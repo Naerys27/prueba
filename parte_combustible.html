@@ -72,6 +72,30 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
 .photo-td{text-align:center;vertical-align:middle;padding:2px;min-width:44px}
 .photo-btn{border:none;background:none;cursor:pointer;font-size:15px;padding:4px 2px;border-radius:5px;-webkit-tap-highlight-color:transparent;display:block;margin:0 auto;line-height:1}
 .photo-btn:active{background:rgba(0,58,112,.12)}
+.photo-add-btn{width:100%;padding:9px 11px;border:1.5px dashed #c8d6e0;border-radius:8px;background:#f8fbfd;font-family:inherit;font-size:13px;color:#5a7184;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent}
+.photo-add-btn.has-photo{border-color:#22c55e;background:#f0fdf4;color:#166534}
+.rep-add-btn{width:100%;margin-top:12px;padding:11px;background:#0f6f9c;color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.rep-add-btn:active{opacity:.8}
+.rep-entry{background:#f4f8fb;border:1px solid #d8e8f0;border-radius:10px;padding:10px 12px;margin-bottom:8px;position:relative}
+.rep-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.rep-date{font-size:11px;color:#5a7184;flex-shrink:0}
+.rep-kms{font-size:12px;font-weight:700;color:#0b3e56}
+.rep-del{position:absolute;top:8px;right:8px;background:none;border:none;color:#c0392b;font-size:16px;cursor:pointer;line-height:1;padding:2px 4px;border-radius:5px;-webkit-tap-highlight-color:transparent}
+.rep-del:active{background:rgba(192,57,43,.1)}
+.rep-row2{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.rep-thumb img{max-height:36px;border-radius:5px}
+.rep-empty{font-size:12px;color:#93a8b5;text-align:center;padding:12px 0}
+.rep-total{margin-top:8px;font-size:12px;font-weight:700;color:#0b3e56;padding:8px 4px;border-top:1px solid #d8e8f0}
+.rep-badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:700}
+.rep-badge-g{background:#fef3c7;color:#92400e}.rep-badge-d{background:#dbeafe;color:#1e40af}
+[data-theme="dark"] .photo-add-btn{background:#1a2535;border-color:#4a5a6e;color:#94a3b8}
+[data-theme="dark"] .photo-add-btn.has-photo{border-color:#166534;background:#052e16;color:#86efac}
+[data-theme="dark"] .rep-entry{background:#1a2535;border-color:#374151}
+[data-theme="dark"] .rep-date{color:#94a3b8}
+[data-theme="dark"] .rep-kms{color:#89c4dc}
+[data-theme="dark"] .rep-total{color:#89c4dc;border-color:#374151}
+[data-theme="dark"] .rep-badge-g{background:#3a2a05;color:#fcd34d}
+[data-theme="dark"] .rep-badge-d{background:#1e3052;color:#93c5fd}
 .thumb-wrap img{display:block;max-height:26px;max-width:36px;border-radius:3px;margin:2px auto 0;cursor:pointer}
 .theme-toggle{margin-left:auto;background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px 8px;line-height:1;-webkit-tap-highlight-color:transparent}
 [data-theme="dark"] body{background:#111827;color:#f1f5f9}
@@ -141,75 +165,65 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
     </div>
   </div>
 
-  
-  <div class="card" id="card_gasolina">
-    <div class="ch">Registro de gasolina</div>
-    <div class="cb" style="padding:9px 8px">
-      <p class="hint">Desliza si no caben todas las columnas</p>
-      <div class="tscroll">
-        <table class="ft">
-          <thead>
-            <tr class="r1">
-              <th rowspan="2" style="min-width:58px">KMs</th>
-              <th colspan="2" style="min-width:116px">GASOLINA</th>
-              <th rowspan="2" style="min-width:92px">FECHA</th>
-              <th rowspan="2" style="min-width:44px">FOTO</th>
-            </tr>
-            <tr class="r2">
-              <th style="min-width:58px">€</th>
-              <th style="min-width:58px">LITROS</th>
-            </tr>
-          </thead>
-          <tbody id="tbody_gasolina"></tbody>
-          <tfoot>
-            <tr>
-              <td></td>
-              <td class="tv" id="tg_eur">0,00</td>
-              <td class="tv" id="tg_lit">0,00</td>
-              <td>TOTAL</td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table>
+  <!-- Tablas ocultas para compatibilidad con PDF y recalc -->
+  <div style="display:none" aria-hidden="true">
+    <table><tbody id="tbody_gasolina"></tbody><tfoot><tr><td class="tv" id="tg_eur">0,00</td><td class="tv" id="tg_lit">0,00</td></tr></tfoot></table>
+    <table><tbody id="tbody_gasoil"></tbody><tfoot><tr><td class="tv" id="td_aeur">0,00</td><td class="tv" id="td_alit">0,00</td><td class="tv" id="td_geur">0,00</td><td class="tv" id="td_glit">0,00</td></tr></tfoot></table>
+  </div>
+
+  <!-- Formulario nuevo repostaje - Gasolina -->
+  <div class="card" id="rep-form-g">
+    <div class="ch">Nuevo repostaje · Gasolina</div>
+    <div class="cb">
+      <div class="g3">
+        <div class="f"><label>KMs</label><input type="number" id="nf_gk" inputmode="decimal" placeholder="0"></div>
+        <div class="f"><label>Euros</label><input type="number" id="nf_ge" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+        <div class="f"><label>Litros</label><input type="number" id="nf_gl" step="0.01" inputmode="decimal" placeholder="0,00"></div>
       </div>
+      <div class="g2" style="margin-top:9px">
+        <div class="f"><label>Fecha</label><input type="date" id="nf_gf"></div>
+        <div class="f"><label>Foto del ticket</label>
+          <button type="button" class="photo-add-btn" onclick="captureNewPhoto('g')" id="nf_g_photobtn">📷 Añadir foto</button>
+          <div id="nf_g_thumb"></div>
+        </div>
+      </div>
+      <button type="button" class="rep-add-btn" onclick="addRepostaje('g')">+ Añadir repostaje</button>
     </div>
   </div>
 
-  <div class="card" id="card_gasoil" style="display:none">
-    <div class="ch">Registro de combustible</div>
-    <div class="cb" style="padding:9px 8px">
-      <p class="hint">Desliza si no caben todas las columnas</p>
-      <div class="tscroll">
-        <table class="ft">
-          <thead>
-            <tr class="r1">
-              <th rowspan="2" style="min-width:58px">KMs</th>
-              <th colspan="2" style="min-width:116px">ADBLUE</th>
-              <th colspan="2" style="min-width:116px">GAS-OIL</th>
-              <th rowspan="2" style="min-width:92px">FECHA</th>
-              <th rowspan="2" style="min-width:44px">FOTO</th>
-            </tr>
-            <tr class="r2">
-              <th style="min-width:58px">€</th>
-              <th style="min-width:58px">LITROS</th>
-              <th style="min-width:58px">€</th>
-              <th style="min-width:58px">LITROS</th>
-            </tr>
-          </thead>
-          <tbody id="tbody_gasoil"></tbody>
-          <tfoot>
-            <tr>
-              <td></td>
-              <td class="tv" id="td_aeur">0,00</td>
-              <td class="tv" id="td_alit">0,00</td>
-              <td class="tv" id="td_geur">0,00</td>
-              <td class="tv" id="td_glit">0,00</td>
-              <td>TOTAL</td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table>
+  <!-- Formulario nuevo repostaje - Gas-oil -->
+  <div class="card" id="rep-form-d" style="display:none">
+    <div class="ch">Nuevo repostaje · Gas-oil</div>
+    <div class="cb">
+      <div class="g2">
+        <div class="f"><label>KMs</label><input type="number" id="nf_dk" inputmode="decimal" placeholder="0"></div>
+        <div class="f"><label>Fecha</label><input type="date" id="nf_df"></div>
       </div>
+      <div class="g2" style="margin-top:9px">
+        <div class="f full" style="grid-column:1/-1"><label style="color:#1e40af;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">AdBlue</label></div>
+        <div class="f"><label>Euros</label><input type="number" id="nf_dae" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+        <div class="f"><label>Litros</label><input type="number" id="nf_dal" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+      </div>
+      <div class="g2" style="margin-top:6px">
+        <div class="f full" style="grid-column:1/-1"><label style="color:#92400e;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Gas-oil</label></div>
+        <div class="f"><label>Euros</label><input type="number" id="nf_dge" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+        <div class="f"><label>Litros</label><input type="number" id="nf_dgl" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+      </div>
+      <div class="f" style="margin-top:9px"><label>Foto del ticket</label>
+        <button type="button" class="photo-add-btn" onclick="captureNewPhoto('d')" id="nf_d_photobtn">📷 Añadir foto</button>
+        <div id="nf_d_thumb"></div>
+      </div>
+      <button type="button" class="rep-add-btn" onclick="addRepostaje('d')">+ Añadir repostaje</button>
+    </div>
+  </div>
+
+  <!-- Lista de repostajes del mes -->
+  <div class="card" id="rep-list-card">
+    <div class="ch">Repostajes del mes</div>
+    <div class="cb" style="padding:9px">
+      <div id="rep-list"><div class="rep-empty">Sin repostajes añadidos</div></div>
+      <div class="rep-total" id="rep-total-g" style="display:none">Total: <span id="rep-total-g-eur">0,00</span> € · <span id="rep-total-g-lit">0,00</span> L</div>
+      <div class="rep-total" id="rep-total-d" style="display:none">AdBlue: <span id="rep-total-d-aeur">0,00</span> € / <span id="rep-total-d-alit">0,00</span> L &nbsp;·&nbsp; Gas-oil: <span id="rep-total-d-geur">0,00</span> € / <span id="rep-total-d-glit">0,00</span> L</div>
     </div>
   </div>
 
@@ -656,8 +670,8 @@ function fmtDate(iso) { if (!iso) return ''; var p=iso.split('-'); return (p.len
 
 function switchFuelType() {
   var t=document.getElementById('tipo_combustible').value;
-  document.getElementById('card_gasolina').style.display=(t==='gasolina')?'':'none';
-  document.getElementById('card_gasoil').style.display=(t==='gasoil')?'':'none';
+  document.getElementById('rep-form-g').style.display=(t==='gasolina')?'':'none';
+  document.getElementById('rep-form-d').style.display=(t==='gasoil')?'':'none';
   recalc();
 }
 
@@ -687,6 +701,7 @@ function buildRows() {
 
 
 var rowPhotos = {};
+var _newPhotoData = {};
 var _photoInput = (function() {
   var inp = document.createElement('input');
   inp.type = 'file'; inp.accept = 'image/*'; inp.setAttribute('capture', 'environment');
@@ -709,9 +724,18 @@ _photoInput.addEventListener('change', function() {
   var reader = new FileReader();
   reader.onload = function(e) {
     compressPhoto(e.target.result, function(data, w, h) {
-      rowPhotos[key] = { data: data, w: w, h: h };
-      var el = document.getElementById(tid);
-      if (el) el.innerHTML = '<img src="' + data + '" title="Toca para eliminar" onclick="removeRowPhoto(\'' + key + '\',\'' + tid + '\')">';
+      if (key === 'new_g' || key === 'new_d') {
+        _newPhotoData[key] = { data: data, w: w, h: h };
+        var fuel = key === 'new_g' ? 'g' : 'd';
+        var btn = document.getElementById('nf_' + fuel + '_photobtn');
+        if (btn) btn.className = 'photo-add-btn has-photo';
+        var el = document.getElementById(tid);
+        if (el) el.innerHTML = '<img src="' + data + '" style="max-height:36px;border-radius:5px;margin-top:4px" onclick="clearNewPhoto(\'' + key + '\')" title="Toca para eliminar">';
+      } else {
+        rowPhotos[key] = { data: data, w: w, h: h };
+        var el = document.getElementById(tid);
+        if (el) el.innerHTML = '<img src="' + data + '" title="Toca para eliminar" onclick="removeRowPhoto(\'' + key + '\',\'' + tid + '\')">';
+      }
     });
   };
   reader.readAsDataURL(file);
@@ -719,6 +743,152 @@ _photoInput.addEventListener('change', function() {
 function removeRowPhoto(key, tid) {
   delete rowPhotos[key];
   var el = document.getElementById(tid); if (el) el.innerHTML = '';
+}
+function clearNewPhoto(key) {
+  delete _newPhotoData[key];
+  var fuel = key === 'new_g' ? 'g' : 'd';
+  var btn = document.getElementById('nf_' + fuel + '_photobtn');
+  if (btn) btn.className = 'photo-add-btn';
+  var el = document.getElementById('nf_' + fuel + '_thumb');
+  if (el) el.innerHTML = '';
+}
+function captureNewPhoto(fuel) {
+  _activePhotoKey = 'new_' + fuel;
+  _activeThumbId = 'nf_' + fuel + '_thumb';
+  _photoInput.value = ''; _photoInput.click();
+}
+function nextFreeRow(fuel) {
+  var cls = (fuel === 'g') ? '.gk' : '.dk';
+  var inputs = document.querySelectorAll(cls);
+  for (var i = 0; i < inputs.length; i++) {
+    if (!inputs[i].value) return inputs[i].getAttribute('data-row');
+  }
+  return null;
+}
+function addRepostaje(fuel) {
+  var row = nextFreeRow(fuel);
+  if (!row) { toast('Límite de ' + NR + ' repostajes alcanzado'); return; }
+  var q = '[data-row="'+row+'"]';
+  if (fuel === 'g') {
+    var kms = document.getElementById('nf_gk').value;
+    var eur = document.getElementById('nf_ge').value;
+    var lit = document.getElementById('nf_gl').value;
+    var fecha = document.getElementById('nf_gf').value;
+    if (!kms && !eur && !lit) { toast('Rellena al menos un campo'); return; }
+    document.querySelector('.gk'+q).value = kms;
+    document.querySelector('.ge'+q).value = eur;
+    document.querySelector('.gl'+q).value = lit;
+    document.querySelector('.gf'+q).value = fecha;
+    if (_newPhotoData['new_g']) { rowPhotos['g_'+row] = _newPhotoData['new_g']; delete _newPhotoData['new_g']; }
+    document.getElementById('nf_gk').value=''; document.getElementById('nf_ge').value='';
+    document.getElementById('nf_gl').value=''; document.getElementById('nf_gf').value='';
+    document.getElementById('nf_g_photobtn').className='photo-add-btn';
+    document.getElementById('nf_g_thumb').innerHTML='';
+  } else {
+    var kms = document.getElementById('nf_dk').value;
+    var aeur = document.getElementById('nf_dae').value;
+    var alit = document.getElementById('nf_dal').value;
+    var geur = document.getElementById('nf_dge').value;
+    var glit = document.getElementById('nf_dgl').value;
+    var fecha = document.getElementById('nf_df').value;
+    if (!kms && !aeur && !alit && !geur && !glit) { toast('Rellena al menos un campo'); return; }
+    document.querySelector('.dk'+q).value = kms;
+    document.querySelector('.dae'+q).value = aeur;
+    document.querySelector('.dal'+q).value = alit;
+    document.querySelector('.dge'+q).value = geur;
+    document.querySelector('.dgl'+q).value = glit;
+    document.querySelector('.df'+q).value = fecha;
+    if (_newPhotoData['new_d']) { rowPhotos['d_'+row] = _newPhotoData['new_d']; delete _newPhotoData['new_d']; }
+    document.getElementById('nf_dk').value=''; document.getElementById('nf_dae').value='';
+    document.getElementById('nf_dal').value=''; document.getElementById('nf_dge').value='';
+    document.getElementById('nf_dgl').value=''; document.getElementById('nf_df').value='';
+    document.getElementById('nf_d_photobtn').className='photo-add-btn';
+    document.getElementById('nf_d_thumb').innerHTML='';
+  }
+  recalc(); toast('Repostaje añadido');
+}
+function deleteRepostaje(fuel, row) {
+  var q = '[data-row="'+row+'"]';
+  if (fuel === 'g') {
+    document.querySelector('.gk'+q).value=''; document.querySelector('.ge'+q).value='';
+    document.querySelector('.gl'+q).value=''; document.querySelector('.gf'+q).value='';
+  } else {
+    document.querySelector('.dk'+q).value=''; document.querySelector('.dae'+q).value='';
+    document.querySelector('.dal'+q).value=''; document.querySelector('.dge'+q).value='';
+    document.querySelector('.dgl'+q).value=''; document.querySelector('.df'+q).value='';
+  }
+  delete rowPhotos[fuel+'_'+row];
+  recalc();
+}
+function renderRepostajes() {
+  var tipo = document.getElementById('tipo_combustible').value;
+  var list = document.getElementById('rep-list');
+  if (!list) return;
+  list.innerHTML = '';
+  var entries = [];
+  if (tipo === 'gasolina') {
+    document.querySelectorAll('.gk').forEach(function(e) {
+      var row = e.getAttribute('data-row');
+      var kms = e.value, eur = document.querySelector('.ge[data-row="'+row+'"]').value,
+          lit = document.querySelector('.gl[data-row="'+row+'"]').value,
+          fecha = document.querySelector('.gf[data-row="'+row+'"]').value;
+      if (kms || eur || lit) entries.push({fuel:'g', row:row, kms:kms, eur:eur, lit:lit, fecha:fecha});
+    });
+  } else {
+    document.querySelectorAll('.dk').forEach(function(e) {
+      var row = e.getAttribute('data-row');
+      var kms = e.value, aeur = document.querySelector('.dae[data-row="'+row+'"]').value,
+          alit = document.querySelector('.dal[data-row="'+row+'"]').value,
+          geur = document.querySelector('.dge[data-row="'+row+'"]').value,
+          glit = document.querySelector('.dgl[data-row="'+row+'"]').value,
+          fecha = document.querySelector('.df[data-row="'+row+'"]').value;
+      if (kms || aeur || alit || geur || glit) entries.push({fuel:'d', row:row, kms:kms, aeur:aeur, alit:alit, geur:geur, glit:glit, fecha:fecha});
+    });
+  }
+  if (!entries.length) {
+    list.innerHTML = '<div class="rep-empty">Sin repostajes añadidos</div>';
+  } else {
+    entries.forEach(function(e) {
+      var ph = rowPhotos[(e.fuel==='g'?'g':'d')+'_'+e.row];
+      var phHtml = ph ? '<div class="rep-thumb" style="margin-top:4px"><img src="'+ph.data+'"></div>' : '';
+      var body = '';
+      if (e.fuel === 'g') {
+        body = '<span class="rep-badge rep-badge-g">Gasolina</span>';
+        if (e.kms) body += ' <span class="rep-kms">'+e.kms+' km</span>';
+        if (e.fecha) body += ' <span class="rep-date">'+fmtDate(e.fecha)+'</span>';
+        var row2 = '';
+        if (e.eur) row2 += '<span>'+e.eur+' €</span>';
+        if (e.lit) row2 += (row2?' · ':'')+'<span>'+e.lit+' L</span>';
+        if (row2) body += '<div class="rep-row2">'+row2+'</div>';
+      } else {
+        body = '<span class="rep-badge rep-badge-d">Gas-oil</span>';
+        if (e.kms) body += ' <span class="rep-kms">'+e.kms+' km</span>';
+        if (e.fecha) body += ' <span class="rep-date">'+fmtDate(e.fecha)+'</span>';
+        var row2 = '';
+        if (e.aeur || e.alit) row2 += '<span>AdBlue: '+(e.aeur||'–')+' € / '+(e.alit||'–')+' L</span>';
+        if (e.geur || e.glit) row2 += (row2?' &nbsp;·&nbsp; ':'')+'<span>Gas-oil: '+(e.geur||'–')+' € / '+(e.glit||'–')+' L</span>';
+        if (row2) body += '<div class="rep-row2">'+row2+'</div>';
+      }
+      var div = document.createElement('div');
+      div.className = 'rep-entry';
+      div.innerHTML = '<div class="rep-row">'+body+phHtml+'</div>'+
+        '<button type="button" class="rep-del" onclick="deleteRepostaje(\''+e.fuel+'\',\''+e.row+'\')">✕</button>';
+      list.appendChild(div);
+    });
+  }
+  var totG = document.getElementById('rep-total-g');
+  var totD = document.getElementById('rep-total-d');
+  if (totG) totG.style.display = (tipo === 'gasolina') ? '' : 'none';
+  if (totD) totD.style.display = (tipo === 'gasoil') ? '' : 'none';
+  if (tipo === 'gasolina') {
+    document.getElementById('rep-total-g-eur').textContent = document.getElementById('tg_eur').textContent;
+    document.getElementById('rep-total-g-lit').textContent = document.getElementById('tg_lit').textContent;
+  } else {
+    document.getElementById('rep-total-d-aeur').textContent = document.getElementById('td_aeur').textContent;
+    document.getElementById('rep-total-d-alit').textContent = document.getElementById('td_alit').textContent;
+    document.getElementById('rep-total-d-geur').textContent = document.getElementById('td_geur').textContent;
+    document.getElementById('rep-total-d-glit').textContent = document.getElementById('td_glit').textContent;
+  }
 }
 function compressPhoto(dataUrl, cb) {
   var img = new Image();
@@ -773,6 +943,7 @@ function recalc() {
   var litros=(tipo==='gasolina')?gl:dgl;
   var kms=(kmBloque>0)?kmBloque:kmsTabla;
   document.getElementById('v_consumo').value=(kms>0 && litros>0)?(fmtN((litros/kms)*100,2)+' L/100km'):'';
+  renderRepostajes();
 }
 
 document.addEventListener('input', function(ev) {
@@ -853,8 +1024,13 @@ function resetForm() {
     else if (!i.readOnly) i.value='';
   });
   resetConductoresUI();
-  rowPhotos={}; document.querySelectorAll('.thumb-wrap').forEach(function(el){el.innerHTML='';});
-  switchFuelType(); recalc(); clearSig(); toast('Formulario limpiado');
+  rowPhotos={}; _newPhotoData={};
+  document.querySelectorAll('.thumb-wrap').forEach(function(el){el.innerHTML='';});
+  document.getElementById('nf_g_photobtn').className='photo-add-btn';
+  document.getElementById('nf_d_photobtn').className='photo-add-btn';
+  document.getElementById('nf_g_thumb').innerHTML='';
+  document.getElementById('nf_d_thumb').innerHTML='';
+  switchFuelType(); clearSig(); toast('Formulario limpiado');
 }
 
 var sigDrawing=false,sigLX=0,sigLY=0; var sigCanvas=document.getElementById('sigcanvas'); var sigCtx=sigCanvas.getContext('2d');
