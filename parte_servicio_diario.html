@@ -1107,7 +1107,11 @@
         document.getElementById('parte_servicio').value = foundMat;
         if (foundV.marca) document.getElementById('marca').value = foundV.marca;
         if (foundV.modelo) document.getElementById('modelo').value = foundV.modelo;
-        if (!foundV.marca && foundV.marcaModelo) document.getElementById('marca').value = foundV.marcaModelo;
+        if (!foundV.marca && foundV.marcaModelo) {
+          var mm = foundV.marcaModelo.split(' ');
+          document.getElementById('marca').value = mm[0] || '';
+          if (!foundV.modelo) document.getElementById('modelo').value = mm.slice(1).join(' ') || '';
+        }
       }
       function tryLinkVehicleConductorPD() {
         var mat = (gv('parte_servicio') || '').trim().toUpperCase();
@@ -1154,7 +1158,9 @@
         document.getElementById('parte_servicio').addEventListener('change', onMatriculaChangePD);
         document.getElementById('parte_servicio').addEventListener('blur', onMatriculaChangePD);
         document.getElementById('parte_servicio').addEventListener('blur', tryLinkVehicleConductorPD);
+        document.getElementById('conductor').addEventListener('input', onConductorChangePD);
         document.getElementById('conductor').addEventListener('change', onConductorChangePD);
+        document.getElementById('conductor').addEventListener('blur', onConductorChangePD);
         document.getElementById('conductor').addEventListener('blur', tryLinkVehicleConductorPD);
       });
    </script>
