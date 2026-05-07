@@ -1029,6 +1029,7 @@
       function clearParteFormAfterSave() { FIELD_IDS_PARTES.forEach(id => { if (q(id)) q(id).value = ''; }); editingParteId = null; setRepostajesVisibles(1, true); recalc(); clearSig(); }
       function saveParteDiario() {
          const data = collectParteData(); const errors = validateParteData(data); if (errors.length) { showErr('Revisa el parte:\n- ' + errors.join('\n- ')); return; }
+         saveCurrentVehiclePD();
          const parts = getSavedParts(); const now = new Date().toISOString(); let idx = -1;
          if (editingParteId) { idx = parts.findIndex(p => p.id === editingParteId); data.id = editingParteId; data.createdAt = idx >= 0 ? (parts[idx].createdAt || now) : now; }
          else { data.id = makeNewParteId(data); data.createdAt = now; }
