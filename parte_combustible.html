@@ -96,6 +96,18 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
 [data-theme="dark"] .rep-total{color:#89c4dc;border-color:#374151}
 [data-theme="dark"] .rep-badge-g{background:#3a2a05;color:#fcd34d}
 [data-theme="dark"] .rep-badge-d{background:#1e3052;color:#93c5fd}
+.hist-entry{border-bottom:1px solid #e8edf2;padding:8px 0}
+.hist-entry:last-child{border-bottom:none;padding-bottom:0}
+.hist-hdr{display:flex;align-items:center;gap:8px;cursor:pointer;flex-wrap:wrap;user-select:none}
+.hist-mes{font-size:13px;font-weight:700;color:#0b3e56}
+.hist-sum{font-size:11px;color:#5a7184;flex:1}
+.hist-arr{margin-left:auto;font-size:12px;color:#93a8b5;flex-shrink:0}
+.hist-row{font-size:11px;color:#5a7184;padding:5px 0 3px 12px;border-left:2px solid #d8e8f0;margin:4px 0 0}
+.hist-ch{cursor:pointer;user-select:none}
+[data-theme="dark"] .hist-entry{border-color:#374151}
+[data-theme="dark"] .hist-mes{color:#89c4dc}
+[data-theme="dark"] .hist-sum,[data-theme="dark"] .hist-row{color:#94a3b8}
+[data-theme="dark"] .hist-row{border-color:#374151}
 .thumb-wrap img{display:block;max-height:26px;max-width:36px;border-radius:3px;margin:2px auto 0;cursor:pointer}
 .theme-toggle{margin-left:auto;background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px 8px;line-height:1;-webkit-tap-highlight-color:transparent}
 [data-theme="dark"] body{background:#111827;color:#f1f5f9}
@@ -249,6 +261,17 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
       </div>
       <button class="clrbtn" onclick="clearSig()">X Borrar firma</button>
     </div>
+  </div>
+
+  <!-- Historial de repostajes -->
+  <div class="card" id="hist-card" style="display:none">
+    <div class="ch hist-ch" onclick="toggleHist()">Historial de repostajes <span id="hist-arrow" style="float:right">▾</span></div>
+    <div class="cb" style="padding:9px" id="hist-body">
+      <div id="hist-list"></div>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
 
 <div class="bar">
   <button class="btn btnc" onclick="resetForm()">Limpiar</button>
@@ -1138,7 +1161,7 @@ function addPhotosPage(doc) {
     doc.setDrawColor(180,180,180); doc.setLineWidth(0.25); doc.rect(x, y+captionH, imgW, imgH);
     if (col===0) { col=1; } else { col=0; y+=blockH; }
   }
-}function makePDF() { var btn=document.getElementById('pdfbtn'); btn.textContent='Generando...'; btn.disabled=true; setTimeout(function(){ try { var JPDF=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:window.jsPDF; if(!JPDF) throw new Error('jsPDF no cargado.'); var doc=new JPDF({orientation:'portrait',unit:'mm',format:'a4'}); var blue=[21,96,130], dark=[20,20,20]; var tipo=document.getElementById('tipo_combustible').value; if (tipo==='gasolina') drawPDFGasolina(doc, blue, dark); else drawPDFGasoil(doc, blue, dark); var mesVal=gv('v_mes')||'parte', matVal=gv('v_mat')||'vehiculo'; addPhotosPage(doc); saveCurrentVehicle(); doc.save(fmtMonth(mesVal).split(' ')[0]+' '+matVal+' Parte de Combustible.pdf'); toast('PDF generado correctamente'); resetForm(); } catch(err) { showErr('ERROR: '+err.message); } btn.textContent='Guardar PDF'; btn.disabled=false; },80); }
+}function makePDF() { var btn=document.getElementById('pdfbtn'); btn.textContent='Generando...'; btn.disabled=true; setTimeout(function(){ try { var JPDF=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:window.jsPDF; if(!JPDF) throw new Error('jsPDF no cargado.'); var doc=new JPDF({orientation:'portrait',unit:'mm',format:'a4'}); var blue=[21,96,130], dark=[20,20,20]; var tipo=document.getElementById('tipo_combustible').value; if (tipo==='gasolina') drawPDFGasolina(doc, blue, dark); else drawPDFGasoil(doc, blue, dark); var mesVal=gv('v_mes')||'parte', matVal=gv('v_mat')||'vehiculo'; addPhotosPage(doc); saveCurrentVehicle(); saveHistorico(); doc.save(fmtMonth(mesVal).split(' ')[0]+' '+matVal+' Parte de Combustible.pdf'); toast('PDF generado correctamente'); resetForm(); } catch(err) { showErr('ERROR: '+err.message); } btn.textContent='Guardar PDF'; btn.disabled=false; },80); }
 
 
 buildRows();
@@ -1169,6 +1192,118 @@ function onMatriculaChange() {
   if (v.tarjeta) document.getElementById('v_tarjeta').value = v.tarjeta;
   if (v.coste)   document.getElementById('v_coste').value   = v.coste;
 }
+var HIST_KEY = 'partes_combustible_hist_v1';
+function saveHistorico() {
+  var mat = (gv('v_mat') || '').trim().toUpperCase();
+  var mes = gv('v_mes');
+  if (!mat || !mes) return;
+  var tipo = document.getElementById('tipo_combustible').value;
+  var withPhotos = FSStorage.isActive();
+  var entries = [], photos = {};
+  if (tipo === 'gasolina') {
+    document.querySelectorAll('.gk').forEach(function(e) {
+      var row = e.getAttribute('data-row');
+      var kms = e.value, eur = document.querySelector('.ge[data-row="'+row+'"]').value,
+          lit = document.querySelector('.gl[data-row="'+row+'"]').value,
+          fecha = document.querySelector('.gf[data-row="'+row+'"]').value;
+      if (kms || eur || lit) {
+        var idx = entries.length;
+        entries.push({ kms: kms, eur: eur, lit: lit, fecha: fecha });
+        if (withPhotos && rowPhotos['g_'+row]) photos[idx] = { data: rowPhotos['g_'+row].data };
+      }
+    });
+  } else {
+    document.querySelectorAll('.dk').forEach(function(e) {
+      var row = e.getAttribute('data-row');
+      var kms = e.value, aeur = document.querySelector('.dae[data-row="'+row+'"]').value,
+          alit = document.querySelector('.dal[data-row="'+row+'"]').value,
+          geur = document.querySelector('.dge[data-row="'+row+'"]').value,
+          glit = document.querySelector('.dgl[data-row="'+row+'"]').value,
+          fecha = document.querySelector('.df[data-row="'+row+'"]').value;
+      if (kms || aeur || alit || geur || glit) {
+        var idx = entries.length;
+        entries.push({ kms: kms, aeur: aeur, alit: alit, geur: geur, glit: glit, fecha: fecha });
+        if (withPhotos && rowPhotos['d_'+row]) photos[idx] = { data: rowPhotos['d_'+row].data };
+      }
+    });
+  }
+  if (!entries.length) return;
+  var hist = {};
+  try { hist = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); } catch(e) { hist = {}; }
+  var key = mat + '/' + mes;
+  hist[key] = { mat: mat, mes: mes, tipo: tipo, entries: entries };
+  if (Object.keys(photos).length) hist[key].photos = photos;
+  // Purgar entradas con más de 6 meses
+  var cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - 6);
+  var cutoffStr = cutoff.getFullYear() + '-' + String(cutoff.getMonth() + 1).padStart(2, '0');
+  Object.keys(hist).forEach(function(k) { if (hist[k].mes && hist[k].mes < cutoffStr) delete hist[k]; });
+  FSStorage.setItem(HIST_KEY, JSON.stringify(hist));
+}
+function renderHistorico() {
+  var card = document.getElementById('hist-card');
+  var list = document.getElementById('hist-list');
+  if (!card || !list) return;
+  var hist = {};
+  try { hist = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); } catch(e) {}
+  var keys = Object.keys(hist).sort().reverse();
+  if (!keys.length) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  list.innerHTML = '';
+  keys.forEach(function(k) {
+    var h = hist[k];
+    var totalEur = 0, totalLit = 0;
+    h.entries.forEach(function(e) {
+      if (h.tipo === 'gasolina') { totalEur += nval(e.eur); totalLit += nval(e.lit); }
+      else { totalEur += nval(e.geur) + nval(e.aeur); totalLit += nval(e.glit) + nval(e.alit); }
+    });
+    var div = document.createElement('div');
+    div.className = 'hist-entry';
+    div.innerHTML =
+      '<div class="hist-hdr" onclick="toggleHistEntry(this)">' +
+        '<span class="rep-badge '+(h.tipo==='gasolina'?'rep-badge-g':'rep-badge-d')+'">'+(h.tipo==='gasolina'?'Gasolina':'Gas-oil')+'</span>' +
+        ' <span class="hist-mes">'+fmtMonth(h.mes)+'</span>' +
+        ' <span class="hist-sum">'+h.entries.length+' repostaje'+(h.entries.length!==1?'s':'')+' · '+fmtN(totalEur,2)+' €</span>' +
+        '<span class="hist-arr">▾</span>' +
+      '</div>' +
+      '<div class="hist-rows" style="display:none"></div>';
+    var rowsEl = div.querySelector('.hist-rows');
+    h.entries.forEach(function(e, idx) {
+      var ph = (h.photos && h.photos[idx]) ? '<img src="'+h.photos[idx].data+'" style="max-height:32px;border-radius:4px;margin-top:4px;display:block">' : '';
+      var text = '';
+      if (h.tipo === 'gasolina') {
+        if (e.kms) text += e.kms+' km';
+        if (e.eur) text += (text?' · ':'')+e.eur+' €';
+        if (e.lit) text += (text?' · ':'')+e.lit+' L';
+        if (e.fecha) text += (text?' · ':'')+fmtDate(e.fecha);
+      } else {
+        if (e.kms) text += e.kms+' km';
+        if (e.geur||e.glit) text += (text?' · ':'')+'G: '+(e.geur||'–')+' € / '+(e.glit||'–')+' L';
+        if (e.aeur||e.alit) text += (text?' · ':'')+'A: '+(e.aeur||'–')+' € / '+(e.alit||'–')+' L';
+        if (e.fecha) text += (text?' · ':'')+fmtDate(e.fecha);
+      }
+      var r = document.createElement('div');
+      r.className = 'hist-row';
+      r.innerHTML = '<span>'+text+'</span>'+ph;
+      rowsEl.appendChild(r);
+    });
+    list.appendChild(div);
+  });
+}
+function toggleHistEntry(hdr) {
+  var rows = hdr.nextElementSibling;
+  var arr = hdr.querySelector('.hist-arr');
+  var open = rows.style.display !== 'none';
+  rows.style.display = open ? 'none' : '';
+  if (arr) arr.textContent = open ? '▾' : '▴';
+}
+function toggleHist() {
+  var body = document.getElementById('hist-body');
+  var arrow = document.getElementById('hist-arrow');
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  if (arrow) arrow.textContent = open ? '▾' : '▴';
+}
 function saveCurrentVehicle() {
   var mat = (gv('v_mat') || '').trim().toUpperCase();
   if (!mat) return;
@@ -1185,7 +1320,7 @@ function saveCurrentVehicle() {
   updateMatDatalist();
 }
 
-window.addEventListener("load", function() { initConductoresUI(); resizeSigCanvas(); setTimeout(resizeSigCanvas, 400); FSStorage.onReady(function() { updateMatDatalist(); document.getElementById('v_mat').addEventListener('change', onMatriculaChange); }); });
+window.addEventListener("load", function() { initConductoresUI(); resizeSigCanvas(); setTimeout(resizeSigCanvas, 400); FSStorage.onReady(function() { updateMatDatalist(); document.getElementById('v_mat').addEventListener('change', onMatriculaChange); renderHistorico(); }); });
 function toggleTheme() {
   var dark = document.documentElement.getAttribute('data-theme') === 'dark';
   if (dark) {
