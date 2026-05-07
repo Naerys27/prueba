@@ -104,6 +104,9 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
 .hist-arr{margin-left:auto;font-size:12px;color:#93a8b5;flex-shrink:0}
 .hist-row{font-size:11px;color:#5a7184;padding:5px 0 3px 12px;border-left:2px solid #d8e8f0;margin:4px 0 0}
 .hist-ch{cursor:pointer;user-select:none}
+.hist-load-btn{display:block;width:100%;margin-top:10px;padding:9px;background:#e8f0f7;color:#003a70;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
+.hist-load-btn:active{opacity:.8}
+[data-theme="dark"] .hist-load-btn{background:#1a3348;color:#89c4dc}
 [data-theme="dark"] .hist-entry{border-color:#374151}
 [data-theme="dark"] .hist-mes{color:#89c4dc}
 [data-theme="dark"] .hist-sum,[data-theme="dark"] .hist-row{color:#94a3b8}
@@ -1257,6 +1260,7 @@ function renderHistorico() {
       if (h.tipo === 'gasolina') { totalEur += nval(e.eur); totalLit += nval(e.lit); }
       else { totalEur += nval(e.geur) + nval(e.aeur); totalLit += nval(e.glit) + nval(e.alit); }
     });
+    var safeKey = k.replace(/'/g, "\\'");
     var div = document.createElement('div');
     div.className = 'hist-entry';
     div.innerHTML =
@@ -1287,6 +1291,12 @@ function renderHistorico() {
       r.innerHTML = '<span>'+text+'</span>'+ph;
       rowsEl.appendChild(r);
     });
+    var loadBtn = document.createElement('button');
+    loadBtn.type = 'button';
+    loadBtn.className = 'hist-load-btn';
+    loadBtn.textContent = 'Cargar este mes en el formulario';
+    loadBtn.onclick = function() { loadHistorico(k); };
+    rowsEl.appendChild(loadBtn);
     list.appendChild(div);
   });
 }
@@ -1303,6 +1313,57 @@ function toggleHist() {
   var open = body.style.display !== 'none';
   body.style.display = open ? 'none' : '';
   if (arrow) arrow.textContent = open ? '▾' : '▴';
+}
+function loadHistorico(key) {
+  var hist = {};
+  try { hist = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); } catch(e) {}
+  var h = hist[key];
+  if (!h) return;
+  // Limpiar formulario primero
+  document.querySelectorAll('input, textarea, select').forEach(function(el) {
+    if (el.id === 'tipo_combustible') el.value = h.tipo;
+    else if (!el.readOnly) el.value = '';
+  });
+  resetConductoresUI();
+  rowPhotos = {}; _newPhotoData = {};
+  document.querySelectorAll('.thumb-wrap').forEach(function(el) { el.innerHTML = ''; });
+  document.getElementById('nf_g_photobtn').className = 'photo-add-btn';
+  document.getElementById('nf_d_photobtn').className = 'photo-add-btn';
+  document.getElementById('nf_g_thumb').innerHTML = '';
+  document.getElementById('nf_d_thumb').innerHTML = '';
+  clearSig();
+  // Rellenar campos de cabecera
+  if (document.getElementById('v_mat')) document.getElementById('v_mat').value = h.mat || '';
+  if (document.getElementById('v_mes')) document.getElementById('v_mes').value = h.mes || '';
+  onMatriculaChange();
+  // Rellenar filas de la tabla oculta
+  h.entries.forEach(function(e, idx) {
+    var row = String(idx + 1);
+    var q = '[data-row="'+row+'"]';
+    if (h.tipo === 'gasolina') {
+      var gk = document.querySelector('.gk'+q), ge = document.querySelector('.ge'+q),
+          gl = document.querySelector('.gl'+q), gf = document.querySelector('.gf'+q);
+      if (gk) gk.value = e.kms || '';
+      if (ge) ge.value = e.eur || '';
+      if (gl) gl.value = e.lit || '';
+      if (gf) gf.value = e.fecha || '';
+      if (h.photos && h.photos[idx]) rowPhotos['g_'+row] = h.photos[idx];
+    } else {
+      var dk = document.querySelector('.dk'+q), dae = document.querySelector('.dae'+q),
+          dal = document.querySelector('.dal'+q), dge = document.querySelector('.dge'+q),
+          dgl = document.querySelector('.dgl'+q), df = document.querySelector('.df'+q);
+      if (dk) dk.value = e.kms || '';
+      if (dae) dae.value = e.aeur || '';
+      if (dal) dal.value = e.alit || '';
+      if (dge) dge.value = e.geur || '';
+      if (dgl) dgl.value = e.glit || '';
+      if (df) df.value = e.fecha || '';
+      if (h.photos && h.photos[idx]) rowPhotos['d_'+row] = h.photos[idx];
+    }
+  });
+  switchFuelType();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast('Mes cargado en el formulario');
 }
 function saveCurrentVehicle() {
   var mat = (gv('v_mat') || '').trim().toUpperCase();
