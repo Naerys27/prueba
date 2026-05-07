@@ -9,6 +9,7 @@
   var _handle = null;
   var _cache = {};
   var _active = false;
+  var _pending = false;
   var _ready = false;
   var _queue = [];
   var _supported = typeof window.showSaveFilePicker === 'function';
@@ -67,12 +68,12 @@
     await w.close();
   }
 
-  async function checkPermission(handle) {
-    var opts = { mode: 'readwrite' };
-    try {
-      if (await handle.queryPermission(opts) === 'granted') return true;
-      return (await handle.requestPermission(opts)) === 'granted';
-    } catch(e) { return false; }
+  async function queryOnly(handle) {
+    try { return await handle.queryPermission({ mode: 'readwrite' }); } catch(e) { return 'denied'; }
+  }
+
+  async function requestPerm(handle) {
+    try { return await handle.requestPermission({ mode: 'readwrite' }); } catch(e) { return 'denied'; }
   }
 
   function loadLS() {
@@ -118,16 +119,22 @@
     init: async function() {
       _ready = false;
       _active = false;
+      _pending = false;
       _cache = {};
       if (!_supported) { loadLS(); notify(); return; }
       try {
         var handle = await idbGet(HANDLE_KEY);
         if (handle) {
-          var ok = await checkPermission(handle);
-          if (ok) {
+          var perm = await queryOnly(handle);
+          if (perm === 'granted') {
             _handle = handle;
             _cache = await readFile(handle);
             _active = true;
+          } else if (perm === 'prompt') {
+            _handle = handle;
+            _pending = true;
+          } else {
+            await idbDelete(HANDLE_KEY);
           }
         }
       } catch(e) {
@@ -143,7 +150,32 @@
     },
 
     isActive: function() { return _active; },
+    isPending: function() { return _pending; },
     isSupported: function() { return _supported; },
+
+    reconnect: async function() {
+      if (!_handle || !_pending) return false;
+      try {
+        var perm = await requestPerm(_handle);
+        if (perm === 'granted') {
+          var fileData = await readFile(_handle);
+          var lsData = {};
+          DATA_KEYS.forEach(function(k) {
+            var v = localStorage.getItem(k);
+            if (v) try { lsData[k] = JSON.parse(v); } catch(e) {}
+          });
+          _cache = mergeData(fileData, lsData);
+          if (Object.keys(lsData).length) await writeFile(_handle, _cache);
+          _active = true;
+          _pending = false;
+          return true;
+        }
+        return false;
+      } catch(e) {
+        console.warn('[FSStorage] reconnect:', e.message);
+        return false;
+      }
+    },
 
     setup: async function(useExisting) {
       if (!_supported) {
@@ -163,8 +195,8 @@
             types: [{ description: 'Datos JSON', accept: { 'application/json': ['.json'] } }]
           });
         }
-        var ok = await checkPermission(handle);
-        if (!ok) {
+        var perm = await requestPerm(handle);
+        if (perm !== 'granted') {
           alert('Se necesita permiso de escritura para usar el archivo.');
           return false;
         }
