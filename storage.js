@@ -87,6 +87,33 @@
     _ready = true;
     _queue.forEach(function(cb) { try { cb(); } catch(e) {} });
     _queue = [];
+    if (_pending) showReconnectBanner();
+  }
+
+  function showReconnectBanner() {
+    if (document.getElementById('_fsr_banner')) return;
+    if (document.getElementById('st-pend')) return; // index.html has its own UI
+    var d = document.createElement('div');
+    d.id = '_fsr_banner';
+    d.setAttribute('style', [
+      'position:fixed;top:0;left:0;right:0;z-index:9999',
+      'background:#1e3a5f;color:#fff',
+      'padding:10px 14px;display:flex;align-items:center;gap:10px',
+      'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px',
+      'box-shadow:0 2px 10px rgba(0,0,0,.4)'
+    ].join(';'));
+    d.innerHTML =
+      '<span style="flex:1;line-height:1.4">🔗 Archivo vinculado pero sin permiso. Toca para sincronizar los datos.</span>' +
+      '<button style="flex-shrink:0;background:#3b82f6;color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent">Reconectar</button>';
+    d.querySelector('button').addEventListener('click', function() {
+      FSStorage.reconnect().then(function(ok) {
+        if (ok) {
+          d.remove();
+          window.location.reload();
+        }
+      });
+    });
+    document.body.appendChild(d);
   }
 
   function mergeData(file, ls) {
