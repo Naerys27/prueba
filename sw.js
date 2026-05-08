@@ -1,4 +1,4 @@
-const CACHE = 'partes-loco-v27';
+const CACHE = 'partes-loco-v28';
 const FILES = [
   'index.html',
   'parte_combustible.html',
@@ -11,9 +11,11 @@ const FILES = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())
-  );
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
+});
+
+self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {

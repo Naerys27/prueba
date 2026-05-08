@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <script>(function(){var t=localStorage.getItem('partes_theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark')})();</script>
@@ -1459,7 +1459,7 @@ function toggleTheme() {
 })();
 window.addEventListener("resize", resizeSigCanvas);
 </script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'))}</script>
+<script>if ('serviceWorker' in navigator) { window.addEventListener('load', function() { navigator.serviceWorker.register('sw.js').then(function(reg) { if (reg.waiting) _showSWUpdateBanner(reg); reg.addEventListener('updatefound', function() { var nw = reg.installing; nw.addEventListener('statechange', function() { if (nw.state === 'installed' && navigator.serviceWorker.controller) _showSWUpdateBanner(reg); }); }); }); var _swRefreshing = false; navigator.serviceWorker.addEventListener('controllerchange', function() { if (!_swRefreshing) { _swRefreshing = true; window.location.reload(); } }); }); } function _showSWUpdateBanner(reg) { if (document.getElementById('_sw_upd')) return; var d = document.createElement('div'); d.id = '_sw_upd'; d.setAttribute('style', 'position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1e3a5f;color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;box-shadow:0 -2px 10px rgba(0,0,0,.4)'); d.innerHTML = '<span style="flex:1">Nueva version disponible.</span><button style="flex-shrink:0;background:#3b82f6;color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent">Actualizar</button>'; d.querySelector('button').addEventListener('click', function() { if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' }); }); document.body.appendChild(d); }</script>
 </body>
 </html>
 
