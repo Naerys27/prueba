@@ -32,7 +32,10 @@
       [data-theme="dark"] .ch { background: #1a3348; color: #89c4dc; border-color: #253f52; }
       [data-theme="dark"] .f input, [data-theme="dark"] .f textarea { background: #1a2535; color: var(--text); border-color: var(--input); }
       [data-theme="dark"] .f input:focus, [data-theme="dark"] .f textarea:focus { background: #1f2d40; border-color: var(--blue); }
+      .f input[readonly] { background: #f0f4f7; color: #5a7080; cursor: default; }
+      .f .calc-hint { display:block; font-size:11px; color:#7a94a8; margin-top:3px; }
       [data-theme="dark"] .f input[readonly] { background: #141c27; color: #7a94a8; }
+      [data-theme="dark"] .f .calc-hint { color: #566c7a; }
       [data-theme="dark"] .f label { color: #94a3b8; }
       [data-theme="dark"] .bar { background: var(--card); border-color: var(--border); }
       [data-theme="dark"] .btnc { background: #2d4458; color: #a8c8dc; }
@@ -378,7 +381,7 @@
                      inputmode="numeric" oninput="recalc()"></div>
                <div class="f"><label>Lectura de contador - Llegada</label><input id="cont_llegada" type="text"
                      inputmode="numeric" oninput="recalc()"></div>
-               <div class="f"><label>Kilómetros recorridos</label><input id="kms_recorridos" readonly></div>
+               <div class="f"><label>Kilómetros recorridos</label><input id="kms_recorridos" readonly><span class="calc-hint">Calculado automáticamente</span></div>
                <div class="f"><label>Hora salida</label><input id="hora_salida" type="time"></div>
                <div class="f"><label>Hora llegada</label><input id="hora_llegada" type="time"></div>
             </div>
@@ -965,6 +968,7 @@
          }
       })();
       function makePDF() {
+         const data = collectParteData(); const errors = validateParteData(data); if (errors.length) { showErr('Revisa el parte:\n• ' + errors.join('\n• ')); return; }
          const btn = q('pdfbtn'); btn.textContent = 'Generando...'; btn.disabled = true;
          setTimeout(() => {
             try {
@@ -973,7 +977,6 @@
                const doc = new JPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
                drawCurrentParteDiarioPDFPage(doc);
                saveCurrentVehiclePD(); const _fecha = gv('fecha') || ''; const _fechaFmt = _fecha ? _fecha.slice(2,4)+_fecha.slice(5,7)+_fecha.slice(8,10) : 'XXXXXX'; const _mat = (gv('parte_servicio') || 'SIN_MAT').toUpperCase(); const _conductor = gv('conductor'); const _nombreFichero = _fechaFmt + ' ' + _mat + ' Parte diario' + (_conductor ? ' - ' + _conductor : '') + '.pdf'; doc.save(_nombreFichero); saveParteDiario();
-               //const fp = fmtDateParts(gv('fecha')); const f = fp.y ? `${fp.y}-${fp.m}-${fp.d}` : 'parte'; doc.save('Parte_servicio_diario_' + f + '.pdf'); toast('PDF generado correctamente');
             } catch (err) { showErr('ERROR: ' + err.message); }
             btn.textContent = 'PDF diario'; btn.disabled = false;
          }, 80);
@@ -1109,15 +1112,32 @@
           });
         }
       }
+      function suggestLastKmPD(mat) {
+        if (!mat || gv('cont_salida').trim()) return;
+        var parts = getSavedParts().filter(function(p) {
+          return cleanKeyPart(p.parte_servicio) === mat && p.cont_llegada;
+        });
+        if (!parts.length) return;
+        parts.sort(function(a, b) { return String(b.fecha || '').localeCompare(String(a.fecha || '')) || String(b.hora_llegada || '').localeCompare(String(a.hora_llegada || '')); });
+        var last = parts[0];
+        if (last.cont_llegada) {
+          document.getElementById('cont_salida').value = last.cont_llegada;
+          recalc();
+          toast('Km salida sugerido desde el último parte (' + last.fecha + ')');
+        }
+      }
       function onMatriculaChangePD() {
         var mat = (document.getElementById('parte_servicio').value || '').trim().toUpperCase();
+        if (!mat) return;
         var db = loadVehicleDB_PD();
-        if (!db[mat]) return;
         var v = db[mat];
-        if (v.marca) document.getElementById('marca').value = v.marca;
-        if (v.modelo) document.getElementById('modelo').value = v.modelo;
-        if (!v.marca && v.marcaModelo) document.getElementById('marca').value = v.marcaModelo;
-        if (v.conductor) document.getElementById('conductor').value = v.conductor;
+        if (v) {
+          if (v.marca) document.getElementById('marca').value = v.marca;
+          if (v.modelo) document.getElementById('modelo').value = v.modelo;
+          if (!v.marca && v.marcaModelo) document.getElementById('marca').value = v.marcaModelo;
+          if (v.conductor) document.getElementById('conductor').value = v.conductor;
+        }
+        suggestLastKmPD(mat);
       }
       function onConductorChangePD() {
         var conductor = (document.getElementById('conductor').value || '').trim();

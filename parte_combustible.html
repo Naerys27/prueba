@@ -29,6 +29,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
 .full{grid-column:1/-1}
 .f label{display:block;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.fuel-sublabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;display:block}
+.fuel-sublabel-adblue{color:#1e40af}
+.fuel-sublabel-gasoil{color:#92400e}
+[data-theme="dark"] .fuel-sublabel-adblue{color:#93c5fd}
+[data-theme="dark"] .fuel-sublabel-gasoil{color:#fcd34d}
 .f input,.f textarea{width:100%;padding:9px 11px;border:1.5px solid #c8d6e0;border-radius:8px;font-family:inherit;font-size:14px;background:#f8fbfd;color:#1a1a2e;-webkit-appearance:none;appearance:none}
 .f input:focus,.f textarea:focus{outline:none;border-color:#003a70;box-shadow:0 0 0 3px rgba(0,58,112,.1);background:#fff}
 .f textarea{resize:none;height:58px;line-height:1.4}
@@ -215,12 +220,12 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
         <div class="f"><label>Fecha</label><input type="date" id="nf_df"></div>
       </div>
       <div class="g2" style="margin-top:9px">
-        <div class="f full" style="grid-column:1/-1"><label style="color:#1e40af;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">AdBlue</label></div>
+        <div class="f full" style="grid-column:1/-1"><span class="fuel-sublabel fuel-sublabel-adblue">AdBlue</span></div>
         <div class="f"><label>Euros</label><input type="number" id="nf_dae" step="0.01" inputmode="decimal" placeholder="0,00"></div>
         <div class="f"><label>Litros</label><input type="number" id="nf_dal" step="0.01" inputmode="decimal" placeholder="0,00"></div>
       </div>
       <div class="g2" style="margin-top:6px">
-        <div class="f full" style="grid-column:1/-1"><label style="color:#92400e;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Gas-oil</label></div>
+        <div class="f full" style="grid-column:1/-1"><span class="fuel-sublabel fuel-sublabel-gasoil">Gas-oil</span></div>
         <div class="f"><label>Euros</label><input type="number" id="nf_dge" step="0.01" inputmode="decimal" placeholder="0,00"></div>
         <div class="f"><label>Litros</label><input type="number" id="nf_dgl" step="0.01" inputmode="decimal" placeholder="0,00"></div>
       </div>
@@ -696,6 +701,21 @@ function fmtDate(iso) { if (!iso) return ''; var p=iso.split('-'); return (p.len
 
 function switchFuelType() {
   var t=document.getElementById('tipo_combustible').value;
+  var hasEntries = false;
+  document.querySelectorAll('.gk, .dk').forEach(function(e){ if (e.value) hasEntries = true; });
+  if (hasEntries) {
+    if (!confirm('Si cambias el tipo de combustible se perderán los repostajes añadidos. ¿Continuar?')) {
+      document.getElementById('tipo_combustible').value = (t === 'gasolina') ? 'gasoil' : 'gasolina';
+      return;
+    }
+    document.querySelectorAll('.gk,.ge,.gl,.gf,.dk,.dae,.dal,.dge,.dgl,.df').forEach(function(e){ e.value=''; });
+    rowPhotos={}; _newPhotoData={};
+    document.querySelectorAll('.thumb-wrap').forEach(function(el){ el.innerHTML=''; });
+    document.getElementById('nf_g_photobtn').className='photo-add-btn';
+    document.getElementById('nf_d_photobtn').className='photo-add-btn';
+    document.getElementById('nf_g_thumb').innerHTML='';
+    document.getElementById('nf_d_thumb').innerHTML='';
+  }
   document.getElementById('rep-form-g').style.display=(t==='gasolina')?'':'none';
   document.getElementById('rep-form-d').style.display=(t==='gasoil')?'':'none';
   recalc();
@@ -1164,7 +1184,20 @@ function addPhotosPage(doc) {
     doc.setDrawColor(180,180,180); doc.setLineWidth(0.25); doc.rect(x, y+captionH, imgW, imgH);
     if (col===0) { col=1; } else { col=0; y+=blockH; }
   }
-}function makePDF() { var btn=document.getElementById('pdfbtn'); btn.textContent='Generando...'; btn.disabled=true; setTimeout(function(){ try { var JPDF=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:window.jsPDF; if(!JPDF) throw new Error('jsPDF no cargado.'); var doc=new JPDF({orientation:'portrait',unit:'mm',format:'a4'}); var blue=[21,96,130], dark=[20,20,20]; var tipo=document.getElementById('tipo_combustible').value; if (tipo==='gasolina') drawPDFGasolina(doc, blue, dark); else drawPDFGasoil(doc, blue, dark); var mesVal=gv('v_mes')||'parte', matVal=gv('v_mat')||'vehiculo'; addPhotosPage(doc); saveCurrentVehicle(); saveHistorico(); doc.save(fmtMonth(mesVal).split(' ')[0]+' '+matVal+' Parte de Combustible.pdf'); toast('PDF generado correctamente'); resetForm(); } catch(err) { showErr('ERROR: '+err.message); } btn.textContent='Guardar PDF'; btn.disabled=false; },80); }
+}
+function validateCombustible() {
+  var errors = [];
+  if (!gv('v_mes')) errors.push('Indica el mes y año.');
+  if (!gv('v_mat').trim()) errors.push('Indica la matrícula del vehículo.');
+  var hasEntry = false;
+  document.querySelectorAll('.gk, .dk').forEach(function(e){ if (e.value) hasEntry = true; });
+  if (!hasEntry) errors.push('Añade al menos un repostaje.');
+  return errors;
+}
+function makePDF() {
+  var errs = validateCombustible();
+  if (errs.length) { showErr('Revisa el parte:\n• ' + errs.join('\n• ')); return; }
+  var btn=document.getElementById('pdfbtn'); btn.textContent='Generando...'; btn.disabled=true; setTimeout(function(){ try { var JPDF=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:window.jsPDF; if(!JPDF) throw new Error('jsPDF no cargado.'); var doc=new JPDF({orientation:'portrait',unit:'mm',format:'a4'}); var blue=[21,96,130], dark=[20,20,20]; var tipo=document.getElementById('tipo_combustible').value; if (tipo==='gasolina') drawPDFGasolina(doc, blue, dark); else drawPDFGasoil(doc, blue, dark); var mesVal=gv('v_mes')||'parte', matVal=gv('v_mat')||'vehiculo'; addPhotosPage(doc); saveCurrentVehicle(); saveHistorico(); doc.save(fmtMonth(mesVal).split(' ')[0]+' '+matVal+' Parte de Combustible.pdf'); toast('PDF generado correctamente'); resetForm(); } catch(err) { showErr('ERROR: '+err.message); } btn.textContent='Guardar PDF'; btn.disabled=false; },80); }
 
 
 buildRows();

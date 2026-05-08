@@ -173,31 +173,76 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      padding: 11px 14px;
+      background: linear-gradient(135deg, #0f6f9c 0%, #0a5578 100%);
+      padding: 12px 16px 16px;
       z-index: 100;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, .08)
+      box-shadow: 0 -4px 20px rgba(15,111,156,.35)
     }
 
-    #install-banner button {
-      width: 100%;
-      background: var(--blue);
+    #install-banner-inner {
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #install-banner-ico {
+      font-size: 30px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    #install-banner-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    #install-banner-text strong {
+      display: block;
       color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    #install-banner-text span {
+      display: block;
+      color: rgba(255,255,255,.75);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    #install-btn {
+      background: #fff;
+      color: #0f6f9c;
       border: none;
       border-radius: 9px;
-      padding: 13px;
+      padding: 11px 16px;
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
-      -webkit-tap-highlight-color: transparent
+      -webkit-tap-highlight-color: transparent;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    #install-btn:active {
+      background: #e0eff8;
     }
   </style>
 </head>
 
 <body>
   <div id="install-banner">
-    <button id="install-btn">Instalar APP</button>
+    <div id="install-banner-inner">
+      <div id="install-banner-ico">📲</div>
+      <div id="install-banner-text">
+        <strong>Instalar aplicación</strong>
+        <span>Añade la app a tu pantalla de inicio</span>
+      </div>
+      <button id="install-btn">Instalar</button>
+    </div>
   </div>
   <div class="hdr">
     <img class="hdr-logo"
