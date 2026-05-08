@@ -140,6 +140,8 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
 [data-theme="dark"] .driver-add{background:#0e1c2e;color:#79c0e0}
 [data-theme="dark"] .driver-remove{background:#2a0f0f;color:#e87070}
 [data-theme="dark"] .errbox{background:#2a0f0f;border-color:#6a2a2a;color:#e87070}
+.fuel-select{width:100%;border:1px solid #ccd6de;border-radius:8px;padding:10px 12px;background:#fff;color:#1a1a2e;font-family:inherit;font-size:14px;-webkit-appearance:auto;appearance:auto}
+[data-theme="dark"] .fuel-select{background:#0d1520;color:#e6edf3;border-color:#3a4a5a}
 </style>
 </head>
 <body>
@@ -176,7 +178,7 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
         </div>
       </div>
         <div class="f full"><label>Combustible</label>
-          <select id="tipo_combustible" onchange="switchFuelType()" style="width:100%;border:1px solid #c8d6e0;border-radius:8px;padding:10px 12px;background:#fff;color:#1a1a2e;font-family:inherit;font-size:14px;">
+          <select id="tipo_combustible" onchange="switchFuelType()" class="fuel-select">
             <option value="gasolina">Gasolina</option>
             <option value="gasoil">Gas-oil / AdBlue</option>
           </select>
