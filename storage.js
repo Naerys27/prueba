@@ -4,7 +4,7 @@
   var IDB_DB = 'partes_fss_v1';
   var IDB_STORE = 'config';
   var HANDLE_KEY = 'file_handle';
-  var DATA_KEYS = ['partes_vehiculos_v1', 'partes_conductores_v1', 'cht_parte_servicio_diario_v1'];
+  var DATA_KEYS = ['partes_vehiculos_v1', 'partes_conductores_v1', 'cht_parte_servicio_diario_v1', 'cht_orden_reparacion_v1'];
 
   var _handle = null;
   var _cache = {};
@@ -131,7 +131,7 @@
         var s = {};
         (Array.isArray(fv) ? fv : []).concat(Array.isArray(lv) ? lv : []).forEach(function(v) { if (v) s[v] = 1; });
         result[k] = Object.keys(s).sort();
-      } else if (k === 'cht_parte_servicio_diario_v1') {
+      } else if (k === 'cht_parte_servicio_diario_v1' || k === 'cht_orden_reparacion_v1') {
         var m = {};
         (Array.isArray(fv) ? fv : []).concat(Array.isArray(lv) ? lv : []).forEach(function(p) { if (p && p.id) m[p.id] = p; });
         result[k] = Object.values(m);

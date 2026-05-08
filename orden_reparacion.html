@@ -292,6 +292,20 @@
     [data-theme="dark"] .btnc { background: #1c2e3e; color: #79c0e0; }
     [data-theme="dark"] .btns { background: #0a3325; }
 
+    .or-saved-item { display:flex; align-items:flex-start; gap:10px; border:1px solid #dde3ea; border-radius:10px; padding:10px; background:#fbfdff; margin-bottom:8px; }
+    .or-saved-main { flex:1; min-width:0; }
+    .or-saved-title { font-weight:800; color:#123649; font-size:14px; margin-bottom:3px; }
+    .or-saved-meta { color:#64748b; font-size:12px; line-height:1.35; overflow-wrap:anywhere; }
+    .or-saved-actions { display:flex; flex-direction:column; gap:6px; flex-shrink:0; }
+    .or-saved-empty { color:#64748b; font-size:13px; padding:8px 0; }
+    .mini-btn { padding:5px 10px; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; -webkit-tap-highlight-color:transparent; }
+    .mini-load { background:#0f6f9c; color:#fff; }
+    .mini-del { background:#e5eef4; color:#6b2828; }
+    [data-theme="dark"] .or-saved-item { background:#0e1925; border-color:#21262d; }
+    [data-theme="dark"] .or-saved-title { color:#79b4cc; }
+    [data-theme="dark"] .or-saved-meta { color:#8b949e; }
+    [data-theme="dark"] .mini-del { background:#1c2e3e; color:#f08080; }
+
   </style>
 </head>
 
@@ -337,10 +351,19 @@
       </div>
     </section>
   </main>
+  <div class="card" id="or-hist-card" style="max-width:620px;margin:0 auto 80px;padding:0 12px;display:none">
+    <div class="ch" id="or-hist-ch" onclick="toggleOrHist()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+      <span id="or-hist-title">Órdenes guardadas</span><span id="or-hist-arrow">▾</span>
+    </div>
+    <div id="or-hist-body" style="padding:9px">
+      <div id="or-hist-list"></div>
+    </div>
+  </div>
   <div class="bar">
-    <button class="btn btnc" onclick="resetForm()" type="button">Limpiar</button>
-    <button class="btn btns" onclick="sharePDF()" id="sharebtn" type="button">Compartir</button>
-    <button class="btn btnp" onclick="makePDF()" id="pdfbtn" type="button">Guardar PDF</button>
+    <button class="btn btnc" onclick="resetFormOR()" type="button">Nuevo</button>
+    <button class="btn btns" onclick="saveOrden()" id="savebtn" type="button">Guardar</button>
+    <button class="btn btnc" onclick="sharePDF()" id="sharebtn" type="button">Compartir</button>
+    <button class="btn btnp" onclick="makePDF()" id="pdfbtn" type="button">PDF</button>
   </div>
   <div class="toast" id="toast"></div>
   <script>
@@ -1006,7 +1029,109 @@
       }, 100);
     }
 
-    function resetForm() {
+    var _editingOrdenId = null;
+    var OR_KEY = 'cht_orden_reparacion_v1';
+
+    function getSavedOrdenes() { try { return JSON.parse(FSStorage.getItem(OR_KEY) || '[]'); } catch(e) { return []; } }
+    function setSavedOrdenes(list) { FSStorage.setItem(OR_KEY, JSON.stringify(list)); }
+
+    function escapeHtmlOR(v) { return String(v || '').replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+    function fechaCortaOR(iso) { if (!iso) return ''; var p = iso.split('-'); return p.length === 3 ? p[2]+'/'+p[1]+'/'+p[0] : iso; }
+
+    function saveOrden() {
+      var data = {
+        id: _editingOrdenId || String(Date.now()),
+        createdAt: new Date().toISOString(),
+        fecha: gv('fecha'),
+        matricula: gv('matricula'),
+        marca: gv('marca'),
+        vehiculo: gv('vehiculo'),
+        solicita: gv('solicita'),
+        telefono: gv('telefono'),
+        servicio: gv('servicio'),
+        cc: gv('cc'),
+        concepto: gv('concepto'),
+        km_aprox: gv('km_aprox'),
+        localizacion: gv('localizacion')
+      };
+      if (!data.fecha && !data.matricula) { alert('Rellena al menos la fecha o la matrícula antes de guardar.'); return; }
+      var list = getSavedOrdenes();
+      var idx = -1;
+      for (var i = 0; i < list.length; i++) { if (list[i].id === data.id) { idx = i; break; } }
+      if (idx >= 0) list[idx] = data; else list.push(data);
+      setSavedOrdenes(list);
+      _editingOrdenId = data.id;
+      renderOrHistory();
+      toast(idx >= 0 ? 'Orden actualizada' : 'Orden guardada');
+    }
+
+    function loadOrden(id) {
+      var list = getSavedOrdenes();
+      var o = null;
+      for (var i = 0; i < list.length; i++) { if (list[i].id === id) { o = list[i]; break; } }
+      if (!o) return;
+      _editingOrdenId = id;
+      var fields = ['fecha','matricula','marca','vehiculo','solicita','telefono','servicio','cc','concepto','km_aprox','localizacion'];
+      for (var j = 0; j < fields.length; j++) { var el = document.getElementById(fields[j]); if (el) el.value = o[fields[j]] || ''; }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      toast('Orden cargada para editar');
+    }
+
+    function deleteOrden(id) {
+      var list = getSavedOrdenes();
+      var o = null;
+      for (var i = 0; i < list.length; i++) { if (list[i].id === id) { o = list[i]; break; } }
+      var msg = o ? ('¿Borrar la orden del ' + fechaCortaOR(o.fecha) + ' · ' + (o.matricula || 'sin matrícula') + '?') : '¿Borrar esta orden?';
+      if (!confirm(msg)) return;
+      if (_editingOrdenId === id) _editingOrdenId = null;
+      var newList = [];
+      for (var k = 0; k < list.length; k++) { if (list[k].id !== id) newList.push(list[k]); }
+      setSavedOrdenes(newList);
+      renderOrHistory();
+      toast('Orden borrada');
+    }
+
+    function renderOrHistory() {
+      var card = document.getElementById('or-hist-card');
+      var list = document.getElementById('or-hist-list');
+      var titleEl = document.getElementById('or-hist-title');
+      if (!card || !list) return;
+      var all = getSavedOrdenes().slice().sort(function(a,b) {
+        return String(b.createdAt || b.fecha || '').localeCompare(String(a.createdAt || a.fecha || ''));
+      });
+      if (!all.length) { card.style.display = 'none'; return; }
+      card.style.display = '';
+      if (titleEl) titleEl.textContent = 'Órdenes guardadas (' + all.length + ')';
+      var html = '';
+      for (var i = 0; i < all.length; i++) {
+        var o = all[i];
+        var tit = fechaCortaOR(o.fecha) + (o.matricula ? ' · ' + escapeHtmlOR(o.matricula.toUpperCase()) : '');
+        var meta = escapeHtmlOR((o.marca || '') + (o.vehiculo ? ' ' + o.vehiculo : ''));
+        if (o.concepto) meta += (meta ? '<br>' : '') + escapeHtmlOR(o.concepto.substring(0, 80)) + (o.concepto.length > 80 ? '…' : '');
+        html += '<div class="or-saved-item">' +
+          '<div class="or-saved-main">' +
+            '<div class="or-saved-title">' + escapeHtmlOR(tit) + '</div>' +
+            (meta ? '<div class="or-saved-meta">' + meta + '</div>' : '') +
+          '</div>' +
+          '<div class="or-saved-actions">' +
+            '<button class="mini-btn mini-load" type="button" onclick="loadOrden(\'' + escapeHtmlOR(o.id) + '\')">Cargar</button>' +
+            '<button class="mini-btn mini-del" type="button" onclick="deleteOrden(\'' + escapeHtmlOR(o.id) + '\')">Borrar</button>' +
+          '</div>' +
+        '</div>';
+      }
+      list.innerHTML = html;
+    }
+
+    function toggleOrHist() {
+      var body = document.getElementById('or-hist-body');
+      var arrow = document.getElementById('or-hist-arrow');
+      var open = body.style.display !== 'none';
+      body.style.display = open ? 'none' : '';
+      if (arrow) arrow.textContent = open ? '▾' : '▴';
+    }
+
+    function resetFormOR() {
+      _editingOrdenId = null;
       var els = document.querySelectorAll('input, textarea');
       for (var i = 0; i < els.length; i++) els[i].value = '';
       toast('Formulario limpiado');
@@ -1057,6 +1182,7 @@
       window.addEventListener('load', function() {
         FSStorage.onReady(function() {
           updateDatalist();
+          renderOrHistory();
           document.getElementById('matricula').addEventListener('change', onMatriculaChange);
         });
       });
