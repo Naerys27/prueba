@@ -993,7 +993,7 @@
 
       const STORAGE_KEY_PARTES = 'cht_parte_servicio_diario_v1';
       const FIELD_IDS_PARTES = ['fecha', 'marca', 'modelo', 'parte_servicio', 'conductor', 'cont_salida', 'cont_llegada', 'kms_recorridos', 'hora_salida', 'hora_llegada', 'itinerario', 'p1', 'l1', 'p2', 'l2', 'p3', 'l3', 'tot_eur', 'tot_lit', 'serv_prestado', 'servicio', 'centro_coste'];
-      const MESES_A_CONSERVAR = 2;
+      const MESES_A_CONSERVAR = 3;
       let repostajesVisibles = 1;
       let editingParteId = null;
 
@@ -1061,7 +1061,7 @@
          const data = collectParteData(); const errors = validateParteData(data); if (errors.length) { showErr('Revisa el parte:\n- ' + errors.join('\n- ')); return; }
          saveCurrentVehiclePD();
          const parts = getSavedParts(); const now = new Date().toISOString(); let idx = -1;
-         if (editingParteId) { idx = parts.findIndex(p => p.id === editingParteId); data.id = editingParteId; data.createdAt = idx >= 0 ? (parts[idx].createdAt || now) : now; }
+         if (editingParteId) { idx = parts.findIndex(p => p.id === editingParteId); const orig = idx >= 0 ? parts[idx] : null; if (orig && data.fecha !== orig.fecha) { data.id = makeNewParteId(data); data.createdAt = now; idx = -1; } else { data.id = editingParteId; data.createdAt = orig ? (orig.createdAt || now) : now; } }
          else { data.id = makeNewParteId(data); data.createdAt = now; }
          if (idx >= 0) parts[idx] = data; else parts.push(data);
          if (!setSavedParts(parts)) return;
