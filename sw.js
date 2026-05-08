@@ -1,4 +1,4 @@
-const CACHE = 'partes-loco-v17';
+const CACHE = 'partes-loco-v18';
 const FILES = [
   'index.html',
   'parte_combustible.html',
