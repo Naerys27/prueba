@@ -902,7 +902,7 @@
          q('tot_eur').value = fmtN(nval(gv('p1')) + nval(gv('p2')) + nval(gv('p3')), 2);
          q('tot_lit').value = fmtN(nval(gv('l1')) + nval(gv('l2')) + nval(gv('l3')), 2);
       }
-      function resetForm() { document.querySelectorAll('input, textarea').forEach(el => el.value = ''); editingParteId = null; setRepostajesVisibles(1, true); recalc(); clearSig(); toast('Formulario limpiado'); }
+      function resetForm() { document.querySelectorAll('input, textarea').forEach(el => el.value = ''); editingParteId = null; setRepostajesVisibles(1, true); recalc(); clearSig(); document.getElementById('fecha').value = new Date().toISOString().slice(0,10); toast('Formulario limpiado'); }
 
       let sigDrawing = false, sigLX = 0, sigLY = 0;
       const sigCanvas = q('sigcanvas');
@@ -1265,6 +1265,7 @@
       }
       FSStorage.onReady(function() {
         setRepostajesVisibles(1, false);
+        document.getElementById('fecha').value = new Date().toISOString().slice(0,10);
         ensureMonthInput();
         purgeOldParts(true);
         renderSavedDays();
