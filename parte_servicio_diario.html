@@ -1056,7 +1056,7 @@
       }
       function loadSignatureFromData(data) { return new Promise(resolve => { clearSig(); if (!data || !data.firma) return resolve(); const img = new Image(); img.onload = function () { sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height); sigCtx.drawImage(img, 0, 0, sigCanvas.width, sigCanvas.height); q('sighint').style.display = 'none'; resolve(); }; img.onerror = function () { resolve(); }; img.src = data.firma; }); }
       function setParteData(data, includeSignature = true) { FIELD_IDS_PARTES.forEach(id => { if (q(id)) q(id).value = data && data[id] ? data[id] : ''; }); updateRepostajesFromValues(); recalc(); return includeSignature ? loadSignatureFromData(data) : Promise.resolve(); }
-      function clearParteFormAfterSave() { FIELD_IDS_PARTES.forEach(id => { if (q(id)) q(id).value = ''; }); editingParteId = null; setRepostajesVisibles(1, true); recalc(); clearSig(); }
+      function clearParteFormAfterSave() { FIELD_IDS_PARTES.forEach(id => { if (q(id)) q(id).value = ''; }); editingParteId = null; setRepostajesVisibles(1, true); recalc(); clearSig(); document.getElementById('fecha').value = new Date().toISOString().slice(0,10); }
       function saveParteDiario() {
          const data = collectParteData(); const errors = validateParteData(data); if (errors.length) { showErr('Revisa el parte:\n- ' + errors.join('\n- ')); return; }
          saveCurrentVehiclePD();
@@ -1122,7 +1122,7 @@
       function suggestLastKmPD(mat) {
         if (!mat || gv('cont_salida').trim()) return;
         var parts = getSavedParts().filter(function(p) {
-          return cleanKeyPart(p.parte_servicio) === mat && p.cont_llegada;
+          return cleanKeyPart(p.parte_servicio) === cleanKeyPart(mat) && p.cont_llegada;
         });
         if (!parts.length) return;
         parts.sort(function(a, b) { return String(b.fecha || '').localeCompare(String(a.fecha || '')) || String(b.hora_llegada || '').localeCompare(String(a.hora_llegada || '')); });
