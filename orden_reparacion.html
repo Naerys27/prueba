@@ -1060,9 +1060,16 @@
       for (var i = 0; i < list.length; i++) { if (list[i].id === data.id) { idx = i; break; } }
       if (idx >= 0) list[idx] = data; else list.push(data);
       setSavedOrdenes(list);
-      _editingOrdenId = data.id;
       renderOrHistory();
-      toast(idx >= 0 ? 'Orden actualizada' : 'Orden guardada');
+      if (idx >= 0) {
+        _editingOrdenId = data.id;
+        toast('Orden actualizada');
+      } else {
+        _editingOrdenId = null;
+        var els = document.querySelectorAll('input, textarea');
+        for (var i = 0; i < els.length; i++) els[i].value = '';
+        toast('Orden guardada');
+      }
     }
 
     function loadOrden(id) {
