@@ -705,10 +705,10 @@ function gv(id) { var el = document.getElementById(id); return el ? (el.value ||
 function fmtMonth(ym) { if (!ym) return ''; var p=ym.split('-'); if (p.length<2) return ym; var m=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']; return m[(parseInt(p[1],10)||1)-1]+' '+p[0]; }
 function fmtDate(iso) { if (!iso) return ''; var p=iso.split('-'); return (p.length===3)?(p[2]+'/'+p[1]+'/'+p[0]):iso; }
 
-function switchFuelType() {
+function switchFuelType(skipConfirm) {
   var t=document.getElementById('tipo_combustible').value;
   var hasEntries = false;
-  document.querySelectorAll('.gk, .dk').forEach(function(e){ if (e.value) hasEntries = true; });
+  if (!skipConfirm) document.querySelectorAll('.gk, .dk').forEach(function(e){ if (e.value) hasEntries = true; });
   if (hasEntries) {
     if (!confirm('Si cambias el tipo de combustible se perderán los repostajes añadidos. ¿Continuar?')) {
       document.getElementById('tipo_combustible').value = (t === 'gasolina') ? 'gasoil' : 'gasolina';
@@ -1410,7 +1410,8 @@ function loadHistorico(key) {
       if (h.photos && h.photos[idx]) rowPhotos['d_'+row] = h.photos[idx];
     }
   });
-  switchFuelType();
+  switchFuelType(true);
+  recalc();
   window.scrollTo({ top: 0, behavior: 'smooth' });
   toast('Mes cargado en el formulario');
 }
