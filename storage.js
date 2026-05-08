@@ -142,6 +142,10 @@
     return result;
   }
 
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist();
+  }
+
   var FSStorage = {
     init: async function() {
       _ready = false;
@@ -293,6 +297,12 @@
       localStorage.removeItem(key);
     }
   };
+
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible' && _pending) {
+      showReconnectBanner();
+    }
+  });
 
   global.FSStorage = FSStorage;
 })(window);
