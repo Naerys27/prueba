@@ -59,6 +59,7 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
 .btn{flex:1;padding:13px;border-radius:9px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;border:none;-webkit-tap-highlight-color:transparent}
 .btn:active{opacity:.8}
 .btnc{background:#e5eef4;color:#123649}
+.btns{background:#1a7a5e;color:#fff}
 .btnp{flex:2;background:#0f6f9c;color:#fff}
 .btnp:disabled{opacity:.5}
 .toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:9px 20px;border-radius:20px;font-size:12px;font-weight:600;box-shadow:0 3px 14px rgba(0,0,0,.25);opacity:0;transition:opacity .3s;pointer-events:none;z-index:200;white-space:nowrap}
@@ -128,6 +129,7 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
 [data-theme="dark"] .f input[readonly]{background:#0a1118;color:#6e8494}
 [data-theme="dark"] .bar{background:#161b22;border-color:#21262d}
 [data-theme="dark"] .btnc{background:#1c2e3e;color:#79c0e0}
+[data-theme="dark"] .btns{background:#0a3325}
 [data-theme="dark"] table.ft thead tr.r1 th{background:#061929}
 [data-theme="dark"] table.ft thead tr.r2 th{background:#0e1c2e;color:#79b4cc;border-color:#21262d}
 [data-theme="dark"] table.ft tbody tr:nth-child(even){background:#0d1520}
@@ -257,7 +259,7 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
         <div class="f"><label>Final</label><input type="number" id="km_fin" inputmode="numeric" placeholder="0"></div>
         <div class="f"><label>Total</label><input type="number" id="km_tot" readonly></div>
       </div>
-      <div class="f" style="margin-top:9px"><label>Consumo (auto)</label><input type="text" id="v_consumo" readonly style="background:#edf2f5;color:#5a7184" placeholder="Se calcula automaticamente"></div>
+      <div class="f" style="margin-top:9px"><label>Consumo (auto)</label><input type="text" id="v_consumo" readonly placeholder="Se calcula automaticamente"></div>
     </div>
   </div>
 
@@ -284,8 +286,9 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
 </div><!-- /wrap -->
 
 <div class="bar">
-  <button class="btn btnc" onclick="resetForm()">Limpiar</button>
-  <button class="btn btnp" onclick="makePDF()" id="pdfbtn">Guardar PDF</button>
+  <button class="btn btnc" onclick="resetForm()">Nuevo</button>
+  <button class="btn btns" onclick="saveHistorico();toast('Parte guardado');renderHistorico();" id="savebtn">Guardar</button>
+  <button class="btn btnp" onclick="makePDF()" id="pdfbtn">PDF</button>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -1326,12 +1329,22 @@ function renderHistorico() {
       r.innerHTML = '<span>'+text+'</span>'+ph;
       rowsEl.appendChild(r);
     });
+    var actRow = document.createElement('div');
+    actRow.style.cssText = 'display:flex;gap:8px;margin-top:8px';
     var loadBtn = document.createElement('button');
     loadBtn.type = 'button';
     loadBtn.className = 'hist-load-btn';
-    loadBtn.textContent = 'Cargar este mes en el formulario';
+    loadBtn.textContent = 'Cargar en el formulario';
     loadBtn.onclick = function() { loadHistorico(k); };
-    rowsEl.appendChild(loadBtn);
+    var delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'hist-load-btn';
+    delBtn.style.cssText = 'background:#c0392b;margin-left:4px';
+    delBtn.textContent = 'Borrar';
+    delBtn.onclick = (function(key, label) { return function() { deleteHistorico(key, label); }; })(k, fmtMonth(h.mes) + ' · ' + h.mat);
+    actRow.appendChild(loadBtn);
+    actRow.appendChild(delBtn);
+    rowsEl.appendChild(actRow);
     list.appendChild(div);
   });
 }
@@ -1399,6 +1412,15 @@ function loadHistorico(key) {
   switchFuelType();
   window.scrollTo({ top: 0, behavior: 'smooth' });
   toast('Mes cargado en el formulario');
+}
+function deleteHistorico(key, label) {
+  if (!confirm('¿Borrar el parte de ' + label + '?')) return;
+  var hist = {};
+  try { hist = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); } catch(e) {}
+  delete hist[key];
+  FSStorage.setItem(HIST_KEY, JSON.stringify(hist));
+  renderHistorico();
+  toast('Parte borrado');
 }
 function saveCurrentVehicle() {
   var mat = (gv('v_mat') || '').trim().toUpperCase();

@@ -4,7 +4,7 @@
   var IDB_DB = 'partes_fss_v1';
   var IDB_STORE = 'config';
   var HANDLE_KEY = 'file_handle';
-  var DATA_KEYS = ['partes_vehiculos_v1', 'partes_conductores_v1', 'cht_parte_servicio_diario_v1', 'cht_orden_reparacion_v1'];
+  var DATA_KEYS = ['partes_vehiculos_v1', 'partes_conductores_v1', 'cht_parte_servicio_diario_v1', 'cht_orden_reparacion_v1', 'partes_combustible_hist_v1'];
 
   var _handle = null;
   var _cache = {};
@@ -125,7 +125,7 @@
       var fv = file[k], lv = ls[k];
       if (fv === undefined) { result[k] = lv; return; }
       if (lv === undefined) { result[k] = fv; return; }
-      if (k === 'partes_vehiculos_v1') {
+      if (k === 'partes_vehiculos_v1' || k === 'partes_combustible_hist_v1') {
         result[k] = Object.assign({}, fv, lv);
       } else if (k === 'partes_conductores_v1') {
         var s = {};
