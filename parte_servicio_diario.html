@@ -53,6 +53,7 @@
       [data-theme="dark"] .sigbox { background: #0d1520; border-color: #3a4a5a; }
       [data-theme="dark"] #sigcanvas { filter: invert(1); }
       [data-theme="dark"] .sighint { color: #6e8494; }
+      .clrbtn { font-size:11px; color:#c0392b; background:none; border:none; cursor:pointer; padding:4px 0; font-family:inherit; font-weight:700; margin-top:5px; -webkit-tap-highlight-color:transparent; }
 
       * {
          box-sizing: border-box;
@@ -432,6 +433,7 @@
                   <div class="sigbox" id="sigbox"><canvas id="sigcanvas"></canvas>
                      <div id="sighint" class="sighint">Firma aquí con el dedo o ratón</div>
                   </div>
+                  <button class="clrbtn" onclick="clearSig()" type="button">X Borrar firma</button>
                </div>
             </div>
          </div>
@@ -440,7 +442,6 @@
       <details class="action-panel">
          <summary>Más acciones</summary>
          <div class="panel-body">
-            <button class="sec" onclick="clearSig()" type="button">Borrar firma</button>
             <button class="sec" onclick="resetForm()" type="button">Limpiar formulario</button>
             <button class="sec" onclick="exportSavedParts()" type="button">Exportar copia</button>
             <button class="sec" onclick="document.getElementById('import_partes_json').click()" type="button">Importar copia</button>
