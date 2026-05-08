@@ -157,6 +157,9 @@
             _handle = handle;
             _cache = await readFile(handle);
             _active = true;
+            DATA_KEYS.forEach(function(k) {
+              if (_cache[k] !== undefined) localStorage.setItem(k, JSON.stringify(_cache[k]));
+            });
           } else if (perm === 'prompt') {
             _handle = handle;
             _pending = true;
@@ -193,6 +196,9 @@
           });
           _cache = mergeData(fileData, lsData);
           if (Object.keys(lsData).length) await writeFile(_handle, _cache);
+          DATA_KEYS.forEach(function(k) {
+            if (_cache[k] !== undefined) localStorage.setItem(k, JSON.stringify(_cache[k]));
+          });
           _active = true;
           _pending = false;
           return true;
@@ -269,6 +275,7 @@
         writeFile(_handle, _cache).catch(function(e) {
           console.error('[FSStorage] write:', e.message);
         });
+        localStorage.setItem(key, value);
         return;
       }
       localStorage.setItem(key, value);
@@ -280,6 +287,7 @@
         writeFile(_handle, _cache).catch(function(e) {
           console.error('[FSStorage] write:', e.message);
         });
+        localStorage.removeItem(key);
         return;
       }
       localStorage.removeItem(key);
