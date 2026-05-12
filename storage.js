@@ -187,10 +187,13 @@
     isSupported: function() { return _supported; },
 
     reconnect: async function() {
-      if (!_handle || !_pending) return false;
+      if (!_handle) return false;
       try {
         var perm = await requestPerm(_handle);
-        if (perm === 'granted') {
+        if (perm !== 'granted') return false;
+        _pending = false;
+        _active = true;
+        try {
           var fileData = await readFile(_handle);
           var lsData = {};
           DATA_KEYS.forEach(function(k) {
@@ -202,11 +205,11 @@
           DATA_KEYS.forEach(function(k) {
             if (_cache[k] !== undefined) localStorage.setItem(k, JSON.stringify(_cache[k]));
           });
-          _active = true;
-          _pending = false;
-          return true;
+        } catch(e) {
+          console.warn('[FSStorage] reconnect merge:', e.message);
+          loadLS();
         }
-        return false;
+        return true;
       } catch(e) {
         console.warn('[FSStorage] reconnect:', e.message);
         return false;
