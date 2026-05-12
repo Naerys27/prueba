@@ -109,7 +109,6 @@
       FSStorage.reconnect().then(function(ok) {
         if (ok) {
           d.remove();
-          window.location.reload();
         }
       });
     });
