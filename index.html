@@ -234,6 +234,8 @@
     #install-btn:active {
       background: #e0eff8;
     }
+    .export-link{display:block;text-align:center;font-size:11px;color:var(--text-muted);text-decoration:none;padding:10px 0 4px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+    .export-link:active{opacity:.6}
   </style>
 </head>
 
@@ -327,6 +329,8 @@
       </div>
     </div>
   </div>
+  <a class="export-link" onclick="exportAllData()">↓ exportar copia de todos los datos</a>
+  <input type="file" id="import-all-input" accept=".json" style="display:none" onchange="importAllData(event)">
   <script>
     FSStorage.init();
     FSStorage.onReady(updateStorageUI);
@@ -436,6 +440,31 @@
       document.getElementById('install-banner').style.display = 'none';
       _deferredPrompt = null;
     });
+    var _ALL_KEYS = ['partes_vehiculos_v1','partes_conductores_v1','cht_parte_servicio_diario_v1','cht_orden_reparacion_v1','partes_combustible_hist_v1'];
+    function exportAllData() {
+      var data = { version: 1, exportedAt: new Date().toISOString() };
+      _ALL_KEYS.forEach(function(k) { var v = FSStorage.getItem(k); if (v) try { data[k] = JSON.parse(v); } catch(e) { data[k] = v; } });
+      var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'partes_copia_' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(a); a.click();
+      setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    }
+    function importAllData(ev) {
+      var file = ev.target.files && ev.target.files[0]; if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function() {
+        try {
+          var json = JSON.parse(reader.result);
+          var count = 0;
+          _ALL_KEYS.forEach(function(k) { if (json[k] !== undefined) { FSStorage.setItem(k, JSON.stringify(json[k])); count++; } });
+          alert('Importado: ' + count + ' módulos restaurados.');
+        } catch(e) { alert('Error al importar: ' + e.message); }
+        ev.target.value = '';
+      };
+      reader.readAsText(file, 'utf-8');
+    }
   </script>
 </body>
 
