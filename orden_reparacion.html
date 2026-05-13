@@ -1068,12 +1068,12 @@
       renderOrHistory();
       if (idx >= 0) {
         _editingOrdenId = data.id;
-        toast('Orden actualizada');
+        toast('Orden actualizada'); clearDraft();
       } else {
         _editingOrdenId = null;
         var els = document.querySelectorAll('input, textarea');
         for (var i = 0; i < els.length; i++) els[i].value = '';
-        toast('Orden guardada');
+        toast('Orden guardada'); clearDraft();
       }
     }
 
@@ -1148,6 +1148,41 @@
       for (var i = 0; i < els.length; i++) els[i].value = '';
       toast('Formulario limpiado');
     }
+    var DRAFT_KEY = 'draft_reparacion_v1';
+    var _draftTimer = null;
+    function saveDraft() {
+      var f = {};
+      document.querySelectorAll('input[id], select[id], textarea[id]').forEach(function(el) {
+        if (el.id && !el.readOnly) f[el.id] = el.value;
+      });
+      if (!Object.keys(f).length) return;
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ ts: Date.now(), f: f }));
+    }
+    function clearDraft() { localStorage.removeItem(DRAFT_KEY); }
+    function checkDraft() {
+      var raw = localStorage.getItem(DRAFT_KEY); if (!raw) return;
+      try {
+        var d = JSON.parse(raw);
+        if (!d.f || !Object.keys(d.f).length) return;
+        var age = Math.round((Date.now() - d.ts) / 60000);
+        var banner = document.createElement('div');
+        banner.style.cssText = 'position:fixed;bottom:64px;left:50%;transform:translateX(-50%);background:#1e3a5f;color:#fff;padding:10px 14px;border-radius:10px;font-size:13px;display:flex;gap:10px;align-items:center;z-index:9998;box-shadow:0 2px 12px rgba(0,0,0,.4);white-space:nowrap';
+        banner.innerHTML = '<span>Borrador ' + (age < 1 ? 'reciente' : 'de hace ' + age + ' min') + '</span><button style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer">Restaurar</button><button style="background:transparent;color:#aaa;border:none;font-size:20px;cursor:pointer;line-height:1;padding:0 4px">&#x00D7;</button>';
+        banner.querySelectorAll('button')[0].addEventListener('click', function() {
+          Object.keys(d.f).forEach(function(id) { var el = document.getElementById(id); if (el && !el.readOnly) el.value = d.f[id]; });
+          banner.remove(); toast('Borrador restaurado');
+        });
+        banner.querySelectorAll('button')[1].addEventListener('click', function() { clearDraft(); banner.remove(); });
+        document.body.appendChild(banner);
+        setTimeout(function() { if (banner.parentNode) banner.remove(); }, 10000);
+      } catch(e) {}
+    }
+    document.addEventListener('input', function(e) {
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) {
+        clearTimeout(_draftTimer); _draftTimer = setTimeout(saveDraft, 800);
+      }
+    });
+    FSStorage.onReady(function() { checkDraft(); });
   </script>
   <script>
     if ('serviceWorker' in navigator) {
