@@ -159,6 +159,8 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
 .cam-btn-x{width:50px;height:50px;border-radius:50%;border:2px solid rgba(255,255,255,.65);background:rgba(0,0,0,.35);color:#fff;font-size:20px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .cam-btn-snap{width:68px;height:68px;border-radius:50%;border:5px solid #fff;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 0 0 2px rgba(255,255,255,.35),0 3px 14px rgba(0,0,0,.6);position:relative}
 .cam-btn-snap::before{content:'';position:absolute;top:5px;left:5px;right:5px;bottom:5px;border-radius:50%;background:#fff}
+.cam-btn-mode{height:36px;padding:0 13px;border-radius:18px;border:1.5px solid rgba(255,255,255,.65);background:rgba(0,0,0,.35);color:#fff;font-size:11px;font-weight:700;letter-spacing:.03em;cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap}
+.cam-btn-mode.active{background:rgba(255,255,255,.2);border-color:#fff}
 </style>
 </head>
 <body>
@@ -776,6 +778,22 @@ var _photoInput = (function() {
 })();
 var _activePhotoKey = null, _activeThumbId = null;
 var _cameraStream = null;
+var _camMode = 'ticket';
+function toggleCamMode() {
+  _camMode = _camMode === 'ticket' ? 'normal' : 'ticket';
+  var guide = document.getElementById('cam-guide');
+  var hint = document.getElementById('cam-hint');
+  var btn = document.getElementById('cam-mode-btn');
+  if (_camMode === 'ticket') {
+    guide.style.visibility = 'visible';
+    hint.style.display = '';
+    btn.textContent = 'Ticket'; btn.classList.add('active');
+  } else {
+    guide.style.visibility = 'hidden';
+    hint.style.display = 'none';
+    btn.textContent = 'Normal'; btn.classList.remove('active');
+  }
+}
 document.addEventListener('click', function(ev) {
   var t = ev.target, btn = null;
   while (t && t !== document.body) { if (t.classList && t.classList.contains('photo-btn')) { btn = t; break; } t = t.parentNode; }
@@ -842,8 +860,13 @@ function openCameraModal() {
     _photoInput.value = ''; _photoInput.click(); return;
   }
   var modal = document.getElementById('cam-modal');
+  _camMode = 'ticket';
   modal.style.display = 'block';
   _posGuide();
+  document.getElementById('cam-guide').style.visibility = 'visible';
+  document.getElementById('cam-hint').style.display = '';
+  var modeBtn = document.getElementById('cam-mode-btn');
+  modeBtn.textContent = 'Ticket'; modeBtn.classList.add('active');
   navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } })
     .then(function(stream) {
       _cameraStream = stream;
@@ -864,23 +887,29 @@ function closeCameraModal() {
 }
 function captureFromCamera() {
   var video = document.getElementById('cam-video');
-  var guide = document.getElementById('cam-guide');
   var vw = video.videoWidth, vh = video.videoHeight;
   if (!vw || !vh) return;
-  var dw = video.clientWidth, dh = video.clientHeight;
-  var scale = Math.max(dw / vw, dh / vh);
-  var renderedW = vw * scale, renderedH = vh * scale;
-  var offsetX = (dw - renderedW) / 2, offsetY = (dh - renderedH) / 2;
-  var vRect = video.getBoundingClientRect(), gRect = guide.getBoundingClientRect();
-  var relX = gRect.left - vRect.left, relY = gRect.top - vRect.top;
-  var sx = (relX - offsetX) / scale, sy = (relY - offsetY) / scale;
-  var sw = gRect.width / scale, sh = gRect.height / scale;
-  sx = Math.max(0, sx); sy = Math.max(0, sy);
-  sw = Math.min(sw, vw - sx); sh = Math.min(sh, vh - sy);
   var canvas = document.createElement('canvas');
-  canvas.width = Math.round(sw); canvas.height = Math.round(sh);
-  canvas.getContext('2d').drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-  var dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+  var dataUrl;
+  if (_camMode === 'ticket') {
+    var guide = document.getElementById('cam-guide');
+    var dw = video.clientWidth, dh = video.clientHeight;
+    var scale = Math.max(dw / vw, dh / vh);
+    var renderedW = vw * scale, renderedH = vh * scale;
+    var offsetX = (dw - renderedW) / 2, offsetY = (dh - renderedH) / 2;
+    var vRect = video.getBoundingClientRect(), gRect = guide.getBoundingClientRect();
+    var relX = gRect.left - vRect.left, relY = gRect.top - vRect.top;
+    var sx = (relX - offsetX) / scale, sy = (relY - offsetY) / scale;
+    var sw = gRect.width / scale, sh = gRect.height / scale;
+    sx = Math.max(0, sx); sy = Math.max(0, sy);
+    sw = Math.min(sw, vw - sx); sh = Math.min(sh, vh - sy);
+    canvas.width = Math.round(sw); canvas.height = Math.round(sh);
+    canvas.getContext('2d').drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+  } else {
+    canvas.width = vw; canvas.height = vh;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+  }
+  dataUrl = canvas.toDataURL('image/jpeg', 0.92);
   closeCameraModal();
   compressPhoto(dataUrl, function(data, w, h) {
     var key = _activePhotoKey, tid = _activeThumbId;
@@ -1599,7 +1628,7 @@ window.addEventListener("resize", resizeSigCanvas);
   <div id="cam-ctrl">
     <button class="cam-btn-x" onclick="closeCameraModal()">&#x2715;</button>
     <button class="cam-btn-snap" onclick="captureFromCamera()"></button>
-    <div style="width:50px"></div>
+    <button id="cam-mode-btn" class="cam-btn-mode active" onclick="toggleCamMode()">Ticket</button>
   </div>
 </div>
 <script>if ('serviceWorker' in navigator) { window.addEventListener('load', function() { navigator.serviceWorker.register('sw.js').then(function(reg) { if (reg.waiting) _showSWUpdateBanner(reg); reg.addEventListener('updatefound', function() { var nw = reg.installing; nw.addEventListener('statechange', function() { if (nw.state === 'installed' && navigator.serviceWorker.controller) _showSWUpdateBanner(reg); }); }); }); var _swRefreshing = false; navigator.serviceWorker.addEventListener('controllerchange', function() { if (!_swRefreshing) { _swRefreshing = true; window.location.reload(); } }); }); } function _showSWUpdateBanner(reg) { if (document.getElementById('_sw_upd')) return; var d = document.createElement('div'); d.id = '_sw_upd'; d.setAttribute('style', 'position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1e3a5f;color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;box-shadow:0 -2px 10px rgba(0,0,0,.4)'); d.innerHTML = '<span style="flex:1">Nueva version disponible.</span><button style="flex-shrink:0;background:#3b82f6;color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent">Actualizar</button>'; d.querySelector('button').addEventListener('click', function() { if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' }); }); document.body.appendChild(d); }</script>
