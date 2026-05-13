@@ -1298,7 +1298,7 @@ function addPhotosPage(doc) {
     document.querySelectorAll(fSel).forEach(function(e){ if(parseInt(e.getAttribute('data-row'))===rowNum && e.value) fecha=fmtDate(e.value); });
     var cap='Repostaje '+rowNum+(isGas?' · Gasolina':' · Gas-oil');
     if (fecha) cap+=' · '+fecha; if (litros) cap+=' · '+litros+'L'; if (euros) cap+=' · '+euros+'€';
-    var imgW=colW-2, imgH=Math.min(photoMaxH, imgW*(photo.h/photo.w));
+    var imgW=colW-2, imgH=Math.min(photoMaxH, (photo.w > 0 && photo.h > 0) ? imgW*(photo.h/photo.w) : imgW*1.4);
     var blockH=captionH+imgH+rowGap;
     if (col===0 && y+blockH>pageH-margin) { y=startPage(true); }
     var x=margin+col*(colW+gutter);
@@ -1369,7 +1369,7 @@ function saveHistorico() {
       if (kms || eur || lit) {
         var idx = entries.length;
         entries.push({ kms: kms, eur: eur, lit: lit, fecha: fecha });
-        if (withPhotos && rowPhotos['g_'+row]) photos[idx] = { data: rowPhotos['g_'+row].data };
+        if (withPhotos && rowPhotos['g_'+row]) photos[idx] = rowPhotos['g_'+row];
       }
     });
   } else {
@@ -1383,7 +1383,7 @@ function saveHistorico() {
       if (kms || aeur || alit || geur || glit) {
         var idx = entries.length;
         entries.push({ kms: kms, aeur: aeur, alit: alit, geur: geur, glit: glit, fecha: fecha });
-        if (withPhotos && rowPhotos['d_'+row]) photos[idx] = { data: rowPhotos['d_'+row].data };
+        if (withPhotos && rowPhotos['d_'+row]) photos[idx] = rowPhotos['d_'+row];
       }
     });
   }
