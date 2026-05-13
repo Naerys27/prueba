@@ -849,8 +849,8 @@ function _posGuide() {
   var mw = modal.clientWidth, mh = modal.clientHeight;
   var ctrlH = 115, hintH = 48;
   var availH = mh - ctrlH - hintH;
-  var gw = Math.round(mw * 0.78);
-  var gh = Math.round(Math.min(availH * 0.75, gw * 1.6));
+  var gw = Math.round(mw * 0.72);
+  var gh = Math.round(Math.min(availH * 0.88, gw * 2.5));
   var gx = Math.round((mw - gw) / 2);
   var gy = Math.round(hintH + (availH - gh) / 2);
   guide.style.left = gx + 'px'; guide.style.top = gy + 'px';
@@ -1279,7 +1279,7 @@ function addPhotosPage(doc) {
   var blue=[21,96,130], dark=[22,22,22];
   var pageW=210, pageH=297, margin=14, gutter=6;
   var colW=(pageW-margin*2-gutter)/2;
-  var captionH=7, photoMaxH=80, rowGap=5;
+  var captionH=7, photoMaxH=130, rowGap=5;
   function startPage(cont) {
     doc.addPage();
     doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(blue[0],blue[1],blue[2]);
@@ -1299,7 +1299,9 @@ function addPhotosPage(doc) {
     document.querySelectorAll(fSel).forEach(function(e){ if(parseInt(e.getAttribute('data-row'))===rowNum && e.value) fecha=fmtDate(e.value); });
     var cap='Repostaje '+rowNum+(isGas?' · Gasolina':' · Gas-oil');
     if (fecha) cap+=' · '+fecha; if (litros) cap+=' · '+litros+'L'; if (euros) cap+=' · '+euros+'€';
-    var imgW=colW-2, imgH=Math.min(photoMaxH, (photo.w > 0 && photo.h > 0) ? imgW*(photo.h/photo.w) : imgW*1.4);
+    var nat=(photo.w>0&&photo.h>0)?photo.h/photo.w:1.6;
+    var imgW=colW-2, imgH=imgW*nat;
+    if(imgH>photoMaxH){imgH=photoMaxH;imgW=photoMaxH/nat;}
     var blockH=captionH+imgH+rowGap;
     if (col===0 && y+blockH>pageH-margin) { y=startPage(true); }
     var x=margin+col*(colW+gutter);
