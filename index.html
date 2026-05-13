@@ -417,6 +417,9 @@
       d.querySelector('button').addEventListener('click', function() { if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' }); });
       document.body.appendChild(d);
     }
+    if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+      document.getElementById('install-banner').style.display = 'none';
+    }
     var _deferredPrompt = null;
     var _installBtn = document.getElementById('install-btn');
     window.addEventListener('beforeinstallprompt', function (e) {
