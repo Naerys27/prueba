@@ -1322,22 +1322,23 @@ function validateCombustible() {
 function makePDF() {
   var errs = validateCombustible();
   if (errs.length) { showErr('Revisa el parte:\n• ' + errs.join('\n• ')); return; }
-  var btn=document.getElementById('pdfbtn'); btn.textContent='Generando...'; btn.disabled=true; setTimeout(function(){ try { var JPDF=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:window.jsPDF; if(!JPDF) throw new Error('jsPDF no cargado.'); var doc=new JPDF({orientation:'portrait',unit:'mm',format:'a4'}); var blue=[21,96,130], dark=[20,20,20]; var tipo=document.getElementById('tipo_combustible').value; if (tipo==='gasolina') drawPDFGasolina(doc, blue, dark); else drawPDFGasoil(doc, blue, dark); var mesVal=gv('v_mes')||'parte', matVal=gv('v_mat')||'vehiculo'; addPhotosPage(doc); saveCurrentVehicle(); saveHistorico(); var fname=fmtMonth(mesVal).split(' ')[0]+' '+matVal+' Parte de Combustible.pdf'; var blob=doc.output('blob'); var dlUrl=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=dlUrl; a.download=fname; document.body.appendChild(a); a.click(); document.body.removeChild(a); _showPDFOpenModal(dlUrl,fname); } catch(err) { showErr('ERROR: '+err.message); } btn.textContent='Generar PDF'; btn.disabled=false; },80); }
+  var btn=document.getElementById('pdfbtn'); btn.textContent='Generando...'; btn.disabled=true; setTimeout(function(){ try { var JPDF=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:window.jsPDF; if(!JPDF) throw new Error('jsPDF no cargado.'); var doc=new JPDF({orientation:'portrait',unit:'mm',format:'a4'}); var blue=[21,96,130], dark=[20,20,20]; var tipo=document.getElementById('tipo_combustible').value; if (tipo==='gasolina') drawPDFGasolina(doc, blue, dark); else drawPDFGasoil(doc, blue, dark); var mesVal=gv('v_mes')||'parte', matVal=gv('v_mat')||'vehiculo'; addPhotosPage(doc); saveCurrentVehicle(); saveHistorico(); var fname=fmtMonth(mesVal).split(' ')[0]+' '+matVal+' Parte de Combustible.pdf'; doc.save(fname); var blobUrl=null; try { blobUrl=doc.output('bloburl'); } catch(e) {} _showPDFOpenModal(blobUrl,fname); } catch(err) { showErr('ERROR: '+err.message); } btn.textContent='Generar PDF'; btn.disabled=false; },80); }
 function _showPDFOpenModal(blobUrl, filename) {
   var dark = document.documentElement.getAttribute('data-theme') === 'dark';
   var modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9998;background:'+(dark?'#161b22':'#fff')+';border-radius:18px 18px 0 0;padding:20px 16px 32px;box-shadow:0 -4px 20px rgba(0,0,0,.25);animation:slideUp .22s ease;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+  modal.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:10000;background:'+(dark?'#161b22':'#fff')+';border-radius:18px 18px 0 0;padding:20px 16px 32px;box-shadow:0 -4px 20px rgba(0,0,0,.25);animation:slideUp .22s ease;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+  var openBtn = blobUrl ? '<button id="_pdfm_o" style="flex:2;padding:13px;border-radius:9px;border:none;background:#0f6f9c;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Abrir PDF ↗</button>' : '';
   modal.innerHTML =
     '<p style="font-weight:700;font-size:14px;color:'+(dark?'#79c0e0':'#0b3e56')+';margin-bottom:4px">PDF generado correctamente</p>'+
     '<p style="font-size:12px;color:'+(dark?'#8b949e':'#5a7184')+';margin-bottom:16px;word-break:break-word">'+filename+'</p>'+
     '<div style="display:flex;gap:10px">'+
     '<button id="_pdfm_c" style="flex:1;padding:13px;border-radius:9px;border:none;background:'+(dark?'#21262d':'#e5eef4')+';color:'+(dark?'#e6edf3':'#123649')+';font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Cerrar</button>'+
-    '<button id="_pdfm_o" style="flex:2;padding:13px;border-radius:9px;border:none;background:#0f6f9c;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Abrir PDF ↗</button>'+
+    openBtn+
     '</div>';
   document.body.appendChild(modal);
-  function dismiss() { URL.revokeObjectURL(blobUrl); modal.remove(); resetForm(); }
+  function dismiss() { if (blobUrl) URL.revokeObjectURL(blobUrl); modal.remove(); resetForm(); }
   modal.querySelector('#_pdfm_c').addEventListener('click', dismiss);
-  modal.querySelector('#_pdfm_o').addEventListener('click', function() { window.open(blobUrl, '_blank'); dismiss(); });
+  if (blobUrl) modal.querySelector('#_pdfm_o').addEventListener('click', function() { window.open(blobUrl, '_blank'); dismiss(); });
 }
 
 
