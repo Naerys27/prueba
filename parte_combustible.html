@@ -305,7 +305,7 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
 <div class="bar">
   <button class="btn btnc" onclick="resetForm()">Nuevo</button>
   <button class="btn btns" onclick="saveHistorico();toast('Parte guardado');renderHistorico();clearDraft();" id="savebtn">Guardar</button>
-  <button class="btn btnp" onclick="makePDF()" id="pdfbtn">PDF</button>
+  <button class="btn btnp" onclick="saveHistorico();renderHistorico();clearDraft();makePDF()" id="pdfbtn">Generar PDF</button>
 </div>
 <div class="toast" id="toast"></div>
 
