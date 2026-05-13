@@ -849,8 +849,8 @@ function _posGuide() {
   var mw = modal.clientWidth, mh = modal.clientHeight;
   var ctrlH = 115, hintH = 48;
   var availH = mh - ctrlH - hintH;
-  var gw = Math.round(mw * 0.72);
-  var gh = Math.round(Math.min(availH * 0.88, gw * 2.5));
+  var gw = Math.round(mw * 0.58);
+  var gh = Math.round(Math.min(availH * 0.92, gw * 3.5));
   var gx = Math.round((mw - gw) / 2);
   var gy = Math.round(hintH + (availH - gh) / 2);
   guide.style.left = gx + 'px'; guide.style.top = gy + 'px';
