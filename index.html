@@ -379,10 +379,12 @@
       var dark = document.documentElement.getAttribute('data-theme') === 'dark';
       if (dark) {
         document.documentElement.removeAttribute('data-theme');
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0f6f9c');
         localStorage.setItem('partes_theme', 'light');
         document.getElementById('theme-btn').textContent = '🌙';
       } else {
         document.documentElement.setAttribute('data-theme', 'dark');
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', '#061929');
         localStorage.setItem('partes_theme', 'dark');
         document.getElementById('theme-btn').textContent = '☀️';
       }
@@ -390,6 +392,7 @@
     (function () {
       if (localStorage.getItem('partes_theme') === 'dark') {
         document.getElementById('theme-btn').textContent = '☀️';
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', '#061929');
       }
     })();
     if ('serviceWorker' in navigator) {
