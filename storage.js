@@ -225,6 +225,7 @@
         var handle;
         if (useExisting) {
           var picks = await window.showOpenFilePicker({
+            mode: 'readwrite',
             types: [{ description: 'Datos JSON', accept: { 'application/json': ['.json'] } }]
           });
           handle = picks[0];
