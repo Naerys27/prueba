@@ -146,6 +146,19 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
 [data-theme="dark"] .errbox{background:#2a0f0f;border-color:#6a2a2a;color:#e87070}
 .fuel-select{width:100%;border:1px solid #ccd6de;border-radius:8px;padding:10px 12px;background:#fff;color:#1a1a2e;font-family:inherit;font-size:14px;-webkit-appearance:auto;appearance:auto}
 [data-theme="dark"] .fuel-select{background:#0d1520;color:#e6edf3;border-color:#3a4a5a}
+#cam-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:9999;overflow:hidden}
+#cam-video{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}
+#cam-guide{position:absolute;box-shadow:0 0 0 9999px rgba(0,0,0,.6);pointer-events:none}
+.cam-corner{position:absolute;width:22px;height:22px;border-color:#fff;border-style:solid}
+.cam-c-tl{top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:3px 0 0 0}
+.cam-c-tr{top:-2px;right:-2px;border-width:3px 3px 0 0;border-radius:0 3px 0 0}
+.cam-c-bl{bottom:-2px;left:-2px;border-width:0 0 3px 3px;border-radius:0 0 0 3px}
+.cam-c-br{bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 3px 0}
+#cam-hint{position:absolute;top:24px;left:0;right:0;text-align:center;color:#fff;font-size:12px;font-weight:600;letter-spacing:.04em;text-shadow:0 1px 6px rgba(0,0,0,.9);pointer-events:none}
+#cam-ctrl{position:absolute;bottom:0;left:0;right:0;height:115px;display:flex;align-items:center;justify-content:center;gap:32px}
+.cam-btn-x{width:50px;height:50px;border-radius:50%;border:2px solid rgba(255,255,255,.65);background:rgba(0,0,0,.35);color:#fff;font-size:20px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cam-btn-snap{width:68px;height:68px;border-radius:50%;border:5px solid #fff;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 0 0 2px rgba(255,255,255,.35),0 3px 14px rgba(0,0,0,.6);position:relative}
+.cam-btn-snap::before{content:'';position:absolute;top:5px;left:5px;right:5px;bottom:5px;border-radius:50%;background:#fff}
 </style>
 </head>
 <body>
@@ -762,13 +775,14 @@ var _photoInput = (function() {
   document.body.appendChild(inp); return inp;
 })();
 var _activePhotoKey = null, _activeThumbId = null;
+var _cameraStream = null;
 document.addEventListener('click', function(ev) {
   var t = ev.target, btn = null;
   while (t && t !== document.body) { if (t.classList && t.classList.contains('photo-btn')) { btn = t; break; } t = t.parentNode; }
   if (!btn) return;
   var row = btn.getAttribute('data-row'), fuel = btn.getAttribute('data-fuel');
   _activePhotoKey = fuel + '_' + row; _activeThumbId = fuel + 'thumb' + row;
-  _photoInput.value = ''; _photoInput.click();
+  openCameraModal();
 });
 _photoInput.addEventListener('change', function() {
   var file = this.files[0];
@@ -808,7 +822,81 @@ function clearNewPhoto(key) {
 function captureNewPhoto(fuel) {
   _activePhotoKey = 'new_' + fuel;
   _activeThumbId = 'nf_' + fuel + '_thumb';
-  _photoInput.value = ''; _photoInput.click();
+  openCameraModal();
+}
+function _posGuide() {
+  var modal = document.getElementById('cam-modal');
+  var guide = document.getElementById('cam-guide');
+  var mw = modal.clientWidth, mh = modal.clientHeight;
+  var ctrlH = 115, hintH = 48;
+  var availH = mh - ctrlH - hintH;
+  var gw = Math.round(mw * 0.78);
+  var gh = Math.round(Math.min(availH * 0.75, gw * 1.6));
+  var gx = Math.round((mw - gw) / 2);
+  var gy = Math.round(hintH + (availH - gh) / 2);
+  guide.style.left = gx + 'px'; guide.style.top = gy + 'px';
+  guide.style.width = gw + 'px'; guide.style.height = gh + 'px';
+}
+function openCameraModal() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    _photoInput.value = ''; _photoInput.click(); return;
+  }
+  var modal = document.getElementById('cam-modal');
+  modal.style.display = 'block';
+  _posGuide();
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } })
+    .then(function(stream) {
+      _cameraStream = stream;
+      var video = document.getElementById('cam-video');
+      video.srcObject = stream;
+    })
+    .catch(function() {
+      closeCameraModal();
+      _photoInput.value = ''; _photoInput.click();
+    });
+}
+function closeCameraModal() {
+  var modal = document.getElementById('cam-modal');
+  modal.style.display = 'none';
+  if (_cameraStream) { _cameraStream.getTracks().forEach(function(t) { t.stop(); }); _cameraStream = null; }
+  var video = document.getElementById('cam-video');
+  if (video) video.srcObject = null;
+}
+function captureFromCamera() {
+  var video = document.getElementById('cam-video');
+  var guide = document.getElementById('cam-guide');
+  var vw = video.videoWidth, vh = video.videoHeight;
+  if (!vw || !vh) return;
+  var dw = video.clientWidth, dh = video.clientHeight;
+  var scale = Math.max(dw / vw, dh / vh);
+  var renderedW = vw * scale, renderedH = vh * scale;
+  var offsetX = (dw - renderedW) / 2, offsetY = (dh - renderedH) / 2;
+  var vRect = video.getBoundingClientRect(), gRect = guide.getBoundingClientRect();
+  var relX = gRect.left - vRect.left, relY = gRect.top - vRect.top;
+  var sx = (relX - offsetX) / scale, sy = (relY - offsetY) / scale;
+  var sw = gRect.width / scale, sh = gRect.height / scale;
+  sx = Math.max(0, sx); sy = Math.max(0, sy);
+  sw = Math.min(sw, vw - sx); sh = Math.min(sh, vh - sy);
+  var canvas = document.createElement('canvas');
+  canvas.width = Math.round(sw); canvas.height = Math.round(sh);
+  canvas.getContext('2d').drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+  var dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+  closeCameraModal();
+  compressPhoto(dataUrl, function(data, w, h) {
+    var key = _activePhotoKey, tid = _activeThumbId;
+    if (key === 'new_g' || key === 'new_d') {
+      _newPhotoData[key] = { data: data, w: w, h: h };
+      var fuel = key === 'new_g' ? 'g' : 'd';
+      var btn = document.getElementById('nf_' + fuel + '_photobtn');
+      if (btn) btn.className = 'photo-add-btn has-photo';
+      var el = document.getElementById(tid);
+      if (el) el.innerHTML = '<img src="' + data + '" style="max-height:36px;border-radius:5px;margin-top:4px" onclick="clearNewPhoto(\'' + key + '\')" title="Toca para eliminar">';
+    } else {
+      rowPhotos[key] = { data: data, w: w, h: h };
+      var el = document.getElementById(tid);
+      if (el) el.innerHTML = '<img src="' + data + '" title="Toca para eliminar" onclick="removeRowPhoto(\'' + key + '\',\'' + tid + '\')">';
+    }
+  });
 }
 function nextFreeRow(fuel) {
   var cls = (fuel === 'g') ? '.gk' : '.dk';
@@ -1499,6 +1587,21 @@ window.addEventListener("resize", resizeSigCanvas);
     });
     FSStorage.onReady(function() { checkDraft(); });
 </script>
+<div id="cam-modal">
+  <video id="cam-video" autoplay playsinline muted></video>
+  <div id="cam-guide">
+    <div class="cam-corner cam-c-tl"></div>
+    <div class="cam-corner cam-c-tr"></div>
+    <div class="cam-corner cam-c-bl"></div>
+    <div class="cam-corner cam-c-br"></div>
+  </div>
+  <p id="cam-hint">Encuadra el ticket dentro del recuadro</p>
+  <div id="cam-ctrl">
+    <button class="cam-btn-x" onclick="closeCameraModal()">&#x2715;</button>
+    <button class="cam-btn-snap" onclick="captureFromCamera()"></button>
+    <div style="width:50px"></div>
+  </div>
+</div>
 <script>if ('serviceWorker' in navigator) { window.addEventListener('load', function() { navigator.serviceWorker.register('sw.js').then(function(reg) { if (reg.waiting) _showSWUpdateBanner(reg); reg.addEventListener('updatefound', function() { var nw = reg.installing; nw.addEventListener('statechange', function() { if (nw.state === 'installed' && navigator.serviceWorker.controller) _showSWUpdateBanner(reg); }); }); }); var _swRefreshing = false; navigator.serviceWorker.addEventListener('controllerchange', function() { if (!_swRefreshing) { _swRefreshing = true; window.location.reload(); } }); }); } function _showSWUpdateBanner(reg) { if (document.getElementById('_sw_upd')) return; var d = document.createElement('div'); d.id = '_sw_upd'; d.setAttribute('style', 'position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1e3a5f;color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;box-shadow:0 -2px 10px rgba(0,0,0,.4)'); d.innerHTML = '<span style="flex:1">Nueva version disponible.</span><button style="flex-shrink:0;background:#3b82f6;color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent">Actualizar</button>'; d.querySelector('button').addEventListener('click', function() { if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' }); }); document.body.appendChild(d); }</script>
 </body>
 </html>
