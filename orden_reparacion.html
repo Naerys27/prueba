@@ -781,6 +781,7 @@
     function gv(id) { var el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; }
     function fechaES(v) { if (!v) return ''; var p = String(v).split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : v; }
     function toast(msg) { var t = document.getElementById('toast'); if (!t) return; t.textContent = msg; t.classList.add('on'); clearTimeout(t._tt); t._tt = setTimeout(function () { t.classList.remove('on'); }, 1800); }
+    function showPDFSaved(fn){var dark=document.documentElement.getAttribute('data-theme')==='dark';var m=document.createElement('div');m.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:10000;background:'+(dark?'#161b22':'#fff')+';border-radius:18px 18px 0 0;padding:20px 16px 32px;box-shadow:0 -4px 20px rgba(0,0,0,.25);font-family:inherit';m.innerHTML='<p style="font-weight:700;font-size:14px;color:'+(dark?'#79c0e0':'#0b3e56')+';margin-bottom:4px">PDF guardado en Descargas</p><p style="font-size:12px;color:'+(dark?'#8b949e':'#5a7184')+';margin-bottom:16px;word-break:break-word">'+fn+'</p><button style="width:100%;padding:13px;border-radius:9px;border:none;background:'+(dark?'#21262d':'#e5eef4')+';color:'+(dark?'#e6edf3':'#123649')+';font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Cerrar</button>';document.body.appendChild(m);m.querySelector('button').addEventListener('click',function(){m.remove();});}
 
     function fitOneLine(doc, txt, maxW, startSize, minSize) {
       var size = startSize;
@@ -1037,8 +1038,8 @@
           var mat = (gv('matricula') || 'SIN_MATRICULA').toUpperCase();
           if (window.saveVehicleOR) window.saveVehicleOR();
           var _f = gv('fecha'); var _fechaFmt = _f ? _f.slice(2,4)+_f.slice(5,7)+_f.slice(8,10) : 'XXXXXX';
-          doc.save(_fechaFmt + ' ' + mat + ' Orden de reparación.pdf');
-          toast('PDF generado');
+          doc.save(_fechaFmt + ' ' + mat + ' Orden de reparación.pdf'); showPDFSaved(_fechaFmt + ' ' + mat + ' Orden de reparación.pdf');
+          
           saveOrden();
         } catch (e) {
           alert('ERROR al generar PDF: ' + (e && e.message ? e.message : e));
@@ -1069,7 +1070,7 @@
             await navigator.share({ files: [file], title: 'Orden de reparación', text: 'Orden de reparación y suministro - ' + mat });
             toast('PDF compartido');
           } else {
-            doc.save(filename);
+            doc.save(filename); showPDFSaved(filename);
             toast('PDF descargado (compartir no disponible)');
           }
           saveOrden();

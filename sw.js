@@ -1,12 +1,9 @@
-const CACHE = 'partes-loco-v56';
+const CACHE = 'partes-loco-v57';
 const FILES = [
   'index.html',
   'parte_combustible.html',
-  'parte_combustible_v2.html',
   'parte_servicio_diario.html',
-  'parte_servicio_diario_v2.html',
   'orden_reparacion.html',
-  'orden_reparacion_v2.html',
   'storage.js',
   'manifest.json',
   'icons/icon-192.png',
