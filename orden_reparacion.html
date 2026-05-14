@@ -329,7 +329,7 @@
           <div class="f"><label>Fecha</label><input id="fecha" type="date"></div>
           <div class="f"><label>Matrícula</label><input id="matricula" type="text" list="mat-list-or" autocapitalize="characters" oninput="this.value=this.value.toUpperCase()" style="text-transform:uppercase"><datalist id="mat-list-or"></datalist></div>
           <div class="f"><label>Marca</label><input id="marca" type="text"></div>
-          <div class="f"><label>Vehículo</label><input id="vehiculo" type="text"></div>
+          <div class="f"><label>Modelo</label><input id="vehiculo" type="text"></div>
           <div class="f"><label>Solicitante</label><input id="solicita" type="text"></div>
           <div class="f"><label>Teléfono</label><input id="telefono" type="tel"></div>
           <div class="f"><label>Servicio</label><input id="servicio" type="text"></div>
@@ -874,61 +874,133 @@
       doc.setTextColor(0, 0, 0);
     }
 
-    function drawVectorTemplate(doc) {
-      // Plantilla redibujada en vector: sin foto/fondo escaneado. Solo se conserva el logo como imagen.
-      doc.setDrawColor(0, 0, 0);
-      doc.setTextColor(0, 0, 0);
-      doc.setLineCap('butt');
+    function drawOrdenInstitucional(doc) {
+      var ML=12,CW=186,PW=210;
+      var blue=[15,111,156],dkBlue=[9,55,90],grey=[122,143,160];
+      function secHdr(lbl,x,y,w){
+        doc.setFillColor(blue[0],blue[1],blue[2]);
+        doc.rect(x,y,w,5.5,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(255,255,255);
+        doc.text(lbl.toUpperCase(),x+2.5,y+3.9);
+      }
+      function fld(lbl,val,x,y,maxW){
+        doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(grey[0],grey[1],grey[2]);
+        doc.text(lbl,x,y);
+        if(val){
+          doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(dkBlue[0],dkBlue[1],dkBlue[2]);
+          var txt=maxW?doc.splitTextToSize(String(val),maxW)[0]:String(val);
+          doc.text(txt,x,y+4.5);
+        }
+      }
+      // CABECERA
+      var lh=22.3;
+      try{doc.addImage(LOGO_IMG,'JPEG',ML,10,129.8,lh);}catch(e){}
+      doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(dkBlue[0],dkBlue[1],dkBlue[2]);
+      doc.text('Locomocion',PW-ML,16,{align:'right'});
+      doc.setDrawColor(blue[0],blue[1],blue[2]);doc.setLineWidth(1);doc.line(ML,10+lh+2,PW-ML,10+lh+2);
+      var y=10+lh+5;
+      // Fecha
+      var fechaVal=fechaES(gv('fecha'));
+      doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(grey[0],grey[1],grey[2]);
+      doc.text('Fecha: '+(fechaVal||''),PW-ML,21,{align:'right'});
 
-      // Logo institucional aportado por el usuario, colocado sin deformar proporciones.
-      doc.addImage(LOGO_IMG, 'JPEG', 16.5, 16.5, 100.7, 18.59);
 
-      // Cabecera y título.
-      drawLabel(doc, 'Fecha:', 149.5, 19.3, 10, true);
-      drawCentered(doc, 'ORDEN DE', 105, 45.0, 14, true);
-      drawCentered(doc, 'REPARACIÓN Y SUMINISTRO', 105, 54.3, 14, true);
-      doc.setLineWidth(0.35);
-      doc.line(69.0, 56.7, 147.0, 56.7);
 
-      // Datos principales.
-      drawLabel(doc, 'Vehículo:', 20.3, 64.1, 10, true);
-      drawLabel(doc, 'Marca:', 79.0, 64.1, 10, true);
-      drawLabel(doc, 'Matrícula:', 152.0, 64.1, 10, true);
-      drawLabel(doc, 'Solicita:', 20.3, 73.2, 10, true);
-      drawLabel(doc, 'Teléfono:', 152.0, 73.2, 10, true);
-      drawLabel(doc, 'Servicio:', 20.3, 83.5, 10, true);
-      drawLabel(doc, 'C.C. núm.:', 150.0, 83.5, 10, true);
 
-      // Doble línea separadora.
-      doc.setLineWidth(0.9);
-      doc.line(20, 99.0, 195, 99.0);
-      doc.setLineWidth(0.55);
-      doc.line(20, 101.0, 195, 101.0);
+      // Titulo
+      doc.setFillColor(blue[0],blue[1],blue[2]);
+      doc.rect(ML,y,CW,10,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(255,255,255);
+      doc.text('ORDEN DE REPARACION Y SUMINISTRO',PW/2,y+7,{align:'center'});
+      y+=12;
+      // Seccion datos
+      secHdr('Datos del Modelo y Solicitante',ML,y,CW);
+      y+=5.5;
+      doc.setFillColor(255,255,255);doc.setDrawColor(200,214,224);doc.setLineWidth(0.3);
+      doc.rect(ML,y,CW,29,'FD');
+      y+=5;
+      var c1=62,c2=62,c3=CW-c1-c2-6;
+      fld('Modelo:',gv('vehiculo'),ML+2,y,c1-4);
+      fld('Marca:',gv('marca'),ML+2+c1+2,y,c2-4);
+      fld('Matricula:',(gv('matricula')||'').toUpperCase(),ML+2+c1+2+c2+2,y,c3-4);
+      y+=9;
+      fld('Solicita:',gv('solicita'),ML+2,y,c1+c2+2);
+      fld('Telefono:',gv('telefono'),ML+2+c1+2+c2+2,y,c3-4);
+      y+=9;
+      fld('Servicio:',gv('servicio'),ML+2,y,c1+c2+2);
+      fld('C.C. Num.:',gv('cc'),ML+2+c1+2+c2+2,y,c3-4);
+      y+=9;
+      // Doble separador
+      doc.setDrawColor(0,0,0);doc.setLineWidth(0.9);
+      doc.line(ML,y,PW-ML,y);
+      doc.setLineWidth(0.55);doc.line(ML,y+2.5,PW-ML,y+2.5);
+      y+=7;
+      // Intro
+      doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(30,30,30);
+      doc.text('El que suscribe manifiesta que el vehiculo arriba citado necesita la siguiente',ML,y);
+      y+=5;doc.text('reparacion o suministro:',ML,y);y+=5;
+      // Concepto
+      var conceptoVal=gv('concepto')||'';
+      var conceptoLines=doc.splitTextToSize(conceptoVal,CW-8);
+      var boxH=Math.max(40,conceptoLines.length*5.5+6);
+      doc.setFillColor(255,255,255);doc.setDrawColor(150,150,150);doc.setLineWidth(0.25);
+      doc.rect(ML+1.5,y,CW-3,boxH,'S');
+      doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(dkBlue[0],dkBlue[1],dkBlue[2]);
+      if(conceptoLines.length)doc.text(conceptoLines,ML+4,y+5);
+      y+=boxH+5;
+      // Km + Localizacion
+      fld('Km aproximados:',gv('km_aprox'),ML,y,45);
+      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(30,30,30);
+      doc.text('Km.',ML+52,y+4.5);
+      y+=10;
+      fld('Localizacion del vehiculo:',gv('localizacion'),ML,y,CW);
+      y+=12;
+      // Firmas
+      secHdr('Firman',ML,y,CW);
+      y+=5.5;
+      var sigH=Math.min(30,Math.max(18,272-y-12));
+      var sigW=CW/2-3;
+      // AUTORIZA
+      doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(dkBlue[0],dkBlue[1],dkBlue[2]);
+      doc.text('AUTORIZA',ML+sigW/2,y+4,{align:'center'});
+      doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(grey[0],grey[1],grey[2]);
+      doc.text('para solicitar presupuesto',ML+sigW/2,y+8,{align:'center'});
 
-      // Texto introductorio y caja de concepto.
-      drawLabel(doc, 'El que suscribe manifiesta que el vehículo arriba citado necesita la siguiente', 34.0, 111.0, 10, true);
-      drawLabel(doc, 'reparación o suministro:', 20.0, 119.0, 10, true);
-      doc.setDrawColor(150, 150, 150);
-      doc.setLineWidth(0.25);
-      doc.rect(21.5, 123.0, 177.0, 65.8, 'S');
-      doc.setDrawColor(0, 0, 0);
 
-      // Kilómetros y localización.
-      drawLabel(doc, 'Km aproximados:', 20.0, 198.0, 10, true);
-      drawLabel(doc, 'Km.', 91.5, 198.0, 10, true);
-      drawLabel(doc, 'Localización del vehículo:', 20.0, 208.8, 10, true);
 
-      // Firmas.
-      drawLabel(doc, 'FIRMAN:', 20.0, 223.0, 10, true);
-      drawLabel(doc, 'AUTORIZA', 20.0, 231.0, 10, true);
-      drawLabel(doc, 'para solicitar Presupuesto', 20.0, 237.0, 8, false);
-      drawSignArrow(doc, 17.5, 244.8, 20.0, 4.6);
-      drawLabel(doc, 'El Servicio de Locomoción', 20.0, 279.0, 8, false);
 
-      drawLabel(doc, 'CONFORME', 149.0, 231.0, 10, true);
-      drawLabel(doc, 'con la reparación o suministro', 149.0, 237.0, 8, false);
-      drawSignArrow(doc, 130.8, 245.3, 19.5, 4.6);
-      drawLabel(doc, 'El Servicio de Locomoción', 149.0, 279.0, 8, false);
+
+      doc.setFillColor(248,251,253);doc.setDrawColor(200,214,224);doc.setLineWidth(0.3);
+      doc.rect(ML,y+10,sigW,sigH,'FD');
+
+
+
+
+
+      // CONFORME
+      var cx=ML+sigW+6;
+      doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(dkBlue[0],dkBlue[1],dkBlue[2]);
+      doc.text('CONFORME',cx+sigW/2,y+4,{align:'center'});
+      doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(grey[0],grey[1],grey[2]);
+      doc.text('con la reparacion o suministro',cx+sigW/2,y+8,{align:'center'});
+
+
+
+
+
+      doc.setFillColor(248,251,253);doc.setDrawColor(200,214,224);doc.setLineWidth(0.3);
+      doc.rect(cx,y+10,sigW,sigH,'FD');
+
+
+
+
+
+      // Footer
+      doc.setFillColor(blue[0],blue[1],blue[2]);
+      doc.rect(ML,281,CW,6,'F');
+      doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(255,255,255);
+      doc.text('CONFEDERACION HIDROGRAFICA DEL TAJO · Unidad de Locomocion · Orden de Reparacion y Suministro',ML+3,285);
+      doc.text('Pag. 1 / 1',PW-ML-3,285,{align:'right'});
     }
 
 
@@ -960,25 +1032,14 @@
           var JPDF = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
           if (!JPDF) throw new Error('jsPDF no cargado');
           var doc = new JPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-          drawVectorTemplate(doc);
-
-          addFitText(doc, 'fecha', 162, 19.3, 28, { size: 10, minSize: 8, date: true });
-          addFitText(doc, 'vehiculo', 36.5, 64.1, 40.5, { size: 10, minSize: 8 });
-          addFitText(doc, 'marca', 90.5, 64.1, 48.5, { size: 10, minSize: 8 });
-          addFitText(doc, 'matricula', 170, 64.1, 30, { size: 10, bold: true, minSize: 8, upper: true });
-          addFitText(doc, 'solicita', 35.5, 73.2, 103.5, { size: 10, minSize: 8 });
-          addFitText(doc, 'telefono', 170, 73.2, 30, { size: 10, minSize: 8 });
-          addFitText(doc, 'servicio', 35.5, 83.5, 103.5, { size: 10, minSize: 8 });
-          addFitText(doc, 'cc', 170, 83.5, 30, { size: 10, minSize: 8 });
-          addBlockText(doc, 'concepto', 25, 131, 166, { size: 10, lineHeight: 1.16 });
-          addFitText(doc, 'km_aprox', 52.5, 198.0, 37.5, { size: 10, minSize: 8 });
-          addFitText(doc, 'localizacion', 64, 208.8, 92.5, { size: 10, minSize: 8 });
+          drawOrdenInstitucional(doc);
 
           var mat = (gv('matricula') || 'SIN_MATRICULA').toUpperCase();
           if (window.saveVehicleOR) window.saveVehicleOR();
           var _f = gv('fecha'); var _fechaFmt = _f ? _f.slice(2,4)+_f.slice(5,7)+_f.slice(8,10) : 'XXXXXX';
           doc.save(_fechaFmt + ' ' + mat + ' Orden de reparación.pdf');
           toast('PDF generado');
+          saveOrden();
         } catch (e) {
           alert('ERROR al generar PDF: ' + (e && e.message ? e.message : e));
           console.error(e);
@@ -995,19 +1056,7 @@
           var JPDF = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
           if (!JPDF) throw new Error('jsPDF no cargado');
           var doc = new JPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-          drawVectorTemplate(doc);
-
-          addFitText(doc, 'fecha', 162, 19.3, 28, { size: 10, minSize: 8, date: true });
-          addFitText(doc, 'vehiculo', 36.5, 64.1, 40.5, { size: 10, minSize: 8 });
-          addFitText(doc, 'marca', 90.5, 64.1, 48.5, { size: 10, minSize: 8 });
-          addFitText(doc, 'matricula', 170, 64.1, 30, { size: 10, bold: true, minSize: 8, upper: true });
-          addFitText(doc, 'solicita', 35.5, 73.2, 103.5, { size: 10, minSize: 8 });
-          addFitText(doc, 'telefono', 170, 73.2, 30, { size: 10, minSize: 8 });
-          addFitText(doc, 'servicio', 35.5, 83.5, 103.5, { size: 10, minSize: 8 });
-          addFitText(doc, 'cc', 170, 83.5, 30, { size: 10, minSize: 8 });
-          addBlockText(doc, 'concepto', 25, 131, 166, { size: 10, lineHeight: 1.16 });
-          addFitText(doc, 'km_aprox', 52.5, 198.0, 37.5, { size: 10, minSize: 8 });
-          addFitText(doc, 'localizacion', 64, 208.8, 92.5, { size: 10, minSize: 8 });
+          drawOrdenInstitucional(doc);
 
           var mat = (gv('matricula') || 'SIN_MATRICULA').toUpperCase();
           if (window.saveVehicleOR) window.saveVehicleOR();
@@ -1023,6 +1072,7 @@
             doc.save(filename);
             toast('PDF descargado (compartir no disponible)');
           }
+          saveOrden();
         } catch (e) {
           if (e.name !== 'AbortError') {
             alert('ERROR al compartir: ' + (e && e.message ? e.message : e));
