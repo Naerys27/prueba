@@ -334,6 +334,7 @@
           <div class="f"><label>Teléfono</label><input id="telefono" type="tel"></div>
           <div class="f"><label>Servicio</label><input id="servicio" type="text"></div>
           <div class="f"><label>C.C. núm.</label><input id="cc" type="text"></div>
+          <div class="f full"><label>Responsable del Servicio autorizante</label><input id="resp_autorizante" type="text"></div>
         </div>
       </div>
     </section>
@@ -918,7 +919,7 @@
       secHdr('Datos del Modelo y Solicitante',ML,y,CW);
       y+=5.5;
       doc.setFillColor(255,255,255);doc.setDrawColor(200,214,224);doc.setLineWidth(0.3);
-      doc.rect(ML,y,CW,29,'FD');
+      doc.rect(ML,y,CW,38,'FD');
       y+=5;
       var c1=62,c2=62,c3=CW-c1-c2-6;
       fld('Modelo:',gv('vehiculo'),ML+2,y,c1-4);
@@ -930,6 +931,8 @@
       y+=9;
       fld('Servicio:',gv('servicio'),ML+2,y,c1+c2+2);
       fld('C.C. Num.:',gv('cc'),ML+2+c1+2+c2+2,y,c3-4);
+      y+=9;
+      fld('Resp. autorizante:',gv('resp_autorizante'),ML+2,y,CW-4);
       y+=9;
       // Doble separador
       doc.setDrawColor(0,0,0);doc.setLineWidth(0.9);
@@ -997,9 +1000,9 @@
 
 
       // Footer
-      doc.setFillColor(blue[0],blue[1],blue[2]);
+      doc.setFillColor(240,240,240);
       doc.rect(ML,281,CW,6,'F');
-      doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(255,255,255);
+      doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(110,110,110);
       doc.text('CONFEDERACION HIDROGRAFICA DEL TAJO · Unidad de Locomocion · Orden de Reparacion y Suministro',ML+3,285);
       doc.text('Pag. 1 / 1',PW-ML-3,285,{align:'right'});
     }
@@ -1106,6 +1109,7 @@
         telefono: gv('telefono'),
         servicio: gv('servicio'),
         cc: gv('cc'),
+        resp_autorizante: gv('resp_autorizante'),
         concepto: gv('concepto'),
         km_aprox: gv('km_aprox'),
         localizacion: gv('localizacion')
@@ -1134,7 +1138,7 @@
       for (var i = 0; i < list.length; i++) { if (list[i].id === id) { o = list[i]; break; } }
       if (!o) return;
       _editingOrdenId = id;
-      var fields = ['fecha','matricula','marca','vehiculo','solicita','telefono','servicio','cc','concepto','km_aprox','localizacion'];
+      var fields = ['fecha','matricula','marca','vehiculo','solicita','telefono','servicio','cc','resp_autorizante','concepto','km_aprox','localizacion'];
       for (var j = 0; j < fields.length; j++) { var el = document.getElementById(fields[j]); if (el) el.value = o[fields[j]] || ''; }
       window.scrollTo({ top: 0, behavior: 'smooth' });
       toast('Orden cargada para editar');
