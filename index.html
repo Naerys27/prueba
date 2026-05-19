@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
+  <meta charset="UTF-8">
 <script>(function(){var t=localStorage.getItem('partes_theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark')})();</script>
   <script src="storage.js"></script>
-  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -307,6 +307,7 @@
       <span class="menu-arrow">›</span>
     </a>
     <div class="storage-panel" id="st-panel">
+      <div id="st-nosup" style="display:none;background:#f8f8f8;border:1px solid #dde3ea;border-radius:14px;padding:14px 16px;font-size:12px;color:#5a7184;line-height:1.5">El archivo de datos no está disponible en este navegador. Usa Chrome o Edge para activar esta función.</div>
       <div class="st-warn" id="st-warn">
         <div class="st-warn-hdr">
           <span class="st-warn-ico">⚠️</span>
@@ -343,6 +344,8 @@
         warn.style.display = 'none';
         ok.style.display = 'none';
         if (pend) pend.style.display = 'none';
+        var noSup = document.getElementById('st-nosup');
+        if (noSup) noSup.style.display = 'block';
         return;
       }
       if (FSStorage.isActive()) {
