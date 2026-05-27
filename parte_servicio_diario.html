@@ -907,6 +907,23 @@
          return `Día ${parseInt(p.d, 10)} de ${meses[(parseInt(p.m, 10) || 1) - 1]} de ${p.y}`;
       }
       function toast(msg) { const t = q('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._tt); t._tt = setTimeout(() => t.classList.remove('on'), 1800); }
+    function _showFechaCambiadaModal() {
+      return new Promise(function(resolve) {
+        var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+        var m = document.createElement('div');
+        m.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:10000;background:' + (dark ? '#161b22' : '#fff') + ';border-radius:18px 18px 0 0;padding:20px 16px 32px;box-shadow:0 -4px 20px rgba(0,0,0,.25);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+        m.innerHTML =
+          '<p style="font-weight:700;font-size:14px;color:' + (dark ? '#79c0e0' : '#0b3e56') + ';margin:0 0 4px">La fecha ha cambiado</p>' +
+          '<p style="font-size:13px;color:' + (dark ? '#8b949e' : '#5a7184') + ';margin:0 0 16px">¿Qué quieres hacer con el parte original?</p>' +
+          '<div style="display:flex;flex-direction:column;gap:10px">' +
+          '<button id="_fcd_rep" style="padding:13px;border-radius:9px;border:none;background:#0f6f9c;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;text-align:left">Corregir fecha — reemplazar el original</button>' +
+          '<button id="_fcd_new" style="padding:13px;border-radius:9px;border:none;background:' + (dark ? '#21262d' : '#e5eef4') + ';color:' + (dark ? '#e6edf3' : '#123649') + ';font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;text-align:left">Crear parte nuevo — conservar el original</button>' +
+          '</div>';
+        document.body.appendChild(m);
+        m.querySelector('#_fcd_rep').addEventListener('click', function() { m.remove(); resolve('replace'); });
+        m.querySelector('#_fcd_new').addEventListener('click', function() { m.remove(); resolve('new'); });
+      });
+    }
     function showPDFSaved(fn, blobUrl){
       var dark=document.documentElement.getAttribute('data-theme')==='dark';
       var m=document.createElement('div');
@@ -1129,11 +1146,11 @@
       function loadSignatureFromData(data) { return new Promise(resolve => { clearSig(); if (!data || !data.firma) return resolve(); const img = new Image(); img.onload = function () { sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height); sigCtx.drawImage(img, 0, 0, sigCanvas.width, sigCanvas.height); q('sighint').style.display = 'none'; resolve(); }; img.onerror = function () { resolve(); }; img.src = data.firma; }); }
       function setParteData(data, includeSignature = true) { FIELD_IDS_PARTES.forEach(id => { if (q(id)) q(id).value = data && data[id] ? data[id] : ''; }); updateRepostajesFromValues(); recalc(); return includeSignature ? loadSignatureFromData(data) : Promise.resolve(); }
       function clearParteFormAfterSave() { FIELD_IDS_PARTES.forEach(id => { if (q(id)) q(id).value = ''; }); editingParteId = null; setRepostajesVisibles(1, true); recalc(); clearSig(); document.getElementById('fecha').value = new Date().toISOString().slice(0,10); }
-      function saveParteDiario() {
+      async function saveParteDiario() {
          const data = collectParteData(); const errors = validateParteData(data); if (errors.length) { showErr('Revisa el parte:\n- ' + errors.join('\n- ')); return; }
          saveCurrentVehiclePD();
          const parts = getSavedParts(); const now = new Date().toISOString(); let idx = -1;
-         if (editingParteId) { idx = parts.findIndex(p => p.id === editingParteId); const orig = idx >= 0 ? parts[idx] : null; if (orig && data.fecha !== orig.fecha) { data.id = makeNewParteId(data); data.createdAt = now; } else { data.id = editingParteId; data.createdAt = orig ? (orig.createdAt || now) : now; } }
+         if (editingParteId) { idx = parts.findIndex(p => p.id === editingParteId); const orig = idx >= 0 ? parts[idx] : null; if (orig && data.fecha !== orig.fecha) { const eleccion = await _showFechaCambiadaModal(); data.id = makeNewParteId(data); if (eleccion === 'new') { data.createdAt = now; idx = -1; } else { data.createdAt = orig ? (orig.createdAt || now) : now; } } else { data.id = editingParteId; data.createdAt = orig ? (orig.createdAt || now) : now; } }
          else { data.id = makeNewParteId(data); data.createdAt = now; }
          if (idx >= 0) parts[idx] = data; else parts.push(data);
          if (!setSavedParts(parts)) return;
