@@ -1133,7 +1133,7 @@
          const data = collectParteData(); const errors = validateParteData(data); if (errors.length) { showErr('Revisa el parte:\n- ' + errors.join('\n- ')); return; }
          saveCurrentVehiclePD();
          const parts = getSavedParts(); const now = new Date().toISOString(); let idx = -1;
-         if (editingParteId) { idx = parts.findIndex(p => p.id === editingParteId); const orig = idx >= 0 ? parts[idx] : null; if (orig && data.fecha !== orig.fecha) { data.id = makeNewParteId(data); data.createdAt = now; idx = -1; } else { data.id = editingParteId; data.createdAt = orig ? (orig.createdAt || now) : now; } }
+         if (editingParteId) { idx = parts.findIndex(p => p.id === editingParteId); const orig = idx >= 0 ? parts[idx] : null; if (orig && data.fecha !== orig.fecha) { data.id = makeNewParteId(data); data.createdAt = now; } else { data.id = editingParteId; data.createdAt = orig ? (orig.createdAt || now) : now; } }
          else { data.id = makeNewParteId(data); data.createdAt = now; }
          if (idx >= 0) parts[idx] = data; else parts.push(data);
          if (!setSavedParts(parts)) return;
