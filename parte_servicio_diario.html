@@ -1139,7 +1139,7 @@
          if (!setSavedParts(parts)) return;
          purgeOldParts(true);
          if (q('mes_partes')) q('mes_partes').value = data.fecha.slice(0, 7);
-         renderSavedDays(); clearParteFormAfterSave(); clearDraft(); toast(idx >= 0 ? 'Parte actualizado y formulario limpiado' : 'Parte guardado y formulario limpiado');
+         renderSavedDays(); clearParteFormAfterSave(); clearTimeout(_draftTimer); clearDraft(); toast(idx >= 0 ? 'Parte actualizado y formulario limpiado' : 'Parte guardado y formulario limpiado');
       }
       function getFilteredSavedParts() { ensureMonthInput(); const mes = q('mes_partes')?.value || currentMonthValue(); return sortParts(getSavedParts().filter(p => String(p.fecha || '').slice(0, 7) === mes)); }
       function updateSavedPartsSummary(parts) { const summary = q('summary_partes_guardados'); if (!summary) return; const total = parts.length; const matriculas = new Set(parts.map(p => cleanKeyPart(p.parte_servicio))).size; summary.innerHTML = `Ver partes guardados <span class="summary-count">(${total} parte${total === 1 ? '' : 's'} · ${matriculas} matrícula${matriculas === 1 ? '' : 's'})</span>`; }
@@ -1361,7 +1361,9 @@
         if (el.id && !el.readOnly) f[el.id] = el.value;
       });
       if (!Object.keys(f).length) return;
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ ts: Date.now(), f: f }));
+      var draft = { ts: Date.now(), f: f };
+      if (editingParteId) draft.editingId = editingParteId;
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
     }
     function clearDraft() { localStorage.removeItem(DRAFT_KEY); }
     function checkDraft() {
@@ -1376,6 +1378,7 @@
         banner.innerHTML = '<span>Borrador ' + (age < 1 ? 'reciente' : 'de hace ' + age + ' min') + '</span><button style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer">Restaurar</button><button style="background:transparent;color:#aaa;border:none;font-size:20px;cursor:pointer;line-height:1;padding:0 4px">&#x00D7;</button>';
         banner.querySelectorAll('button')[0].addEventListener('click', function() {
           Object.keys(d.f).forEach(function(id) { var el = document.getElementById(id); if (el && !el.readOnly) el.value = d.f[id]; });
+          if (d.editingId && getSavedParts().some(function(p) { return p.id === d.editingId; })) { editingParteId = d.editingId; }
           banner.remove(); toast('Borrador restaurado');
         });
         banner.querySelectorAll('button')[1].addEventListener('click', function() { clearDraft(); banner.remove(); });
