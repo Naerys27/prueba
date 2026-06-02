@@ -357,10 +357,7 @@
          <div class="ch">Partes diarios guardados offline</div>
          <div class="cb">
             <div class="viewer-tools">
-               <div class="f"><label>Mes a visualizar</label><input id="mes_partes" type="month"></div>
-               <div class="viewer-actions">
-                  <button class="sec" type="button" onclick="renderSavedDays()">Actualizar listado</button>
-               </div>
+               <div class="f"><label>Mes a visualizar</label><input id="mes_partes" type="month" onchange="renderSavedDays()"></div>
             </div>
             <details class="action-panel">
                <summary>Generar PDF mensual</summary>
