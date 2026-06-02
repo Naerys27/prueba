@@ -84,12 +84,25 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
 .photo-add-btn.has-photo{border-color:#22c55e;background:#f0fdf4;color:#166534}
 .rep-add-btn{width:100%;margin-top:12px;padding:11px;background:#0f6f9c;color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .rep-add-btn:active{opacity:.8}
-.rep-entry{background:#f4f8fb;border:1px solid #d8e8f0;border-radius:10px;padding:10px 12px;margin-bottom:8px;position:relative}
+.rep-entry{background:#f4f8fb;border:1px solid #d8e8f0;border-radius:10px;padding:10px 52px 10px 12px;margin-bottom:8px;position:relative}
 .rep-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .rep-date{font-size:11px;color:#5a7184;flex-shrink:0}
 .rep-kms{font-size:12px;font-weight:700;color:#0b3e56}
 .rep-del{position:absolute;top:8px;right:8px;background:none;border:none;color:#c0392b;font-size:16px;cursor:pointer;line-height:1;padding:2px 4px;border-radius:5px;-webkit-tap-highlight-color:transparent}
 .rep-del:active{background:rgba(192,57,43,.1)}
+.rep-edit{position:absolute;top:8px;right:32px;background:none;border:none;color:#0f6f9c;font-size:14px;cursor:pointer;line-height:1;padding:2px 4px;border-radius:5px;-webkit-tap-highlight-color:transparent}
+.rep-edit:active{background:rgba(15,111,156,.1)}
+.rep-inline-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.rep-inline-grid label{font-size:11px;color:#5a7184;display:block;margin-bottom:2px}
+.rep-inline-grid input{width:100%;padding:5px 7px;border:1px solid #d8e8f0;border-radius:6px;font-family:inherit;font-size:13px;background:#fff;color:#1a2e3a;box-sizing:border-box}
+.rep-inline-photo{margin:4px 0 8px}
+.rep-inline-actions{display:flex;gap:8px}
+.rep-inline-actions button{flex:1;padding:8px;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.rep-ok{background:#0f6f9c;color:#fff}.rep-ok:active{opacity:.8}
+.rep-cancel{background:#e8f0f7;color:#0b3e56}.rep-cancel:active{opacity:.8}
+[data-theme="dark"] .rep-edit{color:#79c0e0}
+[data-theme="dark"] .rep-inline-grid input{background:#0d1520;border-color:#3a4a5a;color:#e6edf3}
+[data-theme="dark"] .rep-cancel{background:#1c2d3d;color:#79c0e0}
 .rep-row2{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .rep-thumb img{max-height:36px;border-radius:5px}
 .rep-empty{font-size:12px;color:#93a8b5;text-align:center;padding:12px 0}
@@ -830,6 +843,80 @@ _photoInput.addEventListener('change', function() {
 });
 function removeRowPhoto(key, tid) {
   delete rowPhotos[key];
+  if (tid && tid.indexOf('ie-photo-') === 0) {
+    var parts = key.split('_'), fuel = parts[0], row = parts[1];
+    var el = document.getElementById(tid);
+    if (el) el.innerHTML = '<button type="button" class="photo-add-btn" style="font-size:11px;padding:4px 8px" onclick="addPhotoToRow(\''+fuel+'\',\''+row+'\')">📷 Foto</button>';
+  } else {
+    recalc();
+  }
+}
+function editRepostajeInline(fuel, row) {
+  var entry = document.getElementById('rep-entry-'+fuel+'-'+row);
+  if (!entry) return;
+  var q = '[data-row="'+row+'"]';
+  var ph = rowPhotos[fuel+'_'+row];
+  var phTid = 'ie-photo-'+fuel+'-'+row;
+  var phHtml = ph
+    ? '<img src="'+ph.data+'" style="max-height:36px;border-radius:5px" onclick="removeRowPhoto(\''+fuel+'_'+row+'\',\''+phTid+'\')" title="Toca para eliminar">'
+    : '<button type="button" class="photo-add-btn" style="font-size:11px;padding:4px 8px" onclick="addPhotoToRow(\''+fuel+'\',\''+row+'\')">📷 Foto</button>';
+  var fields = '';
+  if (fuel === 'g') {
+    var kms = (document.querySelector('.gk'+q)||{}).value||'';
+    var eur = (document.querySelector('.ge'+q)||{}).value||'';
+    var lit = (document.querySelector('.gl'+q)||{}).value||'';
+    var fecha = (document.querySelector('.gf'+q)||{}).value||'';
+    fields = '<div class="rep-inline-grid">'+
+      '<div><label>KMs</label><input type="number" id="ie_gk_'+row+'" inputmode="decimal" value="'+kms+'"></div>'+
+      '<div><label>Fecha</label><input type="date" id="ie_gf_'+row+'" value="'+fecha+'"></div>'+
+      '<div><label>Euros</label><input type="number" id="ie_ge_'+row+'" step="0.01" inputmode="decimal" value="'+eur+'"></div>'+
+      '<div><label>Litros</label><input type="number" id="ie_gl_'+row+'" step="0.01" inputmode="decimal" value="'+lit+'"></div>'+
+    '</div>';
+  } else {
+    var kms = (document.querySelector('.dk'+q)||{}).value||'';
+    var aeur = (document.querySelector('.dae'+q)||{}).value||'';
+    var alit = (document.querySelector('.dal'+q)||{}).value||'';
+    var geur = (document.querySelector('.dge'+q)||{}).value||'';
+    var glit = (document.querySelector('.dgl'+q)||{}).value||'';
+    var fecha = (document.querySelector('.df'+q)||{}).value||'';
+    fields = '<div class="rep-inline-grid">'+
+      '<div><label>KMs</label><input type="number" id="ie_dk_'+row+'" inputmode="decimal" value="'+kms+'"></div>'+
+      '<div><label>Fecha</label><input type="date" id="ie_df_'+row+'" value="'+fecha+'"></div>'+
+      '<div><label>AdBlue €</label><input type="number" id="ie_dae_'+row+'" step="0.01" inputmode="decimal" value="'+aeur+'"></div>'+
+      '<div><label>AdBlue L</label><input type="number" id="ie_dal_'+row+'" step="0.01" inputmode="decimal" value="'+alit+'"></div>'+
+      '<div><label>Gas-oil €</label><input type="number" id="ie_dge_'+row+'" step="0.01" inputmode="decimal" value="'+geur+'"></div>'+
+      '<div><label>Gas-oil L</label><input type="number" id="ie_dgl_'+row+'" step="0.01" inputmode="decimal" value="'+glit+'"></div>'+
+    '</div>';
+  }
+  entry.style.paddingRight = '12px';
+  entry.innerHTML = fields+
+    '<div class="rep-inline-photo" id="'+phTid+'">'+phHtml+'</div>'+
+    '<div class="rep-inline-actions">'+
+      '<button type="button" class="rep-ok" onclick="saveRepostajeInline(\''+fuel+'\',\''+row+'\')">✓ Guardar</button>'+
+      '<button type="button" class="rep-cancel" onclick="recalc()">Cancelar</button>'+
+    '</div>';
+}
+function saveRepostajeInline(fuel, row) {
+  var q = '[data-row="'+row+'"]';
+  function sv(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+  if (fuel === 'g') {
+    var gk = document.querySelector('.gk'+q), ge = document.querySelector('.ge'+q),
+        gl = document.querySelector('.gl'+q), gf = document.querySelector('.gf'+q);
+    if (gk) gk.value = sv('ie_gk_'+row);
+    if (ge) ge.value = sv('ie_ge_'+row);
+    if (gl) gl.value = sv('ie_gl_'+row);
+    if (gf) gf.value = sv('ie_gf_'+row);
+  } else {
+    var dk = document.querySelector('.dk'+q), dae = document.querySelector('.dae'+q),
+        dal = document.querySelector('.dal'+q), dge = document.querySelector('.dge'+q),
+        dgl = document.querySelector('.dgl'+q), df = document.querySelector('.df'+q);
+    if (dk) dk.value = sv('ie_dk_'+row);
+    if (dae) dae.value = sv('ie_dae_'+row);
+    if (dal) dal.value = sv('ie_dal_'+row);
+    if (dge) dge.value = sv('ie_dge_'+row);
+    if (dgl) dgl.value = sv('ie_dgl_'+row);
+    if (df) df.value = sv('ie_df_'+row);
+  }
   recalc();
 }
 function clearNewPhoto(key) {
@@ -847,7 +934,9 @@ function captureNewPhoto(fuel) {
 }
 function addPhotoToRow(fuel, row) {
   _activePhotoKey = fuel + '_' + row;
-  _activeThumbId = 'rep-photo-' + fuel + '-' + row;
+  _activeThumbId = document.getElementById('ie-photo-'+fuel+'-'+row)
+    ? 'ie-photo-'+fuel+'-'+row
+    : 'rep-photo-'+fuel+'-'+row;
   openCameraModal();
 }
 function _posGuide() {
@@ -1053,7 +1142,9 @@ function renderRepostajes() {
       }
       var div = document.createElement('div');
       div.className = 'rep-entry';
+      div.id = 'rep-entry-'+e.fuel+'-'+e.row;
       div.innerHTML = '<div class="rep-row">'+body+phHtml+'</div>'+
+        '<button type="button" class="rep-edit" onclick="editRepostajeInline(\''+e.fuel+'\',\''+e.row+'\')">✏️</button>'+
         '<button type="button" class="rep-del" onclick="deleteRepostaje(\''+e.fuel+'\',\''+e.row+'\')">✕</button>';
       list.appendChild(div);
     });
