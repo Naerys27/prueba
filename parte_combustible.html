@@ -196,7 +196,7 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
     <div class="ch">Identificacion del vehiculo</div>
     <div class="cb">
       <div class="g2">
-        <div class="f"><label>Mes / Año</label><input type="month" id="v_mes"></div>
+        <div class="f"><label>Mes / Año</label><input type="month" id="v_mes" onchange="onMesChange(false)"></div>
         <div class="f"><label>Matricula</label><input type="text" id="v_mat" list="mat-list" autocapitalize="characters" placeholder="0000-XXX"><datalist id="mat-list"></datalist></div>
         <div class="f"><label>Marca</label><input type="text" id="v_marca" placeholder="Ej. SEAT"></div>
         <div class="f"><label>Modelo</label><input type="text" id="v_modelo" placeholder="Ej. Ibiza"></div>
@@ -1596,6 +1596,21 @@ function updateMatDatalist() {
     dl.appendChild(opt);
   });
 }
+function onMesChange(auto) {
+  var mes = gv('v_mes');
+  if (!mes) return;
+  var hist = {};
+  try { hist = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); } catch(e) {}
+  var matches = Object.keys(hist).filter(function(k) { return hist[k].mes === mes; });
+  if (!matches.length) return;
+  if (!auto) {
+    var hasData = false;
+    document.querySelectorAll('.gk, .dk').forEach(function(el) { if (el.value) hasData = true; });
+    if (hasData) { saveHistorico(); toast('Parte anterior guardado'); }
+  }
+  loadHistorico(matches[0]);
+  if (matches.length > 1) toast(matches.length + ' partes guardados para este mes');
+}
 function onMatriculaChange() {
   var mat = (document.getElementById('v_mat').value || '').trim().toUpperCase();
   var db = loadVehicleDB();
@@ -1827,7 +1842,7 @@ function saveCurrentVehicle() {
   updateMatDatalist();
 }
 
-window.addEventListener("load", function() { initConductoresUI(); resizeSigCanvas(); setTimeout(resizeSigCanvas, 400); FSStorage.onReady(function() { updateMatDatalist(); document.getElementById('v_mat').addEventListener('change', onMatriculaChange); renderHistorico(); }); });
+window.addEventListener("load", function() { initConductoresUI(); resizeSigCanvas(); setTimeout(resizeSigCanvas, 400); FSStorage.onReady(function() { updateMatDatalist(); document.getElementById('v_mat').addEventListener('change', onMatriculaChange); var _d = new Date(); var _mes = _d.getFullYear() + '-' + String(_d.getMonth() + 1).padStart(2, '0'); var _vmes = document.getElementById('v_mes'); if (_vmes && !_vmes.value) { _vmes.value = _mes; onMesChange(true); } renderHistorico(); }); });
 function toggleTheme() {
   var dark = document.documentElement.getAttribute('data-theme') === 'dark';
   if (dark) {
