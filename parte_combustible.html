@@ -830,7 +830,7 @@ _photoInput.addEventListener('change', function() {
 });
 function removeRowPhoto(key, tid) {
   delete rowPhotos[key];
-  var el = document.getElementById(tid); if (el) el.innerHTML = '';
+  recalc();
 }
 function clearNewPhoto(key) {
   delete _newPhotoData[key];
@@ -843,6 +843,11 @@ function clearNewPhoto(key) {
 function captureNewPhoto(fuel) {
   _activePhotoKey = 'new_' + fuel;
   _activeThumbId = 'nf_' + fuel + '_thumb';
+  openCameraModal();
+}
+function addPhotoToRow(fuel, row) {
+  _activePhotoKey = fuel + '_' + row;
+  _activeThumbId = 'rep-photo-' + fuel + '-' + row;
   openCameraModal();
 }
 function _posGuide() {
@@ -1022,8 +1027,12 @@ function renderRepostajes() {
     list.innerHTML = '<div class="rep-empty">Sin repostajes añadidos</div>';
   } else {
     entries.forEach(function(e) {
-      var ph = rowPhotos[(e.fuel==='g'?'g':'d')+'_'+e.row];
-      var phHtml = ph ? '<div class="rep-thumb" style="margin-top:4px"><img src="'+ph.data+'"></div>' : '';
+      var _phKey = (e.fuel==='g'?'g':'d')+'_'+e.row;
+      var ph = rowPhotos[_phKey];
+      var _phTid = 'rep-photo-'+e.fuel+'-'+e.row;
+      var phHtml = ph
+        ? '<div class="rep-thumb" id="'+_phTid+'" style="margin-top:4px"><img src="'+ph.data+'" onclick="removeRowPhoto(\''+_phKey+'\',\''+_phTid+'\')" title="Toca para eliminar"></div>'
+        : '<div id="'+_phTid+'" style="margin-top:4px"><button type="button" class="photo-add-btn" style="font-size:11px;padding:4px 8px" onclick="addPhotoToRow(\''+e.fuel+'\',\''+e.row+'\')">📷 Foto</button></div>';
       var body = '';
       if (e.fuel === 'g') {
         body = '<span class="rep-badge rep-badge-g">Gasolina</span>';
@@ -1486,7 +1495,6 @@ function saveHistorico() {
   var mes = gv('v_mes');
   if (!mat || !mes) return;
   var tipo = document.getElementById('tipo_combustible').value;
-  var withPhotos = FSStorage.isActive();
   var entries = [], photos = {};
   if (tipo === 'gasolina') {
     document.querySelectorAll('.gk').forEach(function(e) {
@@ -1497,7 +1505,7 @@ function saveHistorico() {
       if (kms || eur || lit) {
         var idx = entries.length;
         entries.push({ kms: kms, eur: eur, lit: lit, fecha: fecha });
-        if (withPhotos && rowPhotos['g_'+row]) photos[idx] = rowPhotos['g_'+row];
+        if (rowPhotos['g_'+row]) photos[idx] = rowPhotos['g_'+row];
       }
     });
   } else {
@@ -1511,7 +1519,7 @@ function saveHistorico() {
       if (kms || aeur || alit || geur || glit) {
         var idx = entries.length;
         entries.push({ kms: kms, aeur: aeur, alit: alit, geur: geur, glit: glit, fecha: fecha });
-        if (withPhotos && rowPhotos['d_'+row]) photos[idx] = rowPhotos['d_'+row];
+        if (rowPhotos['d_'+row]) photos[idx] = rowPhotos['d_'+row];
       }
     });
   }
@@ -1519,7 +1527,9 @@ function saveHistorico() {
   var hist = {};
   try { hist = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); } catch(e) { hist = {}; }
   var key = mat + '/' + mes;
-  hist[key] = { mat: mat, mes: mes, tipo: tipo, entries: entries };
+  hist[key] = { mat: mat, mes: mes, tipo: tipo, entries: entries,
+    servicio: gv('v_servicio'), conductores: gv('v_conductores'),
+    km_ini: gv('km_ini'), km_fin: gv('km_fin') };
   if (Object.keys(photos).length) hist[key].photos = photos;
   // Purgar entradas con más de 6 meses
   var cutoff = new Date();
@@ -1631,6 +1641,20 @@ function loadHistorico(key) {
   if (document.getElementById('v_mat')) document.getElementById('v_mat').value = h.mat || '';
   if (document.getElementById('v_mes')) document.getElementById('v_mes').value = h.mes || '';
   onMatriculaChange();
+  if (document.getElementById('km_ini')) document.getElementById('km_ini').value = h.km_ini || '';
+  if (document.getElementById('km_fin')) document.getElementById('km_fin').value = h.km_fin || '';
+  var _kia = parseInt((h.km_ini || '').toString(), 10) || 0, _kib = parseInt((h.km_fin || '').toString(), 10) || 0;
+  document.getElementById('km_tot').value = (_kib > _kia) ? (_kib - _kia) : '';
+  if (document.getElementById('v_servicio')) document.getElementById('v_servicio').value = h.servicio || '';
+  if (h.conductores) {
+    var _cList = document.getElementById('conductores_list');
+    if (_cList) {
+      _cList.innerHTML = '';
+      h.conductores.split('\n').filter(function(c) { return c.trim(); }).forEach(function(c) { addConductorRow(c); });
+      if (!_cList.children.length) addConductorRow('');
+      syncConductoresField();
+    }
+  }
   // Rellenar filas de la tabla oculta
   h.entries.forEach(function(e, idx) {
     var row = String(idx + 1);
