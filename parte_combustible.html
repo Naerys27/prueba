@@ -1960,15 +1960,19 @@ function saveCurrentVehicle() {
 }
 function suggestKmIniFromPrevMonth(mat, mes) {
   if (!mat || !mes) return;
-  var p = mes.split('-'), y = parseInt(p[0], 10), m = parseInt(p[1], 10) - 1;
-  if (m === 0) { m = 12; y -= 1; }
-  var prevMes = y + '-' + String(m).padStart(2, '0');
   var hist = {};
   try { hist = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); } catch(e) {}
-  var prev = hist[mat + '/' + prevMes];
-  if (prev && prev.km_fin) {
-    var el = document.getElementById('km_ini');
-    if (el && !el.value) { el.value = prev.km_fin; recalc(); toast('Km inicial: ' + prev.km_fin + ' km (del mes anterior)'); }
+  var p = mes.split('-'), y = parseInt(p[0], 10), m = parseInt(p[1], 10);
+  for (var i = 0; i < 6; i++) {
+    m -= 1;
+    if (m === 0) { m = 12; y -= 1; }
+    var prevMes = y + '-' + String(m).padStart(2, '0');
+    var prev = hist[mat + '/' + prevMes];
+    if (prev && prev.km_fin) {
+      var el = document.getElementById('km_ini');
+      if (el && !el.value) { el.value = prev.km_fin; recalc(); toast('Km inicial: ' + prev.km_fin + ' km (' + prevMes + ')'); }
+      return;
+    }
   }
 }
 
