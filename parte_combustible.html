@@ -1703,13 +1703,19 @@ function newParteForMes(mes) {
 }
 function onMatriculaChange() {
   var mat = (document.getElementById('v_mat').value || '').trim().toUpperCase();
-  var db = loadVehicleDB();
-  if (db[mat]) {
+  document.getElementById('v_marca').value  = '';
+  document.getElementById('v_modelo').value = '';
+  document.getElementById('v_tarjeta').value = '';
+  document.getElementById('v_coste').value  = '';
+  if (mat) {
+    var db = loadVehicleDB();
     var v = db[mat];
-    if (v.marca)   document.getElementById('v_marca').value   = v.marca;
-    if (v.modelo)  document.getElementById('v_modelo').value  = v.modelo;
-    if (v.tarjeta) document.getElementById('v_tarjeta').value = v.tarjeta;
-    if (v.coste)   document.getElementById('v_coste').value   = v.coste;
+    if (v) {
+      if (v.marca)   document.getElementById('v_marca').value   = v.marca;
+      if (v.modelo)  document.getElementById('v_modelo').value  = v.modelo;
+      if (v.tarjeta) document.getElementById('v_tarjeta').value = v.tarjeta;
+      if (v.coste)   document.getElementById('v_coste').value   = v.coste;
+    }
   }
   var mes = gv('v_mes');
   if (mat && mes) {

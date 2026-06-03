@@ -1323,9 +1323,12 @@
       }
       function onMatriculaChange() {
         var mat = (document.getElementById('matricula').value || '').trim().toUpperCase();
+        document.getElementById('marca').value = '';
+        document.getElementById('vehiculo').value = '';
+        if (!mat) return;
         var db = loadDB();
-        if (!db[mat]) return;
         var v = db[mat];
+        if (!v) return;
         var marca = v.marca || (v.marcaModelo ? v.marcaModelo.split(' ')[0] : '');
         var modelo = v.modelo || (v.marcaModelo ? v.marcaModelo.split(' ').slice(1).join(' ') : '');
         if (marca) document.getElementById('marca').value = marca;

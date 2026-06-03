@@ -1216,13 +1216,16 @@
       }
       function onMatriculaChangePD() {
         var mat = (document.getElementById('parte_servicio').value || '').trim().toUpperCase();
+        document.getElementById('marca').value = '';
+        document.getElementById('modelo').value = '';
+        document.getElementById('conductor').value = '';
         if (!mat) return;
         var db = loadVehicleDB_PD();
         var v = db[mat];
         if (v) {
           if (v.marca) document.getElementById('marca').value = v.marca;
+          else if (v.marcaModelo) document.getElementById('marca').value = v.marcaModelo;
           if (v.modelo) document.getElementById('modelo').value = v.modelo;
-          if (!v.marca && v.marcaModelo) document.getElementById('marca').value = v.marcaModelo;
           if (v.conductor) document.getElementById('conductor').value = v.conductor;
         }
         suggestLastKmPD(mat);
