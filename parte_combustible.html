@@ -1727,6 +1727,7 @@ function onMatriculaChange() {
     } else {
       _activeParteKey = hist[key] ? key : null;
       renderMatriculaChips(mes);
+      if (!_activeParteKey) suggestKmIniFromPrevMonth(mat, mes);
     }
   }
 }
@@ -1885,6 +1886,7 @@ function loadHistorico(key) {
   if (document.getElementById('v_mes')) document.getElementById('v_mes').value = h.mes || '';
   onMatriculaChange();
   if (document.getElementById('km_ini')) document.getElementById('km_ini').value = h.km_ini || '';
+  if (!h.km_ini) suggestKmIniFromPrevMonth(h.mat, h.mes);
   if (document.getElementById('km_fin')) document.getElementById('km_fin').value = h.km_fin || '';
   var _kia = parseInt((h.km_ini || '').toString(), 10) || 0, _kib = parseInt((h.km_fin || '').toString(), 10) || 0;
   document.getElementById('km_tot').value = (_kib > _kia) ? (_kib - _kia) : '';
@@ -1955,6 +1957,19 @@ function saveCurrentVehicle() {
   db[mat] = existing;
   saveVehicleDB(db);
   updateMatDatalist();
+}
+function suggestKmIniFromPrevMonth(mat, mes) {
+  if (!mat || !mes) return;
+  var p = mes.split('-'), y = parseInt(p[0], 10), m = parseInt(p[1], 10) - 1;
+  if (m === 0) { m = 12; y -= 1; }
+  var prevMes = y + '-' + String(m).padStart(2, '0');
+  var hist = {};
+  try { hist = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); } catch(e) {}
+  var prev = hist[mat + '/' + prevMes];
+  if (prev && prev.km_fin) {
+    var el = document.getElementById('km_ini');
+    if (el && !el.value) { el.value = prev.km_fin; recalc(); toast('Km inicial: ' + prev.km_fin + ' km (del mes anterior)'); }
+  }
 }
 
 window.addEventListener("load", function() { initConductoresUI(); resizeSigCanvas(); setTimeout(resizeSigCanvas, 400); FSStorage.onReady(function() { updateMatDatalist(); document.getElementById('v_mat').addEventListener('change', onMatriculaChange); var _d = new Date(); var _mes = _d.getFullYear() + '-' + String(_d.getMonth() + 1).padStart(2, '0'); var _vmes = document.getElementById('v_mes'); if (_vmes && !_vmes.value) { _vmes.value = _mes; onMesChange(true); } renderHistorico(); }); });
