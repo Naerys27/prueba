@@ -103,6 +103,14 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
 [data-theme="dark"] .rep-edit{color:#79c0e0}
 [data-theme="dark"] .rep-inline-grid input{background:#0d1520;border-color:#3a4a5a;color:#e6edf3}
 [data-theme="dark"] .rep-cancel{background:#1c2d3d;color:#79c0e0}
+.mat-chips-bar{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0 12px}
+.mat-chip{padding:6px 14px;border-radius:20px;border:2px solid #d8e8f0;background:#f4f8fb;font-family:inherit;font-size:12px;font-weight:700;color:#0b3e56;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mat-chip.active{background:#0f6f9c;color:#fff;border-color:#0f6f9c}
+.mat-chip-new{background:none;border:2px dashed #94b8ca;color:#5a7184}
+.mat-chip:active{opacity:.7}
+[data-theme="dark"] .mat-chip{background:#0d1520;border-color:#3a4a5a;color:#79c0e0}
+[data-theme="dark"] .mat-chip.active{background:#0f6f9c;border-color:#0f6f9c;color:#fff}
+[data-theme="dark"] .mat-chip-new{border-color:#3a4a5a;color:#5a7184}
 .rep-row2{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .rep-thumb img{max-height:36px;border-radius:5px}
 .rep-empty{font-size:12px;color:#93a8b5;text-align:center;padding:12px 0}
@@ -221,6 +229,8 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
       </div>
     </div>
   </div>
+
+  <div id="mat-chips-bar" class="mat-chips-bar" style="display:none"></div>
 
   <!-- Tablas ocultas para compatibilidad con PDF y recalc -->
   <div style="display:none" aria-hidden="true">
@@ -786,6 +796,9 @@ function buildRows() {
 
 var rowPhotos = {};
 var _newPhotoData = {};
+var _activeParteKey = null;
+var _activeMes = null;
+var _activeMat = null;
 var _photoInput = (function() {
   var inp = document.createElement('input');
   inp.type = 'file'; inp.accept = 'image/*'; inp.setAttribute('capture', 'environment');
@@ -1329,7 +1342,7 @@ function resetForm() {
   document.getElementById('nf_d_photobtn').className='photo-add-btn';
   document.getElementById('nf_g_thumb').innerHTML='';
   document.getElementById('nf_d_thumb').innerHTML='';
-  switchFuelType(); clearSig(); toast('Formulario limpiado');
+  switchFuelType(); clearSig(); if (!arguments[0]) toast('Formulario limpiado');
 }
 
 var sigDrawing=false,sigLX=0,sigLY=0; var sigCanvas=document.getElementById('sigcanvas'); var sigCtx=sigCanvas.getContext('2d');
@@ -1587,10 +1600,14 @@ function loadVehicleDB() { try { return JSON.parse(FSStorage.getItem(VEHICLE_DB_
 function saveVehicleDB(db) { FSStorage.setItem(VEHICLE_DB_KEY, JSON.stringify(db)); }
 function updateMatDatalist() {
   var db = loadVehicleDB();
+  var hist = {};
+  try { hist = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); } catch(e) {}
+  var mats = new Set(Object.keys(db));
+  Object.keys(hist).forEach(function(k) { if (hist[k].mat) mats.add(hist[k].mat); });
   var dl = document.getElementById('mat-list');
   if (!dl) return;
   dl.innerHTML = '';
-  Object.keys(db).sort().forEach(function(mat) {
+  Array.from(mats).sort().forEach(function(mat) {
     var opt = document.createElement('option');
     opt.value = mat;
     dl.appendChild(opt);
@@ -1599,27 +1616,113 @@ function updateMatDatalist() {
 function onMesChange(auto) {
   var mes = gv('v_mes');
   if (!mes) return;
-  var hist = {};
-  try { hist = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); } catch(e) {}
-  var matches = Object.keys(hist).filter(function(k) { return hist[k].mes === mes; });
-  if (!matches.length) return;
   if (!auto) {
     var hasData = false;
     document.querySelectorAll('.gk, .dk').forEach(function(el) { if (el.value) hasData = true; });
-    if (hasData) { saveHistorico(); toast('Parte anterior guardado'); }
+    if (hasData) {
+      var _vmat = document.getElementById('v_mat');
+      var _vmes = document.getElementById('v_mes');
+      if (_activeMat) _vmat.value = _activeMat;
+      if (_activeMes) _vmes.value = _activeMes;
+      saveHistorico();
+      _vmes.value = mes;
+    }
   }
-  loadHistorico(matches[0]);
-  if (matches.length > 1) toast(matches.length + ' partes guardados para este mes');
+  resetForm(true);
+  document.getElementById('v_mes').value = mes;
+  var hist = {};
+  try { hist = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); } catch(e) {}
+  var matches = Object.keys(hist).filter(function(k) { return hist[k].mes === mes; });
+  if (matches.length) {
+    _activeParteKey = matches[0];
+    loadHistorico(matches[0]);
+    if (matches.length > 1) toast(matches.length + ' partes guardados para este mes');
+  } else {
+    _activeParteKey = null;
+    _activeMes = mes;
+    _activeMat = null;
+    renderMatriculaChips(mes);
+    recalc();
+  }
+}
+function renderMatriculaChips(mes) {
+  var bar = document.getElementById('mat-chips-bar');
+  if (!bar) return;
+  if (!mes) { bar.style.display = 'none'; return; }
+  var hist = {};
+  try { hist = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); } catch(e) {}
+  var keys = Object.keys(hist).filter(function(k) { return hist[k].mes === mes; });
+  bar.innerHTML = '';
+  keys.forEach(function(k) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mat-chip' + (k === _activeParteKey ? ' active' : '');
+    btn.textContent = hist[k].mat;
+    btn.onclick = function() { loadParteChip(k); };
+    bar.appendChild(btn);
+  });
+  var btnNew = document.createElement('button');
+  btnNew.type = 'button';
+  btnNew.className = 'mat-chip mat-chip-new';
+  btnNew.textContent = '+ Nuevo';
+  btnNew.onclick = function() { newParteForMes(mes); };
+  bar.appendChild(btnNew);
+  bar.style.display = '';
+}
+function loadParteChip(key) {
+  if (key === _activeParteKey) return;
+  var hasData = false;
+  document.querySelectorAll('.gk, .dk').forEach(function(el) { if (el.value) hasData = true; });
+  if (hasData) {
+    var _vmat = document.getElementById('v_mat');
+    var _vmes = document.getElementById('v_mes');
+    if (_activeMat) _vmat.value = _activeMat;
+    if (_activeMes) _vmes.value = _activeMes;
+    saveHistorico();
+  }
+  _activeParteKey = key;
+  loadHistorico(key);
+}
+function newParteForMes(mes) {
+  var hasData = false;
+  document.querySelectorAll('.gk, .dk').forEach(function(el) { if (el.value) hasData = true; });
+  if (hasData) {
+    var _vmat = document.getElementById('v_mat');
+    var _vmes = document.getElementById('v_mes');
+    if (_activeMat) _vmat.value = _activeMat;
+    if (_activeMes) _vmes.value = _activeMes;
+    saveHistorico();
+  }
+  _activeParteKey = null;
+  _activeMes = mes;
+  _activeMat = null;
+  resetForm(true);
+  document.getElementById('v_mes').value = mes;
+  renderMatriculaChips(mes);
+  recalc();
 }
 function onMatriculaChange() {
   var mat = (document.getElementById('v_mat').value || '').trim().toUpperCase();
   var db = loadVehicleDB();
-  if (!db[mat]) return;
-  var v = db[mat];
-  if (v.marca)   document.getElementById('v_marca').value   = v.marca;
-  if (v.modelo)  document.getElementById('v_modelo').value  = v.modelo;
-  if (v.tarjeta) document.getElementById('v_tarjeta').value = v.tarjeta;
-  if (v.coste)   document.getElementById('v_coste').value   = v.coste;
+  if (db[mat]) {
+    var v = db[mat];
+    if (v.marca)   document.getElementById('v_marca').value   = v.marca;
+    if (v.modelo)  document.getElementById('v_modelo').value  = v.modelo;
+    if (v.tarjeta) document.getElementById('v_tarjeta').value = v.tarjeta;
+    if (v.coste)   document.getElementById('v_coste').value   = v.coste;
+  }
+  var mes = gv('v_mes');
+  if (mat && mes) {
+    var key = mat + '/' + mes;
+    var hist = {};
+    try { hist = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); } catch(e) {}
+    if (hist[key] && key !== _activeParteKey) {
+      loadParteChip(key);
+    } else {
+      _activeParteKey = hist[key] ? key : null;
+      renderMatriculaChips(mes);
+    }
+  }
 }
 var HIST_KEY = 'partes_combustible_hist_v1';
 function saveHistorico() {
@@ -1669,6 +1772,8 @@ function saveHistorico() {
   var cutoffStr = cutoff.getFullYear() + '-' + String(cutoff.getMonth() + 1).padStart(2, '0');
   Object.keys(hist).forEach(function(k) { if (hist[k].mes && hist[k].mes < cutoffStr) delete hist[k]; });
   FSStorage.setItem(HIST_KEY, JSON.stringify(hist));
+  _activeParteKey = key;
+  renderMatriculaChips(mes);
 }
 function renderHistorico() {
   var card = document.getElementById('hist-card');
@@ -1814,6 +1919,10 @@ function loadHistorico(key) {
   });
   switchFuelType(true);
   recalc();
+  _activeParteKey = key;
+  _activeMes = h.mes;
+  _activeMat = h.mat;
+  renderMatriculaChips(h.mes);
   window.scrollTo({ top: 0, behavior: 'smooth' });
   toast('Mes cargado en el formulario');
 }
