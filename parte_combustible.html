@@ -1634,6 +1634,11 @@ function onMesChange(auto) {
   try { hist = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); } catch(e) {}
   var matches = Object.keys(hist).filter(function(k) { return hist[k].mes === mes; });
   if (matches.length) {
+    matches.sort(function(a, b) {
+      var ta = hist[a].updatedAt || '';
+      var tb = hist[b].updatedAt || '';
+      return tb > ta ? 1 : tb < ta ? -1 : 0;
+    });
     _activeParteKey = matches[0];
     loadHistorico(matches[0]);
     if (matches.length > 1) toast(matches.length + ' partes guardados para este mes');
@@ -1771,7 +1776,8 @@ function saveHistorico() {
   var key = mat + '/' + mes;
   hist[key] = { mat: mat, mes: mes, tipo: tipo, entries: entries,
     servicio: gv('v_servicio'), conductores: gv('v_conductores'),
-    km_ini: gv('km_ini'), km_fin: gv('km_fin') };
+    km_ini: gv('km_ini'), km_fin: gv('km_fin'),
+    updatedAt: new Date().toISOString() };
   if (Object.keys(photos).length) hist[key].photos = photos;
   // Purgar entradas con más de 6 meses
   var cutoff = new Date();
