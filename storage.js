@@ -235,10 +235,13 @@
             types: [{ description: 'Datos JSON', accept: { 'application/json': ['.json'] } }]
           });
         }
-        var perm = await requestPerm(handle);
+        var perm = await queryOnly(handle);
         if (perm !== 'granted') {
-          alert('Se necesita permiso de escritura para usar el archivo.');
-          return false;
+          perm = await requestPerm(handle);
+          if (perm !== 'granted') {
+            alert('Se necesita permiso de escritura para usar el archivo.');
+            return false;
+          }
         }
         var fileData = {};
         try { fileData = await readFile(handle); } catch(e) {}
