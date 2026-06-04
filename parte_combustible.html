@@ -24,7 +24,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .hdr-t p{font-size:10px;opacity:.7;margin-top:2px;line-height:1.2}
 .wrap{max-width:980px;margin:0 auto;padding:13px 12px}
 .card{background:#fff;border:1px solid #dde3ea;border-radius:12px;margin-bottom:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-.ch{background:#f8f9fa;color:#0b3e56;padding:9px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;gap:6px;border-bottom:1px solid #e4eaef}
+.ch{background:#f8f9fa;color:#0b3e56;padding:9px 14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;gap:6px;border-bottom:1px solid #e4eaef}
 .cb{padding:13px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
@@ -51,7 +51,7 @@ table.ft tbody td input:focus{outline:2px solid #0f6f9c;border-radius:3px;backgr
 table.ft tbody td input[type=date]{font-size:9px;min-width:88px}
 table.ft tfoot td{background:#0f6f9c;color:#fff;padding:7px 4px;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
-.sigbox{border:1.5px solid #c8d6e0;border-radius:8px;height:95px;position:relative;overflow:hidden;background:#f8fbfd;touch-action:none}
+.sigbox{border:1.5px solid #c8d6e0;border-radius:8px;height:150px;position:relative;overflow:hidden;background:#f8fbfd;touch-action:none}
 .sigbox canvas{position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;touch-action:none}
 .sighint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#b0c4d0;font-size:12px;pointer-events:none;text-align:center}
 .siglbl{font-size:10px;font-weight:700;color:#5a7184;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
@@ -61,8 +61,8 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
 .btn{flex:1;padding:13px;border-radius:9px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;border:none;-webkit-tap-highlight-color:transparent}
 .btn:active{opacity:.8}
 .btnc{background:#e5eef4;color:#123649}
-.btns{background:#1a7a5e;color:#fff}
-.btnp{flex:2;background:#0f6f9c;color:#fff}
+.btns{flex:2;background:#1a7a5e;color:#fff}
+.btnp{flex:1;background:#0f6f9c;color:#fff}
 .btnp:disabled{opacity:.5}
 .toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:9px 20px;border-radius:20px;font-size:12px;font-weight:600;box-shadow:0 3px 14px rgba(0,0,0,.25);opacity:0;transition:opacity .3s;pointer-events:none;z-index:200;white-space:nowrap}
 .toast.on{opacity:1}
@@ -1354,7 +1354,7 @@ sigCanvas.addEventListener('mousemove', function(ev){ if(!sigDrawing)return; var
 sigCanvas.addEventListener('touchmove', function(ev){ ev.preventDefault(); if(!sigDrawing)return; var p=getSigPos(ev); sigCtx.beginPath(); sigCtx.moveTo(sigLX,sigLY); sigCtx.lineTo(p.x,p.y); sigCtx.strokeStyle='#1a1a2e'; sigCtx.lineWidth=2.5; sigCtx.lineCap='round'; sigCtx.stroke(); sigLX=p.x; sigLY=p.y; document.getElementById('sighint').style.display='none'; }, {passive:false});
 sigCanvas.addEventListener('mouseup', function(){sigDrawing=false;}); sigCanvas.addEventListener('touchend', function(){sigDrawing=false;});
 function clearSig() { sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height); document.getElementById('sighint').style.display=''; }
-function toast(msg) { var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(t._tt); t._tt=setTimeout(function(){t.classList.remove('on');},1800); }
+function toast(msg) { var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(t._tt); t._tt=setTimeout(function(){t.classList.remove('on');},2800); }
 function showErr(msg) { var e=document.getElementById('errbox'); e.textContent=msg; e.style.display='block'; clearTimeout(e._tt); e._tt=setTimeout(function(){e.style.display='none';},6000); }
 
 function drawCombustibleInstitucional(doc) {

@@ -90,7 +90,7 @@
       background: #f8f9fa;
       color: #0b3e56;
       padding: 9px 14px;
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: .07em;
@@ -189,12 +189,13 @@
     }
 
     .btnp {
-      flex: 2;
+      flex: 1;
       background: #0f6f9c;
       color: #fff
     }
 
     .btns {
+      flex: 2;
       background: #1a7a5e;
       color: #fff
     }
@@ -782,7 +783,7 @@
 
     function gv(id) { var el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; }
     function fechaES(v) { if (!v) return ''; var p = String(v).split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : v; }
-    function toast(msg) { var t = document.getElementById('toast'); if (!t) return; t.textContent = msg; t.classList.add('on'); clearTimeout(t._tt); t._tt = setTimeout(function () { t.classList.remove('on'); }, 1800); }
+    function toast(msg) { var t = document.getElementById('toast'); if (!t) return; t.textContent = msg; t.classList.add('on'); clearTimeout(t._tt); t._tt = setTimeout(function () { t.classList.remove('on'); }, 2800); }
     function showPDFSaved(fn, blobUrl){
       var dark=document.documentElement.getAttribute('data-theme')==='dark';
       var m=document.createElement('div');
