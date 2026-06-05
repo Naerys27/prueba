@@ -1753,6 +1753,7 @@ function saveHistorico() {
   var mat = (gv('v_mat') || '').trim().toUpperCase();
   var mes = gv('v_mes');
   if (!mat || !mes) return;
+  saveCurrentVehicle();
   var tipo = document.getElementById('tipo_combustible').value;
   var entries = [], photos = {};
   if (tipo === 'gasolina') {
