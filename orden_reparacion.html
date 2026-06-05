@@ -223,6 +223,9 @@
       opacity: 1
     }
 
+    .errbox{display:none;position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:#ffeaea;border:1px solid #ffb3b3;border-radius:14px;padding:10px 18px;font-size:12px;color:#c0392b;box-shadow:0 3px 14px rgba(0,0,0,.25);z-index:201;max-width:85%;text-align:center;white-space:pre-line;font-weight:600}
+    [data-theme="dark"] .errbox{background:#2a0f0f;border-color:#6a2a2a;color:#fca5a5}
+
     @media(max-width:520px) {
       .g2 {
         grid-template-columns: 1fr
@@ -374,6 +377,7 @@
     <button class="btn btnp" onclick="makePDF()" id="pdfbtn" type="button">Generar PDF</button>
   </div>
   <div class="toast" id="toast"></div>
+  <div id="errbox" class="errbox"></div>
   <script>
     /** @license
      *
@@ -787,6 +791,7 @@
     function gv(id) { var el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; }
     function fechaES(v) { if (!v) return ''; var p = String(v).split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : v; }
     function toast(msg) { var t = document.getElementById('toast'); if (!t) return; t.textContent = msg; t.classList.add('on'); clearTimeout(t._tt); t._tt = setTimeout(function () { t.classList.remove('on'); }, 2800); }
+    function showErr(msg) { var e = document.getElementById('errbox'); e.textContent = msg; e.style.display = 'block'; clearTimeout(e._tt); e._tt = setTimeout(function () { e.style.display = 'none'; }, 6000); }
     function showPDFSaved(fn, blobUrl){
       var dark=document.documentElement.getAttribute('data-theme')==='dark';
       var m=document.createElement('div');
@@ -1050,7 +1055,7 @@
       }
     })();
     function makePDF() {
-      if (!gv('fecha') && !gv('matricula')) { alert('Rellena al menos la fecha o la matrícula antes de generar el PDF.'); return; }
+      if (!gv('fecha') && !gv('matricula')) { showErr('Rellena al menos la fecha o la matrícula antes de generar el PDF.'); return; }
       var btn = document.getElementById('pdfbtn');
       if (btn) { btn.textContent = 'Generando...'; btn.disabled = true; }
       setTimeout(function () {
@@ -1070,7 +1075,7 @@
           
           saveOrden();
         } catch (e) {
-          alert('ERROR al generar PDF: ' + (e && e.message ? e.message : e));
+          showErr('ERROR al generar PDF: ' + (e && e.message ? e.message : e));
           console.error(e);
         } finally {
           if (btn) { btn.textContent = 'Guardar PDF'; btn.disabled = false; }
@@ -1078,7 +1083,7 @@
       }, 100);
     }
     function sharePDF() {
-      if (!gv('fecha') && !gv('matricula')) { alert('Rellena al menos la fecha o la matrícula antes de generar el PDF.'); return; }
+      if (!gv('fecha') && !gv('matricula')) { showErr('Rellena al menos la fecha o la matrícula antes de generar el PDF.'); return; }
       var btn = document.getElementById('sharebtn');
       if (btn) { btn.textContent = 'Preparando...'; btn.disabled = true; }
       setTimeout(async function () {
@@ -1107,7 +1112,7 @@
           saveOrden();
         } catch (e) {
           if (e.name !== 'AbortError') {
-            alert('ERROR al compartir: ' + (e && e.message ? e.message : e));
+            showErr('ERROR al compartir: ' + (e && e.message ? e.message : e));
             console.error(e);
           }
         } finally {
@@ -1142,7 +1147,7 @@
         km_aprox: gv('km_aprox'),
         localizacion: gv('localizacion')
       };
-      if (!data.fecha && !data.matricula) { alert('Rellena al menos la fecha o la matrícula antes de guardar.'); return; }
+      if (!data.fecha && !data.matricula) { showErr('Rellena al menos la fecha o la matrícula antes de guardar.'); return; }
       var list = getSavedOrdenes();
       var idx = -1;
       for (var i = 0; i < list.length; i++) { if (list[i].id === data.id) { idx = i; break; } }
@@ -1228,7 +1233,8 @@
       if (arrow) arrow.textContent = open ? '▾' : '▴';
     }
 
-    function resetFormOR() {
+    function resetFormOR(force) {
+      if (!force && (gv('fecha') || gv('matricula')) && !confirm('¿Limpiar el formulario? Se perderán los datos no guardados.')) return;
       _editingOrdenId = null;
       var els = document.querySelectorAll('input, textarea');
       for (var i = 0; i < els.length; i++) els[i].value = '';
@@ -1242,7 +1248,11 @@
         if (el.id && !el.readOnly) f[el.id] = el.value;
       });
       if (!Object.keys(f).length) return;
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ ts: Date.now(), f: f }));
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ ts: Date.now(), f: f }));
+      } catch(e) {
+        if (e && (e.name === 'QuotaExceededError' || e.code === 22)) console.warn('[draft] localStorage lleno, borrador no guardado');
+      }
     }
     function clearDraft() { localStorage.removeItem(DRAFT_KEY); }
     function checkDraft() {
