@@ -1131,6 +1131,7 @@
     function fechaCortaOR(iso) { if (!iso) return ''; var p = iso.split('-'); return p.length === 3 ? p[2]+'/'+p[1]+'/'+p[0] : iso; }
 
     function saveOrden() {
+      window.saveVehicleOR();
       var data = {
         id: _editingOrdenId || String(Date.now()),
         createdAt: new Date().toISOString(),
