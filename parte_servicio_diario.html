@@ -366,7 +366,7 @@
          <div class="ch">Partes diarios guardados offline</div>
          <div class="cb">
             <div class="viewer-tools">
-               <div class="f"><label>Mes a visualizar</label><input id="mes_partes" type="month" onchange="renderSavedDays()"></div>
+               <div class="f"><label for="mes_partes">Mes a visualizar</label><input id="mes_partes" type="month" onchange="renderSavedDays()"></div>
             </div>
             <details class="action-panel">
                <summary>Generar PDF mensual</summary>
@@ -389,11 +389,11 @@
          <div class="ch">Datos generales</div>
          <div class="cb">
             <div class="grid">
-               <div class="f"><label>Conductor/a</label><input id="conductor" list="conductor-list-pd" placeholder="Nombre del conductor/a"><datalist id="conductor-list-pd"></datalist></div>
-               <div class="f"><label>Fecha</label><input id="fecha" type="date"></div>
-               <div class="f"><label>Parte del Servicio del Vehículo</label><input id="parte_servicio" list="mat-list-pd" autocapitalize="characters" placeholder="Introduzca Matrícula"><datalist id="mat-list-pd"></datalist></div>
-               <div class="f"><label>Marca</label><input id="marca" placeholder="Ej. SEAT"></div>
-               <div class="f"><label>Modelo</label><input id="modelo" placeholder="Ej. Ibiza"></div>
+               <div class="f"><label for="conductor">Conductor/a</label><input id="conductor" list="conductor-list-pd" placeholder="Nombre del conductor/a"><datalist id="conductor-list-pd"></datalist></div>
+               <div class="f"><label for="fecha">Fecha</label><input id="fecha" type="date"></div>
+               <div class="f"><label for="parte_servicio">Matrícula</label><input id="parte_servicio" list="mat-list-pd" autocapitalize="characters" placeholder="Introduzca Matrícula"><datalist id="mat-list-pd"></datalist></div>
+               <div class="f"><label for="marca">Marca</label><input id="marca" placeholder="Ej. SEAT"></div>
+               <div class="f"><label for="modelo">Modelo</label><input id="modelo" placeholder="Ej. Ibiza"></div>
             </div>
          </div>
       </div>
@@ -402,13 +402,13 @@
          <div class="ch">Lecturas y horas</div>
          <div class="cb">
             <div class="grid">
-               <div class="f"><label>Lectura de contador - Salida</label><input id="cont_salida" type="text"
+               <div class="f"><label for="cont_salida">Lectura de contador - Salida</label><input id="cont_salida" type="text"
                      inputmode="numeric" oninput="recalc()"></div>
-               <div class="f"><label>Lectura de contador - Llegada</label><input id="cont_llegada" type="text"
+               <div class="f"><label for="cont_llegada">Lectura de contador - Llegada</label><input id="cont_llegada" type="text"
                      inputmode="numeric" oninput="recalc()"></div>
-               <div class="f"><label>Kilómetros recorridos</label><input id="kms_recorridos" readonly><span class="calc-hint">Calculado automáticamente</span></div>
-               <div class="f"><label>Hora salida</label><input id="hora_salida" type="time"></div>
-               <div class="f"><label>Hora llegada</label><input id="hora_llegada" type="time"></div>
+               <div class="f"><label for="kms_recorridos">Kilómetros recorridos</label><input id="kms_recorridos" readonly><span class="calc-hint">Calculado automáticamente</span></div>
+               <div class="f"><label for="hora_salida">Hora salida</label><input id="hora_salida" type="time"></div>
+               <div class="f"><label for="hora_llegada">Hora llegada</label><input id="hora_llegada" type="time"></div>
             </div>
          </div>
       </div>
@@ -417,25 +417,25 @@
          <div class="ch">Itinerario y combustible</div>
          <div class="cb">
             <div class="grid">
-               <div class="f full"><label>Itinerario carretera</label><textarea id="itinerario"></textarea></div>
+               <div class="f full"><label for="itinerario">Itinerario carretera</label><textarea id="itinerario"></textarea></div>
                <div class="repostaje-row" id="repostaje_row_1" data-repostaje="1">
-                  <div class="f"><label>Precio (€)</label><input id="p1" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
-                  <div class="f"><label>Litros</label><input id="l1" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
+                  <div class="f"><label for="p1">Precio (€)</label><input id="p1" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
+                  <div class="f"><label for="l1">Litros</label><input id="l1" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
                </div>
                <div class="repostaje-row hidden" id="repostaje_row_2" data-repostaje="2">
-                  <div class="f"><label>Precio (€)</label><input id="p2" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
-                  <div class="f"><label>Litros</label><input id="l2" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
+                  <div class="f"><label for="p2">Precio (€)</label><input id="p2" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
+                  <div class="f"><label for="l2">Litros</label><input id="l2" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
                </div>
                <div class="repostaje-row hidden" id="repostaje_row_3" data-repostaje="3">
-                  <div class="f"><label>Precio (€)</label><input id="p3" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
-                  <div class="f"><label>Litros</label><input id="l3" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
+                  <div class="f"><label for="p3">Precio (€)</label><input id="p3" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
+                  <div class="f"><label for="l3">Litros</label><input id="l3" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
                </div>
                <div class="f full repostaje-controls">
                   <button class="sec" id="btn_add_repostaje" type="button" onclick="addRepostaje()">Añadir repostaje</button>
                   <button class="sec danger" id="btn_remove_repostaje" type="button" onclick="removeRepostaje()">Eliminar repostaje</button>
                </div>
-               <div class="f"><label>Total €</label><input id="tot_eur" readonly></div>
-               <div class="f"><label>Total litros</label><input id="tot_lit" readonly></div>
+               <div class="f"><label for="tot_eur">Total €</label><input id="tot_eur" readonly></div>
+               <div class="f"><label for="tot_lit">Total litros</label><input id="tot_lit" readonly></div>
             </div>
          </div>
       </div>
@@ -444,9 +444,9 @@
          <div class="ch">Servicio y firma</div>
          <div class="cb">
             <div class="grid">
-               <div class="f full"><label>Servicio prestado a</label><input id="serv_prestado"></div>
-               <div class="f"><label>Servicio</label><input id="servicio"></div>
-               <div class="f"><label>Centro de coste nº</label><input id="centro_coste"></div>
+               <div class="f full"><label for="serv_prestado">Servicio prestado a</label><input id="serv_prestado"></div>
+               <div class="f"><label for="servicio">Servicio</label><input id="servicio"></div>
+               <div class="f"><label for="centro_coste">Centro de coste nº</label><input id="centro_coste"></div>
                <div class="f full"><label>Firma del conductor/a</label>
                   <div class="sigbox" id="sigbox"><canvas id="sigcanvas"></canvas>
                      <div id="sighint" class="sighint">Firma aquí con el dedo o ratón</div>

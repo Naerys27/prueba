@@ -211,13 +211,13 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
     <div class="ch">Identificacion del vehiculo</div>
     <div class="cb">
       <div class="g2">
-        <div class="f"><label>Mes / Año</label><input type="month" id="v_mes" onchange="onMesChange(false)"></div>
-        <div class="f"><label>Matrícula</label><input type="text" id="v_mat" list="mat-list" autocapitalize="characters" placeholder="0000-XXX"><datalist id="mat-list"></datalist></div>
-        <div class="f"><label>Marca</label><input type="text" id="v_marca" placeholder="Ej. SEAT"></div>
-        <div class="f"><label>Modelo</label><input type="text" id="v_modelo" placeholder="Ej. Ibiza"></div>
-        <div class="f"><label>Nº Tarjeta</label><input type="text" id="v_tarjeta"></div>
-        <div class="f"><label>Centro de Coste</label><input type="text" id="v_coste"></div>
-        <div class="f full"><label>Servicio</label><input type="text" id="v_servicio"></div>
+        <div class="f"><label for="v_mes">Mes / Año</label><input type="month" id="v_mes" onchange="onMesChange(false)"></div>
+        <div class="f"><label for="v_mat">Matrícula</label><input type="text" id="v_mat" list="mat-list" autocapitalize="characters" placeholder="0000-XXX"><datalist id="mat-list"></datalist></div>
+        <div class="f"><label for="v_marca">Marca</label><input type="text" id="v_marca" placeholder="Ej. SEAT"></div>
+        <div class="f"><label for="v_modelo">Modelo</label><input type="text" id="v_modelo" placeholder="Ej. Ibiza"></div>
+        <div class="f"><label for="v_tarjeta">Nº Tarjeta</label><input type="text" id="v_tarjeta"></div>
+        <div class="f"><label for="v_coste">Centro de Coste</label><input type="text" id="v_coste"></div>
+        <div class="f full"><label for="v_servicio">Servicio</label><input type="text" id="v_servicio"></div>
         
         <div class="f full">
         <label>Conductores</label>
@@ -227,7 +227,7 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
           <textarea id="v_conductores" style="display:none" aria-hidden="true"></textarea>
         </div>
       </div>
-        <div class="f full"><label>Combustible</label>
+        <div class="f full"><label for="tipo_combustible">Combustible</label>
           <select id="tipo_combustible" onchange="switchFuelType()" class="fuel-select">
             <option value="gasolina">Gasolina</option>
             <option value="gasoil">Gas-oil / AdBlue</option>
@@ -250,12 +250,12 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
     <div class="ch">Nuevo repostaje · Gasolina</div>
     <div class="cb">
       <div class="g3">
-        <div class="f"><label>KMs</label><input type="number" id="nf_gk" inputmode="decimal" placeholder="0"></div>
-        <div class="f"><label>Euros</label><input type="number" id="nf_ge" step="0.01" inputmode="decimal" placeholder="0,00"></div>
-        <div class="f"><label>Litros</label><input type="number" id="nf_gl" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+        <div class="f"><label for="nf_gk">KMs</label><input type="number" id="nf_gk" inputmode="decimal" placeholder="0"></div>
+        <div class="f"><label for="nf_ge">Euros</label><input type="number" id="nf_ge" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+        <div class="f"><label for="nf_gl">Litros</label><input type="number" id="nf_gl" step="0.01" inputmode="decimal" placeholder="0,00"></div>
       </div>
       <div class="g2" style="margin-top:9px">
-        <div class="f"><label>Fecha</label><input type="date" id="nf_gf"></div>
+        <div class="f"><label for="nf_gf">Fecha</label><input type="date" id="nf_gf"></div>
         <div class="f"><label>Foto del ticket</label>
           <button type="button" class="photo-add-btn" onclick="captureNewPhoto('g')" id="nf_g_photobtn">📷 Añadir foto</button>
           <div id="nf_g_thumb"></div>
@@ -270,18 +270,18 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
     <div class="ch">Nuevo repostaje · Gas-oil</div>
     <div class="cb">
       <div class="g2">
-        <div class="f"><label>KMs</label><input type="number" id="nf_dk" inputmode="decimal" placeholder="0"></div>
-        <div class="f"><label>Fecha</label><input type="date" id="nf_df"></div>
+        <div class="f"><label for="nf_dk">KMs</label><input type="number" id="nf_dk" inputmode="decimal" placeholder="0"></div>
+        <div class="f"><label for="nf_df">Fecha</label><input type="date" id="nf_df"></div>
       </div>
       <div class="g2" style="margin-top:9px">
         <div class="f full" style="grid-column:1/-1"><span class="fuel-sublabel fuel-sublabel-adblue">AdBlue</span></div>
-        <div class="f"><label>Euros</label><input type="number" id="nf_dae" step="0.01" inputmode="decimal" placeholder="0,00"></div>
-        <div class="f"><label>Litros</label><input type="number" id="nf_dal" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+        <div class="f"><label for="nf_dae">Euros</label><input type="number" id="nf_dae" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+        <div class="f"><label for="nf_dal">Litros</label><input type="number" id="nf_dal" step="0.01" inputmode="decimal" placeholder="0,00"></div>
       </div>
       <div class="g2" style="margin-top:6px">
         <div class="f full" style="grid-column:1/-1"><span class="fuel-sublabel fuel-sublabel-gasoil">Gas-oil</span></div>
-        <div class="f"><label>Euros</label><input type="number" id="nf_dge" step="0.01" inputmode="decimal" placeholder="0,00"></div>
-        <div class="f"><label>Litros</label><input type="number" id="nf_dgl" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+        <div class="f"><label for="nf_dge">Euros</label><input type="number" id="nf_dge" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+        <div class="f"><label for="nf_dgl">Litros</label><input type="number" id="nf_dgl" step="0.01" inputmode="decimal" placeholder="0,00"></div>
       </div>
       <div class="f" style="margin-top:9px"><label>Foto del ticket</label>
         <button type="button" class="photo-add-btn" onclick="captureNewPhoto('d')" id="nf_d_photobtn">📷 Añadir foto</button>
@@ -305,11 +305,11 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
     <div class="ch">Kilometraje y Consumo</div>
     <div class="cb">
       <div class="g3">
-        <div class="f"><label>Comienzo</label><input type="number" id="km_ini" inputmode="numeric" placeholder="0"></div>
-        <div class="f"><label>Final</label><input type="number" id="km_fin" inputmode="numeric" placeholder="0"></div>
-        <div class="f"><label>Total</label><input type="number" id="km_tot" readonly></div>
+        <div class="f"><label for="km_ini">Comienzo</label><input type="number" id="km_ini" inputmode="numeric" placeholder="0"></div>
+        <div class="f"><label for="km_fin">Final</label><input type="number" id="km_fin" inputmode="numeric" placeholder="0"></div>
+        <div class="f"><label for="km_tot">Total</label><input type="number" id="km_tot" readonly></div>
       </div>
-      <div class="f" style="margin-top:9px"><label>Consumo (auto)</label><input type="text" id="v_consumo" readonly placeholder="Se calcula automaticamente"></div>
+      <div class="f" style="margin-top:9px"><label for="v_consumo">Consumo (auto)</label><input type="text" id="v_consumo" readonly placeholder="Se calcula automaticamente"></div>
     </div>
   </div>
 
