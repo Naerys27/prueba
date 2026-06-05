@@ -98,6 +98,8 @@
       transition: transform .12s, box-shadow .12s
     }
 
+    .menu-stat{font-size:11px;color:var(--text-sec);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
+    .menu-stat:empty{display:none}
     .menu-card:active {
       transform: scale(.98);
       box-shadow: 0 1px 4px rgba(0, 58, 112, .1)
@@ -274,6 +276,7 @@
       <div class="menu-body">
         <div class="menu-title">Parte de Servicio Diario</div>
         <div class="menu-desc">Registro diario de servicio del vehiculo</div>
+        <div class="menu-stat" id="stat-diario"></div>
       </div>
       <span class="menu-arrow">›</span>
     </a>
@@ -290,6 +293,7 @@
       <div class="menu-body">
         <div class="menu-title">Parte Mensual de Combustible</div>
         <div class="menu-desc">Registro mensual de repostajes de gasolina y gasoil</div>
+        <div class="menu-stat" id="stat-combustible"></div>
       </div>
       <span class="menu-arrow">›</span>
     </a>
@@ -303,6 +307,7 @@
       <div class="menu-body">
         <div class="menu-title">Parte de Reparación</div>
         <div class="menu-desc">Reparación de vehiculos</div>
+        <div class="menu-stat" id="stat-reparacion"></div>
       </div>
       <span class="menu-arrow">›</span>
     </a>
@@ -335,7 +340,7 @@
   <input type="file" id="import-all-input" accept=".json" style="display:none" onchange="importAllData(event)">
   <script>
     FSStorage.init();
-    FSStorage.onReady(updateStorageUI);
+    FSStorage.onReady(function() { updateStorageUI(); updateModuleStats(); });
     function updateStorageUI() {
       var warn = document.getElementById('st-warn');
       var ok = document.getElementById('st-ok');
@@ -378,6 +383,54 @@
           updateStorageUI();
         }
       });
+    }
+    function updateModuleStats() {
+      function fmtFecha(s) {
+        if (!s) return '';
+        var p = s.split('-');
+        return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : s;
+      }
+      function fmtMes(s) {
+        if (!s) return '';
+        var months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        var p = s.split('-');
+        if (p.length === 2) { var m = parseInt(p[1],10)-1; return months[m] ? months[m]+' '+p[0] : s; }
+        return s;
+      }
+      var elD = document.getElementById('stat-diario');
+      if (elD) {
+        try {
+          var partes = JSON.parse(FSStorage.getItem('cht_parte_servicio_diario_v1') || '[]');
+          if (partes.length) {
+            partes.sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'');});
+            var l = partes[0];
+            elD.textContent = 'Último: ' + fmtFecha(l.fecha) + (l.parte_servicio ? ' · ' + l.parte_servicio.toUpperCase() : '');
+          }
+        } catch(e) {}
+      }
+      var elC = document.getElementById('stat-combustible');
+      if (elC) {
+        try {
+          var hist = JSON.parse(FSStorage.getItem('partes_combustible_hist_v1') || '{}');
+          var keys = Object.keys(hist);
+          if (keys.length) {
+            keys.sort(function(a,b){return (hist[b].mes||b).localeCompare(hist[a].mes||a);});
+            var l = hist[keys[0]];
+            elC.textContent = 'Último: ' + fmtMes(l.mes) + (l.mat ? ' · ' + l.mat.toUpperCase() : '');
+          }
+        } catch(e) {}
+      }
+      var elR = document.getElementById('stat-reparacion');
+      if (elR) {
+        try {
+          var ordenes = JSON.parse(FSStorage.getItem('cht_orden_reparacion_v1') || '[]');
+          if (ordenes.length) {
+            ordenes.sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'');});
+            var l = ordenes[0];
+            elR.textContent = 'Última: ' + fmtFecha(l.fecha) + (l.matricula ? ' · ' + l.matricula.toUpperCase() : '');
+          }
+        } catch(e) {}
+      }
     }
     function toggleTheme() {
       var dark = document.documentElement.getAttribute('data-theme') === 'dark';
