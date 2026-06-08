@@ -38,6 +38,7 @@
       [data-theme="dark"] .f input[readonly] { background: #0a1118; color: #6e8494; }
       [data-theme="dark"] .f .calc-hint { color: #4a5e6a; }
       [data-theme="dark"] .f label { color: #8b949e; }
+      .req { color: #e53e3e; font-weight: 700; margin-left: 2px; }
       [data-theme="dark"] .bar { background: var(--card); border-color: var(--border); }
       [data-theme="dark"] .btnc { background: #1c2e3e; color: #79c0e0; }
       [data-theme="dark"] .saved-item { background: #0e1925; border-color: var(--border); }
@@ -380,8 +381,8 @@
          <div class="cb">
             <div class="grid">
                <div class="f"><label for="conductor">Conductor/a</label><input id="conductor" list="conductor-list-pd" placeholder="Nombre del conductor/a"><datalist id="conductor-list-pd"></datalist></div>
-               <div class="f"><label for="fecha">Fecha</label><input id="fecha" type="date"></div>
-               <div class="f"><label for="parte_servicio">Matrícula</label><input id="parte_servicio" list="mat-list-pd" autocapitalize="characters" placeholder="Introduzca Matrícula"><datalist id="mat-list-pd"></datalist></div>
+               <div class="f"><label for="fecha">Fecha<span class="req">*</span></label><input id="fecha" type="date"></div>
+               <div class="f"><label for="parte_servicio">Matrícula<span class="req">*</span></label><input id="parte_servicio" list="mat-list-pd" autocapitalize="characters" placeholder="Introduzca Matrícula"><datalist id="mat-list-pd"></datalist></div>
                <div class="f"><label for="marca">Marca</label><input id="marca" placeholder="Ej. SEAT"></div>
                <div class="f"><label for="modelo">Modelo</label><input id="modelo" placeholder="Ej. Ibiza"></div>
             </div>
