@@ -1128,6 +1128,7 @@
       function validateParteData(data) {
          const errors = [];
          if (!data.fecha) errors.push('Indica la fecha.');
+         if (!String(data.conductor || '').trim()) errors.push('Indica el nombre del conductor/a.');
          if (!String(data.parte_servicio || '').trim()) errors.push('Indica la matrícula en "Parte del Servicio del Vehículo".');
          const haySalida = String(data.cont_salida || '').trim() !== '';
          const hayLlegada = String(data.cont_llegada || '').trim() !== '';

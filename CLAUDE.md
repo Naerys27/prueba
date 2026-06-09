@@ -6,6 +6,8 @@ PWA (Progressive Web App) para gestionar la documentación del Servicio de Locom
 
 **URL de producción (beta):** https://naerys27.github.io/prueba/
 
+**Service Worker actual:** `partes-loco-v96` — incrementar en cada deploy.
+
 ---
 
 ## Estructura del proyecto
@@ -17,7 +19,7 @@ prueba/
 ├── parte_combustible.html      # Módulo partes mensuales de combustible
 ├── orden_reparacion.html       # Módulo órdenes de reparación y suministro
 ├── storage.js                  # Capa de almacenamiento (localStorage + File System Access API)
-├── sw.js                       # Service Worker (caché offline, versión actual: v58)
+├── sw.js                       # Service Worker (caché offline, versión actual: v80)
 ├── manifest.json               # Manifiesto PWA
 └── icons/
     ├── icon-192.png
@@ -58,7 +60,7 @@ GitHub Pages publica automáticamente desde la rama `main`.
 
 **IMPORTANTE — tras cada deploy:** incrementar la versión del Service Worker en `sw.js`:
 ```javascript
-const CACHE = 'partes-loco-vN';  // incrementar N
+const CACHE = 'partes-loco-vN';  // incrementar N — actualmente v96
 ```
 Si no se incrementa, los usuarios seguirán usando la versión cacheada anterior.
 
@@ -136,3 +138,24 @@ Se descartó OneDrive/Graph API por restricciones de la cuenta corporativa AGE (
 **Sin Service Worker scope personalizado**
 El SW cubre `./` para simplicidad. A tener en cuenta si se despliega en subcarpeta de servidor.
 
+---
+
+## Features implementadas (estado a 2026-06-09)
+
+- **Último registro en menú:** `index.html` muestra bajo cada tarjeta el último dato guardado (`updateModuleStats()`)
+- **Chips de matrícula en parte combustible:** control segmentado iOS integrado en la card (pendiente validación beta)
+- **Campos obligatorios marcados:** `.req { color:#e53e3e }` + `<span class="req">*</span>` en labels obligatorios de los 3 módulos
+- **Historial parte diario colapsable:** `<details class="action-panel">` con summary dinámico que muestra contadores
+- **BD vehículos persistente:** `saveCurrentVehicle/saveVehicleOR/saveCurrentVehiclePD` se llaman en cada guardado (no solo al generar PDF)
+- **showErr():** en los 3 módulos (reemplaza `alert()`)
+- **QuotaExceededError:** manejado en los 3 módulos con mensaje de error descriptivo
+- **Confirmación "Nuevo":** guard en `resetForm()` de los 3 módulos para evitar pérdida de datos
+
+## Patrón de bug de persistencia (RESUELTO)
+
+Las funciones `saveCurrentVehicle/saveVehicleOR/saveCurrentVehiclePD` deben llamarse al **inicio** de `saveHistorico/saveOrden/saveParteDiario`, no solo desde `makePDF`. Si se añade un nuevo campo de vehículo, verificar que se incluye en estas funciones.
+
+## Archivos de prueba (no desplegar)
+
+- `parte_servicio_diario_historial_test.html` — copia de prueba del rediseño historial
+- `parte_combustible_tabs*.html` — prototipos de chips descartados

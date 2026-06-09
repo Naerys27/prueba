@@ -1,73 +1,84 @@
-# HANDOVER.md — Estado del proyecto (2026-05-27)
-
-## Estado actual
-
-### Qué funciona correctamente
-- **Parte de Servicio Diario** — registro diario, guardado, historial, PDF diario, PDF del mes, PDF por matrícula. Modal post-PDF con botón "Abrir PDF ↗".
-- **Parte Mensual de Combustible** — repostajes, fotos de tickets, firma, historial, generación PDF con fotos. Modal post-PDF con botón "Abrir PDF ↗".
-- **Orden de Reparación** — formulario completo (incluye campo "Responsable del Servicio autorizante" añadido recientemente), PDF institucional, historial con auto-guardado al generar PDF. Modal post-PDF con botón "Abrir PDF ↗".
-- **Almacenamiento** — localStorage siempre activo; archivo JSON externo opcional via File System Access API.
-- **PWA** — instalable, offline, Service Worker v57, banner de actualización automática.
-- **Borradores** — guardado automático en todos los módulos, expiración a las 2 horas.
-- **Modo oscuro** — funcional en todos los módulos.
-- **index.html** — menú principal, gestión de archivo JSON, export/import global de datos.
-
-### Qué no está implementado (descartado o pendiente)
-- **Sincronización automática cloud** — descartada por restricciones Azure/AGE.
-- **PDF editable (AcroForm)** para parte combustible — evaluado, descartado por complejidad.
-- **Soporte Safari/iOS** para File System Access API — limitación del navegador, no resoluble.
+# Handover — Partes de Locomoción CHT
+**Fecha:** 2026-06-09 | **SW actual:** `partes-loco-v96`
 
 ---
 
-## Bugs corregidos en esta sesión
+## Estado general
 
-| Bug | Estado |
-|-----|--------|
-| `doc.rect(...,'SD')` inválido en jsPDF (orden reparación) | Corregido → `'S'` |
-| Fecha badge tapaba "Locomoción" en PDF orden reparación | Corregido → fecha como texto plano |
-| PDF generado en blanco al pulsar PDF sin datos en orden reparación | Corregido → validación al inicio de `makePDF()` y `sharePDF()` |
-| `meta charset` después de scripts en index.html | Corregido → movido al inicio de `<head>` |
-| Navegador no compatible sin feedback en index.html | Corregido → añadido aviso `st-nosup` |
-| Último texto sección 5 de la guía decía "partes mensuales" en vez de "órdenes de reparación" | Corregido en Word |
-
-## Bugs conocidos pendientes
-- Ninguno conocido actualmente.
+PWA funcional desplegada en https://naerys27.github.io/prueba/
+3 módulos: Parte Servicio Diario · Parte Combustible · Orden de Reparación
+Sin backend — almacenamiento en localStorage + File System Access API (archivo JSON opcional).
 
 ---
 
-## Lo que estábamos haciendo justo antes de cerrar
+## Cambios recientes
 
-1. Se completaron todos los cambios de UX del modal post-PDF (botón "Abrir PDF ↗" en los 3 módulos, layout igual al de parte combustible).
-2. Se añadió purga automática de 6 meses a las órdenes de reparación.
-3. Se corrigieron los dos bugs menores del index.html.
-4. Se actualizó y corrigió la guía Word (`Guia_App_Partes_Locomocion.docx`).
-5. Se discutió la futura migración a infraestructura corporativa (Forja/SharePoint).
-6. La app está publicada en https://naerys27.github.io/prueba/ y en fase de beta testing con varios conductores.
+### UX / UI — Grupos 1-4 (completados)
+- **Grupo 1:** Toast 2800ms, padding-bottom seguro (iOS), contraste botón danger, firma 150px, botones flex, font-size `.ch`
+- **Grupo 2:** Colapso secciones en móvil, touch targets 44px, checkboxes accesibles
+- **Grupo 3:** Atributo `for` en todos los labels, label "Matrícula" en parte diario
+- **Grupo 4:** Tabla responsiva en parte combustible, confirmación "Nuevo" en los 3 módulos, `showErr()` en orden_reparacion, manejo `QuotaExceededError`
 
-Todos los cambios están subidos a GitHub (último commit: `b9bb7fa` del 25-may-2026). Service Worker en `partes-loco-v58`.
+### Chips matrícula → control segmentado (v90) — PENDIENTE BETA
+`parte_combustible.html`: chips como tab bar iOS integrado en card. Revertible — ver `memory/project_chips_tabs_revert.md`.
+
+### Bug fixes persistencia (v91-v92)
+- `saveCurrentVehicle()` añadido al inicio de `saveHistorico()` en parte_combustible → tarjeta ya no se pierde al guardar sin PDF.
+- `saveVehicleOR()` añadido al inicio de `saveOrden()` en orden_reparacion → marca/modelo ya no se pierden.
+
+### Historial parte diario rediseñado (v93)
+`parte_servicio_diario.html`: visor de partes guardados como `<details class="action-panel">` colapsable. Summary: "Mis partes del mes (N partes · M matrículas)".
+
+### Último registro en menú principal (v94)
+`index.html`: `updateModuleStats()` muestra debajo de cada tarjeta del menú el último registro guardado en ese módulo.
+
+### Asteriscos campos obligatorios (v95)
+CSS `.req { color: #e53e3e; }` en los 3 módulos. Campos marcados:
+- Parte diario: Conductor/a*, Fecha*, Matrícula*
+- Combustible: Mes / Año*, Matrícula*
+- Orden reparación: Fecha*, Matrícula* (OR en validación)
+
+### Validación Conductor/a (v96)
+`parte_servicio_diario.html`: añadida validación real en `validateParteData()` — el parte no se puede guardar ni generar PDF sin indicar el nombre del conductor/a.
 
 ---
 
-## Próximos pasos (por orden de prioridad)
-
-1. **Recoger feedback de los beta testers** — los conductores están probando la app. Cualquier bug o mejora reportada tiene prioridad.
-
-3. **Decidir estrategia de producción** — opciones evaluadas:
-   - **Forja corporativa** (recomendada si tienen Pages habilitado): copiar repo y cambiar URL
-   - **Servidor web corporativo**: copiar archivos estáticos, verificar HTTPS
-   - **SharePoint**: viable pero requiere reescribir `storage.js` para usar Microsoft Graph API
-
-4. **Si se va a SharePoint**: reescribir `storage.js` para usar Graph API + SharePoint Lists como backend de datos. Es la opción que resuelve la dependencia del JSON local y el acceso multi-dispositivo de forma nativa.
-
-5. **Mejoras menores pendientes** (no urgentes):
-   - Añadir botón "Abrir PDF ↗" también en parte combustible (actualmente solo tiene "Cerrar" en el modal `_showPDFOpenModal`, aunque ya tiene `blobUrl` preparado)
+## Archivos de prueba en prueba/ (NO desplegar)
+- `parte_servicio_diario_historial_test.html`
+- `parte_combustible_tabs.html` / `_tabs_a.html` / `_tabs_b.html`
 
 ---
 
-## Lo que NO se debe tocar o romper
+## Pendientes
 
-- **`storage.js`** — cualquier cambio aquí afecta a los 4 módulos simultáneamente. Probar bien antes de subir.
-- **`sw.js` versión** — si se modifica cualquier archivo y se sube a GitHub, HAY QUE incrementar la versión del CACHE. Si no se hace, los usuarios no recibirán la actualización.
-- **Estilos rect en jsPDF** — solo usar `'S'`, `'F'`, `'FD'`, `'DF'`. Nunca `'SD'` (rompe la generación del PDF).
-- **Los IDs de los campos de formulario** — están referenciados en múltiples sitios (saveDraft, saveOrden, fields array, etc.). Cambiar un ID sin actualizar todos los sitios romperá el guardado/restauración.
-- **`_ALL_KEYS` en index.html** — debe contener exactamente las mismas claves que `DATA_KEYS` en storage.js para que el export/import global funcione.
+- **Chips:** validar con beta testers. Si rechazo → `memory/project_chips_tabs_revert.md`.
+- **Concepto en OR:** sin asterisco ni validación — pendiente decisión (de momento se deja sin tocar).
+- **Backend separado:** `~/partes-server` WSL puerto 3001 → `memory/project_partes_backend.md`.
+
+---
+
+## Funciones clave
+
+| Función | Archivo | Qué hace |
+|---------|---------|---------|
+| `saveCurrentVehicle()` | parte_combustible | Guarda marca/modelo/tarjeta/coste en BD vehículos |
+| `saveVehicleOR()` | orden_reparacion | Guarda marca/modelo en BD vehículos |
+| `saveCurrentVehiclePD()` | parte_servicio_diario | Guarda marca/modelo en BD vehículos |
+| `updateModuleStats()` | index.html | Último registro en tarjetas del menú |
+| `renderSavedDays()` | parte_servicio_diario | Lista de partes del mes seleccionado |
+| `saveHistorico()` | parte_combustible | Guarda parte mensual + BD vehículos |
+| `saveOrden()` | orden_reparacion | Guarda orden + BD vehículos |
+| `validateParteData()` | parte_servicio_diario | Valida fecha + conductor/a + matrícula + contadores + horas |
+
+---
+
+## Colores del proyecto
+
+| Color | Uso |
+|-------|-----|
+| `#e5eef4` | Fondo chips bar (claro), botones `.btnc` |
+| `#0e1c2e` | Fondo chips bar (oscuro), card headers dark |
+| `#5a7184` | Texto secundario |
+| `#0f6f9c` | Azul principal (brand) |
+| `#0d1520` | Inputs modo oscuro |
+| `#e53e3e` | Asterisco campos obligatorios |
