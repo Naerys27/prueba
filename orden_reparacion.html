@@ -1067,7 +1067,6 @@
           drawOrdenInstitucional(doc);
 
           var mat = (gv('matricula') || 'SIN_MATRICULA').toUpperCase();
-          if (window.saveVehicleOR) window.saveVehicleOR();
           var _f = gv('fecha'); var _fechaFmt = _f ? _f.slice(2,4)+_f.slice(5,7)+_f.slice(8,10) : 'XXXXXX';
           var _fn = _fechaFmt + ' ' + mat + ' Orden de reparación.pdf';
           var _blob = doc.output('blob'); var _blobUrl = URL.createObjectURL(_blob);
@@ -1095,7 +1094,6 @@
           drawOrdenInstitucional(doc);
 
           var mat = (gv('matricula') || 'SIN_MATRICULA').toUpperCase();
-          if (window.saveVehicleOR) window.saveVehicleOR();
           var _fs = gv('fecha'); var _fechaFmtS = _fs ? _fs.slice(2,4)+_fs.slice(5,7)+_fs.slice(8,10) : 'XXXXXX';
           var filename = _fechaFmtS + ' ' + mat + ' Orden de reparación.pdf';
           var blob = doc.output('blob');
@@ -1132,7 +1130,6 @@
     function fechaCortaOR(iso) { if (!iso) return ''; var p = iso.split('-'); return p.length === 3 ? p[2]+'/'+p[1]+'/'+p[0] : iso; }
 
     function saveOrden() {
-      window.saveVehicleOR();
       var data = {
         id: _editingOrdenId || String(Date.now()),
         createdAt: new Date().toISOString(),
@@ -1150,6 +1147,7 @@
         localizacion: gv('localizacion')
       };
       if (!data.fecha && !data.matricula) { showErr('Rellena al menos la fecha o la matrícula antes de guardar.'); return; }
+      window.saveVehicleOR();
       var list = getSavedOrdenes();
       var idx = -1;
       for (var i = 0; i < list.length; i++) { if (list[i].id === data.id) { idx = i; break; } }
