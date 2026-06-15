@@ -1,5 +1,5 @@
 # Handover — Partes de Locomoción CHT
-**Fecha:** 2026-06-09 | **SW actual:** `partes-loco-v96`
+**Fecha:** 2026-06-09 | **SW actual:** `partes-loco-v97`
 
 ---
 
@@ -40,6 +40,11 @@ CSS `.req { color: #e53e3e; }` en los 3 módulos. Campos marcados:
 
 ### Validación Conductor/a (v96)
 `parte_servicio_diario.html`: añadida validación real en `validateParteData()` — el parte no se puede guardar ni generar PDF sin indicar el nombre del conductor/a.
+
+### Purga fotos antiguas de localStorage (v97)
+`storage.js`: función privada `stripOldPhotos()` — cuando hay archivo JSON vinculado, las fotos de entradas con más de 3 meses se eliminan de localStorage (pero se conservan en el JSON durante 6 meses). Evita que localStorage se llene con Base64 acumulado.
+- `mergeData()` actualizado para recuperar fotos del archivo cuando localStorage no las tiene (evita que el merge borre fotos del JSON progresivamente).
+- `saveHistorico()` en `parte_combustible.html` añade `try/catch` con `showErr` para `QuotaExceededError`.
 
 ---
 

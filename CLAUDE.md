@@ -6,7 +6,7 @@ PWA (Progressive Web App) para gestionar la documentación del Servicio de Locom
 
 **URL de producción (beta):** https://naerys27.github.io/prueba/
 
-**Service Worker actual:** `partes-loco-v96` — incrementar en cada deploy.
+**Service Worker actual:** `partes-loco-v97` — incrementar en cada deploy.
 
 ---
 
@@ -60,7 +60,7 @@ GitHub Pages publica automáticamente desde la rama `main`.
 
 **IMPORTANTE — tras cada deploy:** incrementar la versión del Service Worker en `sw.js`:
 ```javascript
-const CACHE = 'partes-loco-vN';  // incrementar N — actualmente v96
+const CACHE = 'partes-loco-vN';  // incrementar N — actualmente v97
 ```
 Si no se incrementa, los usuarios seguirán usando la versión cacheada anterior.
 

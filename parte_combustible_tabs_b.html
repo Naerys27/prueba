@@ -30,7 +30,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
 .full{grid-column:1/-1}
 .f label{display:block;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
-.req{color:#e53e3e;font-weight:700;margin-left:2px}
 .fuel-sublabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;display:block}
 .fuel-sublabel-adblue{color:#1e40af}
 .fuel-sublabel-gasoil{color:#92400e}
@@ -104,15 +103,14 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
 [data-theme="dark"] .rep-edit{color:#79c0e0}
 [data-theme="dark"] .rep-inline-grid input{background:#0d1520;border-color:#3a4a5a;color:#e6edf3}
 [data-theme="dark"] .rep-cancel{background:#1c2d3d;color:#79c0e0}
-.mat-chips-bar{display:flex;flex-wrap:nowrap;gap:3px;padding:4px;margin-bottom:14px;background:#e5eef4;border-radius:10px;overflow-x:auto}
-.mat-chip{flex:1;min-width:0;padding:9px 10px;border-radius:7px;border:none;background:transparent;font-family:inherit;font-size:13px;font-weight:700;color:#5a7184;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .15s,color .15s,box-shadow .15s}
-.mat-chip.active{background:#fff;color:#0f6f9c;box-shadow:0 1px 5px rgba(0,0,0,.15)}
-.mat-chip-new{flex:1;color:#5a7184}
+.mat-chips-bar{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0 14px;margin-bottom:4px}
+.mat-chip{flex:1;min-width:80px;padding:11px 10px;border-radius:20px;border:2px solid #c8d6e0;background:#f0f5f9;font-family:inherit;font-size:13px;font-weight:700;color:#3a6a85;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mat-chip.active{background:#0f6f9c;color:#fff;border-color:#0f6f9c}
+.mat-chip-new{border:2px dashed #94b8ca;background:transparent;color:#5a7184}
 .mat-chip:active{opacity:.7}
-[data-theme="dark"] .mat-chips-bar{background:#0e1c2e}
-[data-theme="dark"] .mat-chip{color:#4a6a80}
-[data-theme="dark"] .mat-chip.active{background:#0d1520;color:#79c0e0;box-shadow:0 1px 5px rgba(0,0,0,.4)}
-[data-theme="dark"] .mat-chip-new{color:#3a5a70}
+[data-theme="dark"] .mat-chip{background:#0d1520;border-color:#2a3a4a;color:#79c0e0}
+[data-theme="dark"] .mat-chip.active{background:#0f6f9c;border-color:#0f6f9c;color:#fff}
+[data-theme="dark"] .mat-chip-new{border-color:#3a4a5a;color:#5a7184}
 .rep-row2{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .rep-thumb img{max-height:36px;border-radius:5px}
 .rep-empty{font-size:12px;color:#93a8b5;text-align:center;padding:12px 0}
@@ -218,8 +216,8 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
     <div id="mat-chips-bar" class="mat-chips-bar" style="display:none"></div>
     <div class="cb">
       <div class="g2">
-        <div class="f"><label for="v_mes">Mes / Año<span class="req">*</span></label><input type="month" id="v_mes" onchange="onMesChange(false)"></div>
-        <div class="f"><label for="v_mat">Matrícula<span class="req">*</span></label><input type="text" id="v_mat" list="mat-list" autocapitalize="characters" placeholder="0000-XXX"><datalist id="mat-list"></datalist></div>
+        <div class="f"><label for="v_mes">Mes / Año</label><input type="month" id="v_mes" onchange="onMesChange(false)"></div>
+        <div class="f"><label for="v_mat">Matrícula</label><input type="text" id="v_mat" list="mat-list" autocapitalize="characters" placeholder="0000-XXX"><datalist id="mat-list"></datalist></div>
         <div class="f"><label for="v_marca">Marca</label><input type="text" id="v_marca" placeholder="Ej. SEAT"></div>
         <div class="f"><label for="v_modelo">Modelo</label><input type="text" id="v_modelo" placeholder="Ej. Ibiza"></div>
         <div class="f"><label for="v_tarjeta">Nº Tarjeta</label><input type="text" id="v_tarjeta"></div>
@@ -1754,7 +1752,6 @@ function saveHistorico() {
   var mat = (gv('v_mat') || '').trim().toUpperCase();
   var mes = gv('v_mes');
   if (!mat || !mes) return;
-  saveCurrentVehicle();
   var tipo = document.getElementById('tipo_combustible').value;
   var entries = [], photos = {};
   if (tipo === 'gasolina') {
@@ -1798,12 +1795,7 @@ function saveHistorico() {
   cutoff.setMonth(cutoff.getMonth() - 6);
   var cutoffStr = cutoff.getFullYear() + '-' + String(cutoff.getMonth() + 1).padStart(2, '0');
   Object.keys(hist).forEach(function(k) { if (hist[k].mes && hist[k].mes < cutoffStr) delete hist[k]; });
-  try {
-    FSStorage.setItem(HIST_KEY, JSON.stringify(hist));
-  } catch(e) {
-    if (e.name === 'QuotaExceededError' || e.code === 22) showErr('Almacenamiento lleno. Vincula un archivo JSON para guardar con fotos.');
-    else throw e;
-  }
+  FSStorage.setItem(HIST_KEY, JSON.stringify(hist));
   _activeParteKey = key;
   renderMatriculaChips(mes);
 }
