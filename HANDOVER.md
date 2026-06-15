@@ -1,5 +1,5 @@
 # Handover — Partes de Locomoción CHT
-**Fecha:** 2026-06-09 | **SW actual:** `partes-loco-v97`
+**Fecha:** 2026-06-15 | **SW actual:** `partes-loco-v98`
 
 ---
 
@@ -37,6 +37,12 @@ CSS `.req { color: #e53e3e; }` en los 3 módulos. Campos marcados:
 - Parte diario: Conductor/a*, Fecha*, Matrícula*
 - Combustible: Mes / Año*, Matrícula*
 - Orden reparación: Fecha*, Matrícula* (OR en validación)
+
+### Fix autocompletado matrícula/conductor (v98)
+`parte_servicio_diario.html`: corregido bucle destructivo entre `onMatriculaChangePD` y `onConductorChangePD`.
+- `onMatriculaChangePD`: ya no borra el conductor si ya tiene contenido (solo lo limpia si la matrícula se vacía); solo autocompleta conductor desde BD si el campo está vacío.
+- `onConductorChangePD`: ya no sobreescribe la matrícula si ya tiene contenido (solo autocompleta si está vacío).
+- Causa: conductores que usaban una matrícula nueva (MMA05981) pero tenían otra matrícula guardada en BD — el autocompletado cruzado les borraba los datos al intentar corregir.
 
 ### Validación Conductor/a (v96)
 `parte_servicio_diario.html`: añadida validación real en `validateParteData()` — el parte no se puede guardar ni generar PDF sin indicar el nombre del conductor/a.

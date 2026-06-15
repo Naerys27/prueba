@@ -1219,15 +1219,16 @@
         var mat = (document.getElementById('parte_servicio').value || '').trim().toUpperCase();
         document.getElementById('marca').value = '';
         document.getElementById('modelo').value = '';
-        document.getElementById('conductor').value = '';
-        if (!mat) return;
+        if (!mat) { document.getElementById('conductor').value = ''; return; }
         var db = loadVehicleDB_PD();
         var v = db[mat];
         if (v) {
           if (v.marca) document.getElementById('marca').value = v.marca;
           else if (v.marcaModelo) document.getElementById('marca').value = v.marcaModelo;
           if (v.modelo) document.getElementById('modelo').value = v.modelo;
-          if (v.conductor) document.getElementById('conductor').value = v.conductor;
+          if (v.conductor && !document.getElementById('conductor').value.trim()) {
+            document.getElementById('conductor').value = v.conductor;
+          }
         }
         suggestLastKmPD(mat);
       }
@@ -1237,6 +1238,7 @@
         var foundMat = null, foundV = null;
         Object.keys(db).forEach(function(mat) { if ((db[mat].conductor || '').trim() === conductor) { foundMat = mat; foundV = db[mat]; } });
         if (!foundMat) return;
+        if (document.getElementById('parte_servicio').value.trim()) return;
         document.getElementById('parte_servicio').value = foundMat;
         if (foundV.marca) document.getElementById('marca').value = foundV.marca;
         if (foundV.modelo) document.getElementById('modelo').value = foundV.modelo;
