@@ -1172,12 +1172,13 @@
 
       var VEHICLE_DB_KEY_PD = 'partes_vehiculos_v1';
       var CONDUCTOR_DB_KEY_PD = 'partes_conductores_v1';
+      function normStr(s) { return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
       function loadConductoresDB() { try { return JSON.parse(FSStorage.getItem(CONDUCTOR_DB_KEY_PD) || '[]'); } catch(e) { return []; } }
       function saveConductorName(name) {
         name = (name || '').trim();
         if (!name) return;
         var list = loadConductoresDB();
-        if (!list.includes(name)) { list.push(name); list.sort(); FSStorage.setItem(CONDUCTOR_DB_KEY_PD, JSON.stringify(list)); }
+        if (!list.some(function(n) { return normStr(n) === normStr(name); })) { list.push(name); list.sort(); FSStorage.setItem(CONDUCTOR_DB_KEY_PD, JSON.stringify(list)); }
       }
       function loadVehicleDB_PD() { try { return JSON.parse(FSStorage.getItem(VEHICLE_DB_KEY_PD) || '{}'); } catch(e) { return {}; } }
       function saveVehicleDB_PD(db) { FSStorage.setItem(VEHICLE_DB_KEY_PD, JSON.stringify(db)); }
@@ -1194,10 +1195,10 @@
         if (dlc) {
           dlc.innerHTML = '';
           var conductores = {};
-          Object.keys(db).forEach(function(mat) { var c = db[mat].conductor; if (c) conductores[c] = true; });
-          loadConductoresDB().forEach(function(c) { conductores[c] = true; });
-          Object.keys(conductores).sort().forEach(function(c) {
-            var opt = document.createElement('option'); opt.value = c; dlc.appendChild(opt);
+          Object.keys(db).forEach(function(mat) { var c = db[mat].conductor; if (c) conductores[normStr(c)] = c; });
+          loadConductoresDB().forEach(function(c) { if (c) conductores[normStr(c)] = c; });
+          Object.keys(conductores).sort().forEach(function(k) {
+            var opt = document.createElement('option'); opt.value = conductores[k]; dlc.appendChild(opt);
           });
         }
       }
@@ -1234,9 +1235,11 @@
       }
       function onConductorChangePD() {
         var conductor = (document.getElementById('conductor').value || '').trim();
+        if (!conductor) return;
+        var normConductor = normStr(conductor);
         var db = loadVehicleDB_PD();
         var foundMat = null, foundV = null;
-        Object.keys(db).forEach(function(mat) { if ((db[mat].conductor || '').trim() === conductor) { foundMat = mat; foundV = db[mat]; } });
+        Object.keys(db).forEach(function(mat) { if (normStr(db[mat].conductor) === normConductor) { foundMat = mat; foundV = db[mat]; } });
         if (!foundMat) return;
         if (document.getElementById('parte_servicio').value.trim()) return;
         document.getElementById('parte_servicio').value = foundMat;
