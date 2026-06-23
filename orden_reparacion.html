@@ -337,8 +337,8 @@
         <div class="g2">
           <div class="f"><label for="fecha">Fecha<span class="req">*</span></label><input id="fecha" type="date"></div>
           <div class="f"><label for="matricula">Matrícula<span class="req">*</span></label><input id="matricula" type="text" list="mat-list-or" autocapitalize="characters" oninput="this.value=this.value.toUpperCase()" style="text-transform:uppercase"><datalist id="mat-list-or"></datalist></div>
-          <div class="f"><label for="marca">Marca</label><input id="marca" type="text"></div>
-          <div class="f"><label for="vehiculo">Modelo</label><input id="vehiculo" type="text"></div>
+          <div class="f"><label for="marca">Marca</label><input id="marca" type="text" style="text-transform:uppercase"></div>
+          <div class="f"><label for="vehiculo">Modelo</label><input id="vehiculo" type="text" style="text-transform:uppercase"></div>
           <div class="f"><label for="solicita">Solicitante</label><input id="solicita" type="text"></div>
           <div class="f"><label for="telefono">Teléfono</label><input id="telefono" type="tel"></div>
           <div class="f"><label for="servicio">Servicio</label><input id="servicio" type="text"></div>
@@ -1134,9 +1134,9 @@
         id: _editingOrdenId || String(Date.now()),
         createdAt: new Date().toISOString(),
         fecha: gv('fecha'),
-        matricula: gv('matricula'),
-        marca: gv('marca'),
-        vehiculo: gv('vehiculo'),
+        matricula: normMat(gv('matricula')),
+        marca: (gv('marca') || '').toUpperCase(),
+        vehiculo: (gv('vehiculo') || '').toUpperCase(),
         solicita: gv('solicita'),
         telefono: gv('telefono'),
         servicio: gv('servicio'),
@@ -1176,6 +1176,9 @@
       _editingOrdenId = id;
       var fields = ['fecha','matricula','marca','vehiculo','solicita','telefono','servicio','cc','resp_autorizante','concepto','km_aprox','localizacion'];
       for (var j = 0; j < fields.length; j++) { var el = document.getElementById(fields[j]); if (el) el.value = o[fields[j]] || ''; }
+      var _matEl = document.getElementById('matricula'); if (_matEl && _matEl.value) _matEl.value = fmtMat(_matEl.value);
+      var _mEl = document.getElementById('marca'); if (_mEl && _mEl.value) _mEl.value = _mEl.value.toUpperCase();
+      var _moEl = document.getElementById('vehiculo'); if (_moEl && _moEl.value) _moEl.value = _moEl.value.toUpperCase();
       window.scrollTo({ top: 0, behavior: 'smooth' });
       toast('Orden cargada para editar');
     }
@@ -1184,7 +1187,7 @@
       var list = getSavedOrdenes();
       var o = null;
       for (var i = 0; i < list.length; i++) { if (list[i].id === id) { o = list[i]; break; } }
-      var msg = o ? ('¿Borrar la orden del ' + fechaCortaOR(o.fecha) + ' · ' + (o.matricula || 'sin matrícula') + '?') : '¿Borrar esta orden?';
+      var msg = o ? ('¿Borrar la orden del ' + fechaCortaOR(o.fecha) + ' · ' + (fmtMat(o.matricula) || 'sin matrícula') + '?') : '¿Borrar esta orden?';
       if (!confirm(msg)) return;
       if (_editingOrdenId === id) _editingOrdenId = null;
       var newList = [];
@@ -1208,7 +1211,7 @@
       var html = '';
       for (var i = 0; i < all.length; i++) {
         var o = all[i];
-        var tit = fechaCortaOR(o.fecha) + (o.matricula ? ' · ' + escapeHtmlOR(o.matricula.toUpperCase()) : '');
+        var tit = fechaCortaOR(o.fecha) + (o.matricula ? ' · ' + escapeHtmlOR(fmtMat(o.matricula)) : '');
         var meta = escapeHtmlOR((o.marca || '') + (o.vehiculo ? ' ' + o.vehiculo : ''));
         if (o.concepto) meta += (meta ? '<br>' : '') + escapeHtmlOR(o.concepto.substring(0, 80)) + (o.concepto.length > 80 ? '…' : '');
         html += '<div class="or-saved-item">' +
@@ -1310,15 +1313,21 @@
     (function () {
       FSStorage.init();
       var VKEY = 'partes_vehiculos_v1';
-      function loadDB() { try { return JSON.parse(FSStorage.getItem(VKEY) || '{}'); } catch(e) { return {}; } }
+      function normMat(s) { return (s || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase(); }
+      function fmtMat(s) { var n = normMat(s); return n.length > 3 ? n.slice(0, 3) + '-' + n.slice(3) : n; }
+      function loadDB() {
+        var raw; try { raw = JSON.parse(FSStorage.getItem(VKEY) || '{}'); } catch(e) { raw = {}; }
+        var mig = {}; Object.keys(raw).forEach(function(k) { var nk = normMat(k) || k; mig[nk] = raw[k]; });
+        return mig;
+      }
       function saveDB(db) { FSStorage.setItem(VKEY, JSON.stringify(db)); }
       window.saveVehicleOR = function() {
-        var mat = (document.getElementById('matricula').value || '').trim().toUpperCase();
+        var mat = normMat(document.getElementById('matricula').value);
         if (!mat) return;
         var db = loadDB();
         var existing = db[mat] || {};
-        var marca = (document.getElementById('marca').value || '').trim();
-        var modelo = (document.getElementById('vehiculo').value || '').trim();
+        var marca = (document.getElementById('marca').value || '').trim().toUpperCase();
+        var modelo = (document.getElementById('vehiculo').value || '').trim().toUpperCase();
         if (marca) existing.marca = marca;
         if (modelo) existing.modelo = modelo;
         if (marca && modelo) existing.marcaModelo = (marca + ' ' + modelo).trim();
@@ -1332,11 +1341,11 @@
         if (!dl) return;
         dl.innerHTML = '';
         Object.keys(db).sort().forEach(function(mat) {
-          var opt = document.createElement('option'); opt.value = mat; dl.appendChild(opt);
+          var opt = document.createElement('option'); opt.value = fmtMat(mat); dl.appendChild(opt);
         });
       }
       function onMatriculaChange() {
-        var mat = (document.getElementById('matricula').value || '').trim().toUpperCase();
+        var mat = normMat(document.getElementById('matricula').value);
         document.getElementById('marca').value = '';
         document.getElementById('vehiculo').value = '';
         if (!mat) return;
@@ -1345,13 +1354,16 @@
         if (!v) return;
         var marca = v.marca || (v.marcaModelo ? v.marcaModelo.split(' ')[0] : '');
         var modelo = v.modelo || (v.marcaModelo ? v.marcaModelo.split(' ').slice(1).join(' ') : '');
-        if (marca) document.getElementById('marca').value = marca;
-        if (modelo) document.getElementById('vehiculo').value = modelo;
+        if (marca) document.getElementById('marca').value = marca.toUpperCase();
+        if (modelo) document.getElementById('vehiculo').value = modelo.toUpperCase();
       }
       window.addEventListener('load', function() {
         FSStorage.onReady(function() {
           updateDatalist();
           renderOrHistory();
+          document.getElementById('matricula').addEventListener('blur', function() { var v = fmtMat(this.value); if (this.value !== v) this.value = v; });
+          document.getElementById('marca').addEventListener('blur', function() { this.value = this.value.toUpperCase(); });
+          document.getElementById('vehiculo').addEventListener('blur', function() { this.value = this.value.toUpperCase(); });
           document.getElementById('matricula').addEventListener('change', onMatriculaChange);
         });
       });

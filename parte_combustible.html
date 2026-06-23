@@ -220,8 +220,8 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
       <div class="g2">
         <div class="f"><label for="v_mes">Mes / Año<span class="req">*</span></label><input type="month" id="v_mes" onchange="onMesChange(false)"></div>
         <div class="f"><label for="v_mat">Matrícula<span class="req">*</span></label><input type="text" id="v_mat" list="mat-list" autocapitalize="characters" placeholder="0000-XXX"><datalist id="mat-list"></datalist></div>
-        <div class="f"><label for="v_marca">Marca</label><input type="text" id="v_marca" placeholder="Ej. SEAT"></div>
-        <div class="f"><label for="v_modelo">Modelo</label><input type="text" id="v_modelo" placeholder="Ej. Ibiza"></div>
+        <div class="f"><label for="v_marca">Marca</label><input type="text" id="v_marca" placeholder="Ej. SEAT" style="text-transform:uppercase"></div>
+        <div class="f"><label for="v_modelo">Modelo</label><input type="text" id="v_modelo" placeholder="Ej. Ibiza" style="text-transform:uppercase"></div>
         <div class="f"><label for="v_tarjeta">Nº Tarjeta</label><input type="text" id="v_tarjeta"></div>
         <div class="f"><label for="v_coste">Centro de Coste</label><input type="text" id="v_coste"></div>
         <div class="f full"><label for="v_servicio">Servicio</label><input type="text" id="v_servicio"></div>
@@ -1282,7 +1282,7 @@ document.addEventListener('input', function(ev) {
 
 function syncConductoresField() {
   var values = Array.prototype.slice.call(document.querySelectorAll('.driver-input'))
-    .map(function(inp){ return (inp.value || '').trim(); })
+    .map(function(inp){ return (inp.value || '').trim().toUpperCase(); })
     .filter(function(v){ return v !== ''; });
   document.getElementById('v_conductores').value = values.join('\n');
 }
@@ -1292,10 +1292,13 @@ function addConductorRow(value) {
   if (!list) return;
   var row = document.createElement('div');
   row.className = 'driver-row';
-  row.innerHTML = '<input type="text" class="driver-input" placeholder="Nombre y apellidos del conductor" value="' + ((value || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')) + '\">' +
+  var _ucVal = (value || '').toUpperCase();
+  row.innerHTML = '<input type="text" class="driver-input" placeholder="Nombre y apellidos del conductor" style="text-transform:uppercase" value="' + (_ucVal.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')) + '\">' +
                   '<button type="button" class="driver-remove" onclick="removeConductorRow(this)">✕</button>';
   list.appendChild(row);
-  row.querySelector('input').addEventListener('input', syncConductoresField);
+  var _inp = row.querySelector('input');
+  _inp.addEventListener('input', syncConductoresField);
+  _inp.addEventListener('blur', function() { this.value = this.value.toUpperCase(); syncConductoresField(); });
   updateConductorRemoveButtons();
   syncConductoresField();
 }
@@ -1609,20 +1612,38 @@ switchFuelType();
 
 FSStorage.init();
 var VEHICLE_DB_KEY = 'partes_vehiculos_v1';
-function loadVehicleDB() { try { return JSON.parse(FSStorage.getItem(VEHICLE_DB_KEY) || '{}'); } catch(e) { return {}; } }
+function normMat(s) { return (s || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase(); }
+function fmtMat(s) { var n = normMat(s); return n.length > 3 ? n.slice(0, 3) + '-' + n.slice(3) : n; }
+function migrateHist(hist) {
+  var out = {};
+  Object.keys(hist).forEach(function(k) {
+    var si = k.indexOf('/');
+    var mat = si >= 0 ? k.slice(0, si) : k;
+    var mes = si >= 0 ? k.slice(si + 1) : '';
+    var nk = normMat(mat) + (mes ? '/' + mes : '');
+    out[nk] = Object.assign({}, hist[k]);
+    if (out[nk].mat) out[nk].mat = normMat(out[nk].mat);
+  });
+  return out;
+}
+function loadVehicleDB() {
+  var raw; try { raw = JSON.parse(FSStorage.getItem(VEHICLE_DB_KEY) || '{}'); } catch(e) { raw = {}; }
+  var mig = {}; Object.keys(raw).forEach(function(k) { var nk = normMat(k) || k; mig[nk] = raw[k]; });
+  return mig;
+}
 function saveVehicleDB(db) { FSStorage.setItem(VEHICLE_DB_KEY, JSON.stringify(db)); }
 function updateMatDatalist() {
   var db = loadVehicleDB();
   var hist = {};
   try { hist = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); } catch(e) {}
   var mats = new Set(Object.keys(db));
-  Object.keys(hist).forEach(function(k) { if (hist[k].mat) mats.add(hist[k].mat); });
+  Object.keys(hist).forEach(function(k) { if (hist[k].mat) mats.add(normMat(hist[k].mat) || hist[k].mat); });
   var dl = document.getElementById('mat-list');
   if (!dl) return;
   dl.innerHTML = '';
   Array.from(mats).sort().forEach(function(mat) {
     var opt = document.createElement('option');
-    opt.value = mat;
+    opt.value = fmtMat(mat);
     dl.appendChild(opt);
   });
 }
@@ -1635,7 +1656,7 @@ function onMesChange(auto) {
     if (hasData) {
       var _vmat = document.getElementById('v_mat');
       var _vmes = document.getElementById('v_mes');
-      if (_activeMat) _vmat.value = _activeMat;
+      if (_activeMat) _vmat.value = fmtMat(_activeMat);
       if (_activeMes) _vmes.value = _activeMes;
       saveHistorico();
       _vmes.value = mes;
@@ -1675,7 +1696,7 @@ function renderMatriculaChips(mes) {
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'mat-chip' + (k === _activeParteKey ? ' active' : '');
-    btn.textContent = hist[k].mat;
+    btn.textContent = fmtMat(hist[k].mat);
     btn.onclick = function() { loadParteChip(k); };
     bar.appendChild(btn);
   });
@@ -1694,7 +1715,7 @@ function loadParteChip(key) {
   if (hasData) {
     var _vmat = document.getElementById('v_mat');
     var _vmes = document.getElementById('v_mes');
-    if (_activeMat) _vmat.value = _activeMat;
+    if (_activeMat) _vmat.value = fmtMat(_activeMat);
     if (_activeMes) _vmes.value = _activeMes;
     saveHistorico();
   }
@@ -1707,7 +1728,7 @@ function newParteForMes(mes) {
   if (hasData) {
     var _vmat = document.getElementById('v_mat');
     var _vmes = document.getElementById('v_mes');
-    if (_activeMat) _vmat.value = _activeMat;
+    if (_activeMat) _vmat.value = fmtMat(_activeMat);
     if (_activeMes) _vmes.value = _activeMes;
     saveHistorico();
   }
@@ -1720,7 +1741,7 @@ function newParteForMes(mes) {
   recalc();
 }
 function onMatriculaChange() {
-  var mat = (document.getElementById('v_mat').value || '').trim().toUpperCase();
+  var mat = normMat(document.getElementById('v_mat').value);
   document.getElementById('v_marca').value  = '';
   document.getElementById('v_modelo').value = '';
   document.getElementById('v_tarjeta').value = '';
@@ -1729,8 +1750,8 @@ function onMatriculaChange() {
     var db = loadVehicleDB();
     var v = db[mat];
     if (v) {
-      if (v.marca)   document.getElementById('v_marca').value   = v.marca;
-      if (v.modelo)  document.getElementById('v_modelo').value  = v.modelo;
+      if (v.marca)   document.getElementById('v_marca').value   = (v.marca).toUpperCase();
+      if (v.modelo)  document.getElementById('v_modelo').value  = (v.modelo).toUpperCase();
       if (v.tarjeta) document.getElementById('v_tarjeta').value = v.tarjeta;
       if (v.coste)   document.getElementById('v_coste').value   = v.coste;
     }
@@ -1751,7 +1772,7 @@ function onMatriculaChange() {
 }
 var HIST_KEY = 'partes_combustible_hist_v1';
 function saveHistorico() {
-  var mat = (gv('v_mat') || '').trim().toUpperCase();
+  var mat = normMat(gv('v_mat'));
   var mes = gv('v_mes');
   if (!mat || !mes) return;
   saveCurrentVehicle();
@@ -1867,7 +1888,7 @@ function renderHistorico() {
     delBtn.className = 'hist-load-btn';
     delBtn.style.cssText = 'background:#c0392b;margin-left:4px';
     delBtn.textContent = 'Borrar';
-    delBtn.onclick = (function(key, label) { return function() { deleteHistorico(key, label); }; })(k, fmtMonth(h.mes) + ' · ' + h.mat);
+    delBtn.onclick = (function(key, label) { return function() { deleteHistorico(key, label); }; })(k, fmtMonth(h.mes) + ' · ' + fmtMat(h.mat));
     actRow.appendChild(loadBtn);
     actRow.appendChild(delBtn);
     rowsEl.appendChild(actRow);
@@ -1907,11 +1928,11 @@ function loadHistorico(key) {
   document.getElementById('nf_d_thumb').innerHTML = '';
   clearSig();
   // Rellenar campos de cabecera
-  if (document.getElementById('v_mat')) document.getElementById('v_mat').value = h.mat || '';
+  if (document.getElementById('v_mat')) document.getElementById('v_mat').value = fmtMat(h.mat) || '';
   if (document.getElementById('v_mes')) document.getElementById('v_mes').value = h.mes || '';
   onMatriculaChange();
   if (document.getElementById('km_ini')) document.getElementById('km_ini').value = h.km_ini || '';
-  if (!h.km_ini) suggestKmIniFromPrevMonth(h.mat, h.mes);
+  if (!h.km_ini) suggestKmIniFromPrevMonth(normMat(h.mat), h.mes);
   if (document.getElementById('km_fin')) document.getElementById('km_fin').value = h.km_fin || '';
   var _kia = parseInt((h.km_ini || '').toString(), 10) || 0, _kib = parseInt((h.km_fin || '').toString(), 10) || 0;
   document.getElementById('km_tot').value = (_kib > _kia) ? (_kib - _kia) : '';
@@ -1920,7 +1941,7 @@ function loadHistorico(key) {
     var _cList = document.getElementById('conductores_list');
     if (_cList) {
       _cList.innerHTML = '';
-      h.conductores.split('\n').filter(function(c) { return c.trim(); }).forEach(function(c) { addConductorRow(c); });
+      h.conductores.split('\n').filter(function(c) { return c.trim(); }).forEach(function(c) { addConductorRow(c.toUpperCase()); });
       if (!_cList.children.length) addConductorRow('');
       syncConductoresField();
     }
@@ -1954,7 +1975,7 @@ function loadHistorico(key) {
   recalc();
   _activeParteKey = key;
   _activeMes = h.mes;
-  _activeMat = h.mat;
+  _activeMat = normMat(h.mat);
   renderMatriculaChips(h.mes);
   window.scrollTo({ top: 0, behavior: 'smooth' });
   toast('Mes cargado en el formulario');
@@ -1969,11 +1990,11 @@ function deleteHistorico(key, label) {
   toast('Parte borrado');
 }
 function saveCurrentVehicle() {
-  var mat = (gv('v_mat') || '').trim().toUpperCase();
+  var mat = normMat(gv('v_mat'));
   if (!mat) return;
   var db = loadVehicleDB();
   var existing = db[mat] || {};
-  var marca = gv('v_marca'); var modelo = gv('v_modelo');
+  var marca = (gv('v_marca') || '').toUpperCase(); var modelo = (gv('v_modelo') || '').toUpperCase();
   if (marca) existing.marca = marca;
   if (modelo) existing.modelo = modelo;
   if (marca && modelo) existing.marcaModelo = (marca + ' ' + modelo).trim();
@@ -2001,7 +2022,7 @@ function suggestKmIniFromPrevMonth(mat, mes) {
   }
 }
 
-window.addEventListener("load", function() { initConductoresUI(); resizeSigCanvas(); setTimeout(resizeSigCanvas, 400); FSStorage.onReady(function() { updateMatDatalist(); document.getElementById('v_mat').addEventListener('change', onMatriculaChange); var _d = new Date(); var _mes = _d.getFullYear() + '-' + String(_d.getMonth() + 1).padStart(2, '0'); var _vmes = document.getElementById('v_mes'); if (_vmes && !_vmes.value) { _vmes.value = _mes; onMesChange(true); } renderHistorico(); }); });
+window.addEventListener("load", function() { initConductoresUI(); resizeSigCanvas(); setTimeout(resizeSigCanvas, 400); FSStorage.onReady(function() { try { var _rh = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); var _mh = migrateHist(_rh); if (JSON.stringify(_mh) !== JSON.stringify(_rh)) FSStorage.setItem(HIST_KEY, JSON.stringify(_mh)); } catch(e) {} updateMatDatalist(); document.getElementById('v_mat').addEventListener('blur', function() { var v = fmtMat(this.value); if (this.value !== v) this.value = v; }); document.getElementById('v_marca').addEventListener('blur', function() { this.value = this.value.toUpperCase(); }); document.getElementById('v_modelo').addEventListener('blur', function() { this.value = this.value.toUpperCase(); }); document.getElementById('v_mat').addEventListener('change', onMatriculaChange); var _d = new Date(); var _mes = _d.getFullYear() + '-' + String(_d.getMonth() + 1).padStart(2, '0'); var _vmes = document.getElementById('v_mes'); if (_vmes && !_vmes.value) { _vmes.value = _mes; onMesChange(true); } renderHistorico(); }); });
 function toggleTheme() {
   var dark = document.documentElement.getAttribute('data-theme') === 'dark';
   if (dark) {

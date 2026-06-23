@@ -380,11 +380,11 @@
          <div class="ch">Datos generales</div>
          <div class="cb">
             <div class="grid">
-               <div class="f"><label for="conductor">Conductor/a<span class="req">*</span></label><input id="conductor" list="conductor-list-pd" placeholder="Nombre del conductor/a"><datalist id="conductor-list-pd"></datalist></div>
+               <div class="f"><label for="conductor">Conductor/a<span class="req">*</span></label><input id="conductor" list="conductor-list-pd" placeholder="Nombre del conductor/a" style="text-transform:uppercase"><datalist id="conductor-list-pd"></datalist></div>
                <div class="f"><label for="fecha">Fecha<span class="req">*</span></label><input id="fecha" type="date"></div>
                <div class="f"><label for="parte_servicio">Matrícula<span class="req">*</span></label><input id="parte_servicio" list="mat-list-pd" autocapitalize="characters" placeholder="Introduzca Matrícula"><datalist id="mat-list-pd"></datalist></div>
-               <div class="f"><label for="marca">Marca</label><input id="marca" placeholder="Ej. SEAT"></div>
-               <div class="f"><label for="modelo">Modelo</label><input id="modelo" placeholder="Ej. Ibiza"></div>
+               <div class="f"><label for="marca">Marca</label><input id="marca" placeholder="Ej. SEAT" style="text-transform:uppercase"></div>
+               <div class="f"><label for="modelo">Modelo</label><input id="modelo" placeholder="Ej. Ibiza" style="text-transform:uppercase"></div>
             </div>
          </div>
       </div>
@@ -1105,7 +1105,7 @@
          try { FSStorage.setItem(STORAGE_KEY_PARTES, JSON.stringify(sortParts(parts))); return true; }
          catch (err) { const isQuota = err && (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED' || err.code === 22 || err.code === 1014); showErr(isQuota ? 'ERROR: no se ha podido guardar. El almacenamiento local del navegador está lleno. Exporta una copia JSON, borra partes antiguos o libera datos del navegador antes de continuar.' : 'ERROR guardando datos locales: ' + err.message); return false; }
       }
-      function cleanKeyPart(v) { return String(v || '').trim().toUpperCase().replace(/\s+/g, '_').replace(/[^A-Z0-9_\-]/g, '') || 'SIN_MATRICULA'; }
+      function cleanKeyPart(v) { return normMat(v) || 'SIN_MATRICULA'; }
       function currentMonthValue() { const f = gv('fecha'); if (f && /^\d{4}-\d{2}-\d{2}$/.test(f)) return f.slice(0, 7); const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
       function ensureMonthInput() { const mes = q('mes_partes'); if (mes && !mes.value) mes.value = currentMonthValue(); }
       function monthKey(fecha) { return (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) ? fecha.slice(0, 7) : ''; }
@@ -1124,7 +1124,7 @@
          return removed;
       }
       function makeNewParteId(data) { const fecha = data.fecha || new Date().toISOString().slice(0, 10); const matricula = cleanKeyPart(data.parte_servicio); const unique = (Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7)).toUpperCase(); return fecha + '_' + matricula + '_' + unique; }
-      function collectParteData() { recalc(); const data = {}; FIELD_IDS_PARTES.forEach(id => data[id] = gv(id)); data.firma = hasSignature() ? sigCanvas.toDataURL('image/png') : ''; data.updatedAt = new Date().toISOString(); return data; }
+      function collectParteData() { recalc(); const data = {}; FIELD_IDS_PARTES.forEach(id => data[id] = gv(id)); data.parte_servicio = normMat(data.parte_servicio); data.conductor = (data.conductor || '').toUpperCase(); data.marca = (data.marca || '').toUpperCase(); data.modelo = (data.modelo || '').toUpperCase(); data.firma = hasSignature() ? sigCanvas.toDataURL('image/png') : ''; data.updatedAt = new Date().toISOString(); return data; }
       function validateParteData(data) {
          const errors = [];
          if (!data.fecha) errors.push('Indica la fecha.');
@@ -1139,7 +1139,7 @@
          return errors;
       }
       function loadSignatureFromData(data) { return new Promise(resolve => { clearSig(); if (!data || !data.firma) return resolve(); const img = new Image(); img.onload = function () { sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height); sigCtx.drawImage(img, 0, 0, sigCanvas.width, sigCanvas.height); q('sighint').style.display = 'none'; resolve(); }; img.onerror = function () { resolve(); }; img.src = data.firma; }); }
-      function setParteData(data, includeSignature = true) { FIELD_IDS_PARTES.forEach(id => { if (q(id)) q(id).value = data && data[id] ? data[id] : ''; }); updateRepostajesFromValues(); recalc(); return includeSignature ? loadSignatureFromData(data) : Promise.resolve(); }
+      function setParteData(data, includeSignature = true) { FIELD_IDS_PARTES.forEach(id => { if (q(id)) q(id).value = data && data[id] ? data[id] : ''; }); const _ps = q('parte_servicio'); if (_ps && _ps.value) _ps.value = fmtMat(_ps.value); const _pc = q('conductor'); if (_pc && _pc.value) _pc.value = _pc.value.toUpperCase(); const _pm = q('marca'); if (_pm && _pm.value) _pm.value = _pm.value.toUpperCase(); const _pmo = q('modelo'); if (_pmo && _pmo.value) _pmo.value = _pmo.value.toUpperCase(); updateRepostajesFromValues(); recalc(); return includeSignature ? loadSignatureFromData(data) : Promise.resolve(); }
       function clearParteFormAfterSave() { FIELD_IDS_PARTES.forEach(id => { if (q(id)) q(id).value = ''; }); editingParteId = null; setRepostajesVisibles(1, true); recalc(); clearSig(); document.getElementById('fecha').value = new Date().toISOString().slice(0,10); }
       async function saveParteDiario() {
          const data = collectParteData(); const errors = validateParteData(data); if (errors.length) { showErr('Revisa el parte:\n- ' + errors.join('\n- ')); return; }
@@ -1161,9 +1161,9 @@
       function renderSavedDays() {
          const list = q('saved_days_list'); if (!list) return; ensureMonthInput(); const parts = getFilteredSavedParts(); updateSavedPartsSummary(parts);
          if (!parts.length) { list.innerHTML = '<div class="saved-empty">No hay partes guardados para este mes.</div>'; return; }
-         list.innerHTML = parts.map(p => { const repostajes = [1, 2, 3].filter(i => p['p' + i] || p['l' + i]).length || 0; const kms = p.kms_recorridos ? ` · ${escapeHtml(p.kms_recorridos)} km` : ''; const horas = (p.hora_salida || p.hora_llegada) ? ` · ${escapeHtml(p.hora_salida || '--:--')} - ${escapeHtml(p.hora_llegada || '--:--')}` : ''; const firma = p.firma ? ' · con firma' : ''; const repTxt = repostajes ? ` · ${repostajes} repostaje${repostajes > 1 ? 's' : ''}` : ''; const etiqueta = partIndexLabel(parts, p); return `<div class="saved-item" data-id="${escapeHtml(p.id)}"><input class="saved-check" type="checkbox" checked value="${escapeHtml(p.id)}" title="Incluir en PDF mensual"><div class="saved-main"><div class="saved-title">${escapeHtml(formatFechaCorta(p.fecha))} · ${escapeHtml((p.parte_servicio || 'Sin matrícula').toUpperCase())}${escapeHtml(etiqueta)}</div><div class="saved-meta">${escapeHtml(p.marca || 'Sin marca')}${kms}${horas}${repTxt}${firma}<br>${escapeHtml(p.itinerario ? p.itinerario.substring(0, 90) : 'Sin itinerario')}</div></div><div class="saved-row-actions"><button class="sec mini-btn" type="button" onclick="editSavedPart('${escapeHtml(p.id)}')">Editar</button><button class="danger mini-btn" type="button" onclick="deleteSavedPart('${escapeHtml(p.id)}')">Borrar</button></div></div>`; }).join(''); }
+         list.innerHTML = parts.map(p => { const repostajes = [1, 2, 3].filter(i => p['p' + i] || p['l' + i]).length || 0; const kms = p.kms_recorridos ? ` · ${escapeHtml(p.kms_recorridos)} km` : ''; const horas = (p.hora_salida || p.hora_llegada) ? ` · ${escapeHtml(p.hora_salida || '--:--')} - ${escapeHtml(p.hora_llegada || '--:--')}` : ''; const firma = p.firma ? ' · con firma' : ''; const repTxt = repostajes ? ` · ${repostajes} repostaje${repostajes > 1 ? 's' : ''}` : ''; const etiqueta = partIndexLabel(parts, p); return `<div class="saved-item" data-id="${escapeHtml(p.id)}"><input class="saved-check" type="checkbox" checked value="${escapeHtml(p.id)}" title="Incluir en PDF mensual"><div class="saved-main"><div class="saved-title">${escapeHtml(formatFechaCorta(p.fecha))} · ${escapeHtml(fmtMat(p.parte_servicio) || 'Sin matrícula')}${escapeHtml(etiqueta)}</div><div class="saved-meta">${escapeHtml(p.marca || 'Sin marca')}${kms}${horas}${repTxt}${firma}<br>${escapeHtml(p.itinerario ? p.itinerario.substring(0, 90) : 'Sin itinerario')}</div></div><div class="saved-row-actions"><button class="sec mini-btn" type="button" onclick="editSavedPart('${escapeHtml(p.id)}')">Editar</button><button class="danger mini-btn" type="button" onclick="deleteSavedPart('${escapeHtml(p.id)}')">Borrar</button></div></div>`; }).join(''); }
       async function editSavedPart(id) { const part = getSavedParts().find(p => p.id === id); if (!part) { showErr('No se encuentra el parte guardado.'); return; } editingParteId = id; await setParteData(part, true); window.scrollTo({ top: 0, behavior: 'smooth' }); toast('Parte cargado para editar'); }
-      function deleteSavedPart(id) { const part = getSavedParts().find(p => p.id === id); const msg = part ? `¿Borrar el parte del ${formatFechaCorta(part.fecha)} de ${part.parte_servicio || 'sin matrícula'}?` : '¿Borrar este parte guardado?'; if (!confirm(msg)) return; if (editingParteId === id) editingParteId = null; const newParts = getSavedParts().filter(p => p.id !== id); if (!setSavedParts(newParts)) return; renderSavedDays(); toast('Parte borrado'); }
+      function deleteSavedPart(id) { const part = getSavedParts().find(p => p.id === id); const msg = part ? `¿Borrar el parte del ${formatFechaCorta(part.fecha)} de ${fmtMat(part.parte_servicio) || 'sin matrícula'}?` : '¿Borrar este parte guardado?'; if (!confirm(msg)) return; if (editingParteId === id) editingParteId = null; const newParts = getSavedParts().filter(p => p.id !== id); if (!setSavedParts(newParts)) return; renderSavedDays(); toast('Parte borrado'); }
       function getSelectedSavedParts() { const ids = Array.from(document.querySelectorAll('.saved-check:checked')).map(ch => ch.value); const all = getSavedParts(); return sortParts(ids.map(id => all.find(p => p.id === id)).filter(Boolean)); }
       async function renderPartsIntoPDF(doc, parts) { for (let i = 0; i < parts.length; i++) { if (i > 0) doc.addPage(); await setParteData(parts[i], true); drawCurrentParteDiarioPDFPage(doc); } }
       async function makeMonthlyPDF() { const selected = getSelectedSavedParts(); if (!selected.length) { showErr('No hay días seleccionados para generar el PDF mensual.'); return; } const btn = q('pdfmesbtn'); const oldText = btn ? btn.textContent : ''; if (btn) { btn.textContent = 'Generando todo...'; btn.disabled = true; } const backup = collectParteData(); const backupEditId = editingParteId; try { const JPDF = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF; if (!JPDF) throw new Error('jsPDF no cargado.'); const doc = new JPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' }); await renderPartsIntoPDF(doc, selected); const mes = q('mes_partes')?.value || currentMonthValue(); const _mesFmt=mes.slice(2,4)+mes.slice(5,7); const _conds=[...new Set(selected.map(p=>(p.conductor||'').trim()).filter(Boolean))]; const _condStr=_conds.length===1?' - '+_conds[0]:''; const _fn1=`${_mesFmt} Partes diario ${fmtMonth(mes)}${_condStr}.pdf`; const _blob1=doc.output('blob');const _burl1=URL.createObjectURL(_blob1);const _a1=document.createElement('a');_a1.href=_burl1;_a1.download=_fn1;document.body.appendChild(_a1);_a1.click();_a1.remove(); showPDFSaved(_fn1,_burl1); } catch (err) { showErr('ERROR PDF mensual: ' + err.message); } finally { await setParteData(backup, true); editingParteId = backupEditId; updateRepostajesFromValues(); if (btn) { btn.textContent = oldText || 'PDF del mes'; btn.disabled = false; } } }
@@ -1173,14 +1173,22 @@
       var VEHICLE_DB_KEY_PD = 'partes_vehiculos_v1';
       var CONDUCTOR_DB_KEY_PD = 'partes_conductores_v1';
       function normStr(s) { return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
+      function normMat(s) { return (s || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase(); }
+      function fmtMat(s) { var n = normMat(s); return n.length > 3 ? n.slice(0, 3) + '-' + n.slice(3) : n; }
       function loadConductoresDB() { try { return JSON.parse(FSStorage.getItem(CONDUCTOR_DB_KEY_PD) || '[]'); } catch(e) { return []; } }
       function saveConductorName(name) {
-        name = (name || '').trim();
+        name = (name || '').trim().toUpperCase();
         if (!name) return;
         var list = loadConductoresDB();
-        if (!list.some(function(n) { return normStr(n) === normStr(name); })) { list.push(name); list.sort(); FSStorage.setItem(CONDUCTOR_DB_KEY_PD, JSON.stringify(list)); }
+        var idx = list.findIndex(function(n) { return normStr(n) === normStr(name); });
+        if (idx >= 0) { if (list[idx] !== name) { list[idx] = name; list.sort(); FSStorage.setItem(CONDUCTOR_DB_KEY_PD, JSON.stringify(list)); } }
+        else { list.push(name); list.sort(); FSStorage.setItem(CONDUCTOR_DB_KEY_PD, JSON.stringify(list)); }
       }
-      function loadVehicleDB_PD() { try { return JSON.parse(FSStorage.getItem(VEHICLE_DB_KEY_PD) || '{}'); } catch(e) { return {}; } }
+      function loadVehicleDB_PD() {
+        var raw; try { raw = JSON.parse(FSStorage.getItem(VEHICLE_DB_KEY_PD) || '{}'); } catch(e) { raw = {}; }
+        var mig = {}; Object.keys(raw).forEach(function(k) { var nk = normMat(k) || k; mig[nk] = raw[k]; });
+        return mig;
+      }
       function saveVehicleDB_PD(db) { FSStorage.setItem(VEHICLE_DB_KEY_PD, JSON.stringify(db)); }
       function updateMatDatalistPD() {
         var db = loadVehicleDB_PD();
@@ -1189,7 +1197,7 @@
         if (dl) {
           dl.innerHTML = '';
           Object.keys(db).sort().forEach(function(mat) {
-            var opt = document.createElement('option'); opt.value = mat; dl.appendChild(opt);
+            var opt = document.createElement('option'); opt.value = fmtMat(mat); dl.appendChild(opt);
           });
         }
         if (dlc) {
@@ -1217,16 +1225,16 @@
         }
       }
       function onMatriculaChangePD() {
-        var mat = (document.getElementById('parte_servicio').value || '').trim().toUpperCase();
+        var mat = normMat(document.getElementById('parte_servicio').value);
         document.getElementById('marca').value = '';
         document.getElementById('modelo').value = '';
         if (!mat) { document.getElementById('conductor').value = ''; return; }
         var db = loadVehicleDB_PD();
         var v = db[mat];
         if (v) {
-          if (v.marca) document.getElementById('marca').value = v.marca;
-          else if (v.marcaModelo) document.getElementById('marca').value = v.marcaModelo;
-          if (v.modelo) document.getElementById('modelo').value = v.modelo;
+          if (v.marca) document.getElementById('marca').value = v.marca.toUpperCase();
+          else if (v.marcaModelo) document.getElementById('marca').value = v.marcaModelo.toUpperCase();
+          if (v.modelo) document.getElementById('modelo').value = v.modelo.toUpperCase();
           if (v.conductor && !document.getElementById('conductor').value.trim()) {
             document.getElementById('conductor').value = v.conductor;
           }
@@ -1242,24 +1250,25 @@
         Object.keys(db).forEach(function(mat) { if (normStr(db[mat].conductor) === normConductor) { foundMat = mat; foundV = db[mat]; } });
         if (!foundMat) return;
         if (document.getElementById('parte_servicio').value.trim()) return;
-        document.getElementById('parte_servicio').value = foundMat;
-        if (foundV.marca) document.getElementById('marca').value = foundV.marca;
-        if (foundV.modelo) document.getElementById('modelo').value = foundV.modelo;
+        document.getElementById('parte_servicio').value = fmtMat(foundMat);
+        suggestLastKmPD(foundMat);
+        if (foundV.marca) document.getElementById('marca').value = foundV.marca.toUpperCase();
+        if (foundV.modelo) document.getElementById('modelo').value = foundV.modelo.toUpperCase();
         if (!foundV.marca && foundV.marcaModelo) {
           var mm = foundV.marcaModelo.split(' ');
-          document.getElementById('marca').value = mm[0] || '';
-          if (!foundV.modelo) document.getElementById('modelo').value = mm.slice(1).join(' ') || '';
+          document.getElementById('marca').value = (mm[0] || '').toUpperCase();
+          if (!foundV.modelo) document.getElementById('modelo').value = mm.slice(1).join(' ').toUpperCase() || '';
         }
       }
       function tryLinkVehicleConductorPD() {
-        var mat = (gv('parte_servicio') || '').trim().toUpperCase();
+        var mat = normMat(gv('parte_servicio'));
         var conductor = (gv('conductor') || '').trim();
         var marcaVal = (gv('marca') || '').trim();
         var modeloVal = (gv('modelo') || '').trim();
         if (!mat || !conductor) return;
         var db = loadVehicleDB_PD();
         var existing = db[mat] || {};
-        existing.conductor = conductor;
+        existing.conductor = conductor.toUpperCase();
         if (marcaVal) existing.marca = marcaVal;
         if (modeloVal) existing.modelo = modeloVal;
         if (marcaVal || modeloVal) existing.marcaModelo = (marcaVal + (modeloVal ? ' ' + modeloVal : '')).trim();
@@ -1269,15 +1278,16 @@
         updateMatDatalistPD();
       }
       function saveCurrentVehiclePD() {
-        var mat = (gv('parte_servicio') || '').trim().toUpperCase();
+        var mat = normMat(gv('parte_servicio'));
         if (!mat) return;
         var db = loadVehicleDB_PD();
         var existing = db[mat] || {};
-        var marcaVal = gv('marca'); var modeloVal = gv('modelo');
+        var marcaVal = (gv('marca') || '').toUpperCase(); var modeloVal = (gv('modelo') || '').toUpperCase();
         if (marcaVal) existing.marca = marcaVal;
         if (modeloVal) existing.modelo = modeloVal;
         if (marcaVal || modeloVal) existing.marcaModelo = (marcaVal + (modeloVal ? ' ' + modeloVal : '')).trim();
-        existing.conductor = gv('conductor');
+        var conductorVal = (gv('conductor') || '').toUpperCase();
+        if (conductorVal) existing.conductor = conductorVal;
         db[mat] = existing;
         saveVehicleDB_PD(db);
         saveConductorName(gv('conductor'));
@@ -1362,10 +1372,14 @@
         renderHistoricoDS();
         recalc();
         updateMatDatalistPD();
+        document.getElementById('parte_servicio').addEventListener('blur', function() { var v = fmtMat(this.value); if (this.value !== v) this.value = v; });
         document.getElementById('parte_servicio').addEventListener('input', onMatriculaChangePD);
         document.getElementById('parte_servicio').addEventListener('change', onMatriculaChangePD);
         document.getElementById('parte_servicio').addEventListener('blur', onMatriculaChangePD);
         document.getElementById('parte_servicio').addEventListener('blur', tryLinkVehicleConductorPD);
+        document.getElementById('conductor').addEventListener('blur', function() { this.value = this.value.toUpperCase(); });
+        document.getElementById('marca').addEventListener('blur', function() { this.value = this.value.toUpperCase(); });
+        document.getElementById('modelo').addEventListener('blur', function() { this.value = this.value.toUpperCase(); });
         document.getElementById('conductor').addEventListener('input', onConductorChangePD);
         document.getElementById('conductor').addEventListener('change', onConductorChangePD);
         document.getElementById('conductor').addEventListener('blur', onConductorChangePD);
