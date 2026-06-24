@@ -127,6 +127,10 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
 [data-theme="dark"] .rep-total{color:#79c0e0;border-color:#21262d}
 [data-theme="dark"] .rep-badge-g{background:#1e1400;color:#fcd34d}
 [data-theme="dark"] .rep-badge-d{background:#0a1428;color:#93c5fd}
+.rep-conductor{font-size:11px;color:#5a7184;margin-top:3px}
+.conductor-rep-sel{width:100%;margin-top:2px}
+[data-theme="dark"] .rep-conductor{color:#8899aa}
+[data-theme="dark"] .conductor-rep-sel{background:#0d1520;color:#e6edf3;border-color:#3a4a5a}
 .hist-entry{border-bottom:1px solid #e8edf2;padding:8px 0}
 .hist-entry:last-child{border-bottom:none;padding-bottom:0}
 .hist-hdr{display:flex;align-items:center;gap:8px;cursor:pointer;flex-wrap:wrap;user-select:none}
@@ -266,6 +270,10 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
           <div id="nf_g_thumb"></div>
         </div>
       </div>
+      <div class="f" style="margin-top:9px">
+        <label for="nf_gc">Conductor</label>
+        <select id="nf_gc" class="conductor-rep-sel"><option value="">— Sin especificar —</option></select>
+      </div>
       <button type="button" class="rep-add-btn" onclick="addRepostaje('g')">+ Añadir repostaje</button>
     </div>
   </div>
@@ -291,6 +299,10 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
       <div class="f" style="margin-top:9px"><label>Foto del ticket</label>
         <button type="button" class="photo-add-btn" onclick="captureNewPhoto('d')" id="nf_d_photobtn">📷 Añadir foto</button>
         <div id="nf_d_thumb"></div>
+      </div>
+      <div class="f" style="margin-top:9px">
+        <label for="nf_dc">Conductor</label>
+        <select id="nf_dc" class="conductor-rep-sel"><option value="">— Sin especificar —</option></select>
       </div>
       <button type="button" class="rep-add-btn" onclick="addRepostaje('d')">+ Añadir repostaje</button>
     </div>
@@ -752,7 +764,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 <script>
 
 
-var NR = 13;
+var NR = 14;
 function nval(v) { return parseFloat(String(v || '').replace(',', '.')) || 0; }
 function fmtN(v, d) { var n = Number(v || 0); return n.toFixed(d == null ? 2 : d).replace('.', ','); }
 function gv(id) { var el = document.getElementById(id); return el ? (el.value || '') : ''; }
@@ -790,7 +802,8 @@ function buildRows() {
       '<td><input type="number" inputmode="decimal" step="0.01" class="ge" data-row="'+i+'" oninput="recalc()"></td>'+
       '<td><input type="number" inputmode="decimal" step="0.01" class="gl" data-row="'+i+'" oninput="recalc()"></td>'+
       '<td><input type="date" class="gf" data-row="'+i+'"></td>'+
-      '<td class="photo-td"><button type="button" class="photo-btn" data-row="'+i+'" data-fuel="g">📷</button><div class="thumb-wrap" id="gthumb'+i+'"></div></td>';
+      '<td class="photo-td"><button type="button" class="photo-btn" data-row="'+i+'" data-fuel="g">📷</button><div class="thumb-wrap" id="gthumb'+i+'"></div></td>'+
+      '<td><input type="text" class="gc" data-row="'+i+'"></td>';
     tb1.appendChild(tr1);
 
     var tr2=document.createElement('tr');
@@ -800,7 +813,8 @@ function buildRows() {
       '<td><input type="number" inputmode="decimal" step="0.01" class="dge" data-row="'+i+'" oninput="recalc()"></td>'+
       '<td><input type="number" inputmode="decimal" step="0.01" class="dgl" data-row="'+i+'" oninput="recalc()"></td>'+
       '<td><input type="date" class="df" data-row="'+i+'"></td>'+
-      '<td class="photo-td"><button type="button" class="photo-btn" data-row="'+i+'" data-fuel="d">📷</button><div class="thumb-wrap" id="dthumb'+i+'"></div></td>';
+      '<td class="photo-td"><button type="button" class="photo-btn" data-row="'+i+'" data-fuel="d">📷</button><div class="thumb-wrap" id="dthumb'+i+'"></div></td>'+
+      '<td><input type="text" class="dc" data-row="'+i+'"></td>';
     tb2.appendChild(tr2);
   }
 }
@@ -910,16 +924,22 @@ function editRepostajeInline(fuel, row) {
     ? '<img src="'+ph.data+'" style="max-height:36px;border-radius:5px" onclick="removeRowPhoto(\''+fuel+'_'+row+'\',\''+phTid+'\')" title="Toca para eliminar">'
     : '<button type="button" class="photo-add-btn" style="font-size:11px;padding:4px 8px" onclick="addPhotoToRow(\''+fuel+'\',\''+row+'\')">📷 Foto</button>';
   var fields = '';
+  var conductorOpts = '<option value="">— Sin especificar —</option>';
+  var _cvals = (document.getElementById('v_conductores').value||'').split('\n').map(function(v){return v.trim();}).filter(function(v){return v;});
+  _cvals.forEach(function(v){ conductorOpts += '<option value="'+v.replace(/"/g,'&quot;')+'">'+v+'</option>'; });
+  var _showCondField = _cvals.length > 1;
   if (fuel === 'g') {
     var kms = (document.querySelector('.gk'+q)||{}).value||'';
     var eur = (document.querySelector('.ge'+q)||{}).value||'';
     var lit = (document.querySelector('.gl'+q)||{}).value||'';
     var fecha = (document.querySelector('.gf'+q)||{}).value||'';
+    var cond = (document.querySelector('.gc'+q)||{}).value||'';
     fields = '<div class="rep-inline-grid">'+
       '<div><label>KMs</label><input type="number" id="ie_gk_'+row+'" inputmode="decimal" value="'+kms+'"></div>'+
       '<div><label>Fecha</label><input type="date" id="ie_gf_'+row+'" value="'+fecha+'"></div>'+
       '<div><label>Euros</label><input type="number" id="ie_ge_'+row+'" step="0.01" inputmode="decimal" value="'+eur+'"></div>'+
       '<div><label>Litros</label><input type="number" id="ie_gl_'+row+'" step="0.01" inputmode="decimal" value="'+lit+'"></div>'+
+      (_showCondField?'<div style="grid-column:1/-1"><label>Conductor</label><select id="ie_gc_'+row+'" class="conductor-rep-sel">'+conductorOpts+'</select></div>':'')+
     '</div>';
   } else {
     var kms = (document.querySelector('.dk'+q)||{}).value||'';
@@ -928,6 +948,7 @@ function editRepostajeInline(fuel, row) {
     var geur = (document.querySelector('.dge'+q)||{}).value||'';
     var glit = (document.querySelector('.dgl'+q)||{}).value||'';
     var fecha = (document.querySelector('.df'+q)||{}).value||'';
+    var cond = (document.querySelector('.dc'+q)||{}).value||'';
     fields = '<div class="rep-inline-grid">'+
       '<div><label>KMs</label><input type="number" id="ie_dk_'+row+'" inputmode="decimal" value="'+kms+'"></div>'+
       '<div><label>Fecha</label><input type="date" id="ie_df_'+row+'" value="'+fecha+'"></div>'+
@@ -935,6 +956,7 @@ function editRepostajeInline(fuel, row) {
       '<div><label>AdBlue L</label><input type="number" id="ie_dal_'+row+'" step="0.01" inputmode="decimal" value="'+alit+'"></div>'+
       '<div><label>Gas-oil €</label><input type="number" id="ie_dge_'+row+'" step="0.01" inputmode="decimal" value="'+geur+'"></div>'+
       '<div><label>Gas-oil L</label><input type="number" id="ie_dgl_'+row+'" step="0.01" inputmode="decimal" value="'+glit+'"></div>'+
+      (_showCondField?'<div style="grid-column:1/-1"><label>Conductor</label><select id="ie_dc_'+row+'" class="conductor-rep-sel">'+conductorOpts+'</select></div>':'')+
     '</div>';
   }
   entry.style.paddingRight = '12px';
@@ -944,6 +966,9 @@ function editRepostajeInline(fuel, row) {
       '<button type="button" class="rep-ok" onclick="saveRepostajeInline(\''+fuel+'\',\''+row+'\')">✓ Guardar</button>'+
       '<button type="button" class="rep-cancel" onclick="recalc()">Cancelar</button>'+
     '</div>';
+  var _ieSelId = fuel === 'g' ? 'ie_gc_'+row : 'ie_dc_'+row;
+  var _ieSel = document.getElementById(_ieSelId);
+  if (_ieSel) _ieSel.value = cond;
 }
 function saveRepostajeInline(fuel, row) {
   var q = '[data-row="'+row+'"]';
@@ -955,6 +980,7 @@ function saveRepostajeInline(fuel, row) {
     if (ge) ge.value = sv('ie_ge_'+row);
     if (gl) gl.value = sv('ie_gl_'+row);
     if (gf) gf.value = sv('ie_gf_'+row);
+    var _gc = document.querySelector('.gc'+q); var _ieGc = document.getElementById('ie_gc_'+row); if (_gc && _ieGc) _gc.value = _ieGc.value;
   } else {
     var dk = document.querySelector('.dk'+q), dae = document.querySelector('.dae'+q),
         dal = document.querySelector('.dal'+q), dge = document.querySelector('.dge'+q),
@@ -965,6 +991,7 @@ function saveRepostajeInline(fuel, row) {
     if (dge) dge.value = sv('ie_dge_'+row);
     if (dgl) dgl.value = sv('ie_dgl_'+row);
     if (df) df.value = sv('ie_df_'+row);
+    var _dc = document.querySelector('.dc'+q); var _ieDc = document.getElementById('ie_dc_'+row); if (_dc && _ieDc) _dc.value = _ieDc.value;
   }
   recalc();
 }
@@ -1093,13 +1120,16 @@ function addRepostaje(fuel) {
     var lit = document.getElementById('nf_gl').value;
     var fecha = document.getElementById('nf_gf').value;
     if (!kms && !eur && !lit) { toast('Rellena al menos un campo'); return; }
+    var cond_g = document.getElementById('nf_gc').value;
     document.querySelector('.gk'+q).value = kms;
     document.querySelector('.ge'+q).value = eur;
     document.querySelector('.gl'+q).value = lit;
     document.querySelector('.gf'+q).value = fecha;
+    var _gcEl = document.querySelector('.gc'+q); if (_gcEl) _gcEl.value = cond_g;
     if (_newPhotoData['new_g']) { rowPhotos['g_'+row] = _newPhotoData['new_g']; delete _newPhotoData['new_g']; }
     document.getElementById('nf_gk').value=''; document.getElementById('nf_ge').value='';
     document.getElementById('nf_gl').value=''; document.getElementById('nf_gf').value='';
+    updateConductorSelects();
     document.getElementById('nf_g_photobtn').className='photo-add-btn';
     document.getElementById('nf_g_thumb').innerHTML='';
   } else {
@@ -1110,16 +1140,19 @@ function addRepostaje(fuel) {
     var glit = document.getElementById('nf_dgl').value;
     var fecha = document.getElementById('nf_df').value;
     if (!kms && !aeur && !alit && !geur && !glit) { toast('Rellena al menos un campo'); return; }
+    var cond_d = document.getElementById('nf_dc').value;
     document.querySelector('.dk'+q).value = kms;
     document.querySelector('.dae'+q).value = aeur;
     document.querySelector('.dal'+q).value = alit;
     document.querySelector('.dge'+q).value = geur;
     document.querySelector('.dgl'+q).value = glit;
     document.querySelector('.df'+q).value = fecha;
+    var _dcEl = document.querySelector('.dc'+q); if (_dcEl) _dcEl.value = cond_d;
     if (_newPhotoData['new_d']) { rowPhotos['d_'+row] = _newPhotoData['new_d']; delete _newPhotoData['new_d']; }
     document.getElementById('nf_dk').value=''; document.getElementById('nf_dae').value='';
     document.getElementById('nf_dal').value=''; document.getElementById('nf_dge').value='';
     document.getElementById('nf_dgl').value=''; document.getElementById('nf_df').value='';
+    updateConductorSelects();
     document.getElementById('nf_d_photobtn').className='photo-add-btn';
     document.getElementById('nf_d_thumb').innerHTML='';
   }
@@ -1130,10 +1163,12 @@ function deleteRepostaje(fuel, row) {
   if (fuel === 'g') {
     document.querySelector('.gk'+q).value=''; document.querySelector('.ge'+q).value='';
     document.querySelector('.gl'+q).value=''; document.querySelector('.gf'+q).value='';
+    var _gcD = document.querySelector('.gc'+q); if (_gcD) _gcD.value='';
   } else {
     document.querySelector('.dk'+q).value=''; document.querySelector('.dae'+q).value='';
     document.querySelector('.dal'+q).value=''; document.querySelector('.dge'+q).value='';
     document.querySelector('.dgl'+q).value=''; document.querySelector('.df'+q).value='';
+    var _dcD = document.querySelector('.dc'+q); if (_dcD) _dcD.value='';
   }
   delete rowPhotos[fuel+'_'+row];
   recalc();
@@ -1150,7 +1185,8 @@ function renderRepostajes() {
       var kms = e.value, eur = document.querySelector('.ge[data-row="'+row+'"]').value,
           lit = document.querySelector('.gl[data-row="'+row+'"]').value,
           fecha = document.querySelector('.gf[data-row="'+row+'"]').value;
-      if (kms || eur || lit) entries.push({fuel:'g', row:row, kms:kms, eur:eur, lit:lit, fecha:fecha});
+      var cond = (document.querySelector('.gc[data-row="'+row+'"]')||{}).value||'';
+      if (kms || eur || lit) entries.push({fuel:'g', row:row, kms:kms, eur:eur, lit:lit, fecha:fecha, cond:cond});
     });
   } else {
     document.querySelectorAll('.dk').forEach(function(e) {
@@ -1160,7 +1196,8 @@ function renderRepostajes() {
           geur = document.querySelector('.dge[data-row="'+row+'"]').value,
           glit = document.querySelector('.dgl[data-row="'+row+'"]').value,
           fecha = document.querySelector('.df[data-row="'+row+'"]').value;
-      if (kms || aeur || alit || geur || glit) entries.push({fuel:'d', row:row, kms:kms, aeur:aeur, alit:alit, geur:geur, glit:glit, fecha:fecha});
+      var cond = (document.querySelector('.dc[data-row="'+row+'"]')||{}).value||'';
+      if (kms || aeur || alit || geur || glit) entries.push({fuel:'d', row:row, kms:kms, aeur:aeur, alit:alit, geur:geur, glit:glit, fecha:fecha, cond:cond});
     });
   }
   if (!entries.length) {
@@ -1182,6 +1219,7 @@ function renderRepostajes() {
         if (e.eur) row2 += '<span>'+e.eur+' €</span>';
         if (e.lit) row2 += (row2?' · ':'')+'<span>'+e.lit+' L</span>';
         if (row2) body += '<div class="rep-row2">'+row2+'</div>';
+        if (e.cond) body += '<div class="rep-conductor">👤 '+e.cond+'</div>';
       } else {
         body = '<span class="rep-badge rep-badge-d">Gas-oil</span>';
         if (e.kms) body += ' <span class="rep-kms">'+e.kms+' km</span>';
@@ -1190,6 +1228,7 @@ function renderRepostajes() {
         if (e.aeur || e.alit) row2 += '<span>AdBlue: '+(e.aeur||'–')+' € / '+(e.alit||'–')+' L</span>';
         if (e.geur || e.glit) row2 += (row2?' &nbsp;·&nbsp; ':'')+'<span>Gas-oil: '+(e.geur||'–')+' € / '+(e.glit||'–')+' L</span>';
         if (row2) body += '<div class="rep-row2">'+row2+'</div>';
+        if (e.cond) body += '<div class="rep-conductor">👤 '+e.cond+'</div>';
       }
       var div = document.createElement('div');
       div.className = 'rep-entry';
@@ -1285,6 +1324,33 @@ function syncConductoresField() {
     .map(function(inp){ return (inp.value || '').trim().toUpperCase(); })
     .filter(function(v){ return v !== ''; });
   document.getElementById('v_conductores').value = values.join('\n');
+  updateConductorSelects(values);
+}
+function updateConductorSelects(vals) {
+  if (!vals) {
+    vals = (document.getElementById('v_conductores').value || '')
+      .split('\n').map(function(v){ return v.trim(); }).filter(function(v){ return v; });
+  }
+  ['nf_gc','nf_dc'].forEach(function(sid) {
+    var sel = document.getElementById(sid);
+    if (!sel) return;
+    var prev = sel.value;
+    sel.innerHTML = vals.length ? '' : '<option value="">— Sin especificar —</option>';
+    if (vals.length === 1) {
+      var opt = document.createElement('option');
+      opt.value = vals[0]; opt.textContent = vals[0];
+      sel.appendChild(opt);
+      sel.value = vals[0];
+    } else {
+      sel.innerHTML = '<option value="">— Sin especificar —</option>';
+      vals.forEach(function(v) {
+        var opt = document.createElement('option');
+        opt.value = v; opt.textContent = v;
+        sel.appendChild(opt);
+      });
+      if (prev) sel.value = prev;
+    }
+  });
 }
 
 function addConductorRow(value) {
@@ -1405,15 +1471,27 @@ function drawCombustibleInstitucional(doc) {
   secHdr('CONDUCTORES',ML,y,CW);y+=10;
   var condEls=document.querySelectorAll('#conductores_list .driver-input');
   var condTxt=Array.from(condEls).map(function(e){return e.value.trim();}).filter(Boolean).join('   ·   ');
-  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(dkBlue[0],dkBlue[1],dkBlue[2]);
-  doc.text((doc.splitTextToSize(condTxt||'—',CW-4)[0])||'—',ML+2,y);
-  y+=6;hln(y);y+=4;
+  var condFontSize=10, minCondFont=7;
+  doc.setFont('helvetica','normal');doc.setTextColor(dkBlue[0],dkBlue[1],dkBlue[2]);
+  while(condFontSize>minCondFont){doc.setFontSize(condFontSize);if(doc.getTextWidth(condTxt||'—')<=CW-4)break;condFontSize-=0.5;}
+  doc.setFontSize(condFontSize);
+  var condLines=doc.splitTextToSize(condTxt||'—',CW-4);
+  var condLineH=condFontSize<8?4.2:5.2;
+  condLines.forEach(function(ln){doc.text(ln,ML+2,y);y+=condLineH;});
+  hln(y);y+=4;
   secHdr('REPOSTAJES DEL MES',ML,y,CW);y+=7;
   var rowH=5.8,hdrH=6.5,rowCount=0;
+  var _condEls2=document.querySelectorAll('#conductores_list .driver-input');
+  var _condList=Array.from(_condEls2).map(function(e){return e.value.trim();}).filter(Boolean);
+  var multiCond=_condList.length>1;
   if(tipo==='gasolina'){
-    var cols=[{w:10,lbl:'Nº',a:'center'},{w:30,lbl:'Fecha',a:'left'},{w:34,lbl:'KMs',a:'right'},{w:34,lbl:'Litros',a:'right'},{w:34,lbl:'Importe (€)',a:'right'},{w:44,lbl:'Ticket foto',a:'center'}];
+    var cols=multiCond
+      ?[{w:8,lbl:'Nº',a:'center'},{w:22,lbl:'Fecha',a:'left'},{w:26,lbl:'KMs',a:'right'},{w:26,lbl:'Litros',a:'right'},{w:26,lbl:'Importe (€)',a:'right'},{w:48,lbl:'Conductor',a:'left'},{w:30,lbl:'Ticket foto',a:'center'}]
+      :[{w:10,lbl:'Nº',a:'center'},{w:30,lbl:'Fecha',a:'left'},{w:34,lbl:'KMs',a:'right'},{w:34,lbl:'Litros',a:'right'},{w:34,lbl:'Importe (€)',a:'right'},{w:44,lbl:'Ticket foto',a:'center'}];
   }else{
-    var cols=[{w:10,lbl:'Nº',a:'center'},{w:26,lbl:'Fecha',a:'left'},{w:24,lbl:'KMs',a:'right'},{w:22,lbl:'AdBlue €',a:'right'},{w:22,lbl:'AdBlue L',a:'right'},{w:24,lbl:'Gasoil €',a:'right'},{w:24,lbl:'Gasoil L',a:'right'},{w:34,lbl:'Ticket',a:'center'}];
+    var cols=multiCond
+      ?[{w:8,lbl:'Nº',a:'center'},{w:18,lbl:'Fecha',a:'left'},{w:14,lbl:'KMs',a:'right'},{w:16,lbl:'AdBlue €',a:'right'},{w:16,lbl:'AdBlue L',a:'right'},{w:18,lbl:'Gasoil €',a:'right'},{w:18,lbl:'Gasoil L',a:'right'},{w:44,lbl:'Conductor',a:'left'},{w:34,lbl:'Ticket',a:'center'}]
+      :[{w:10,lbl:'Nº',a:'center'},{w:26,lbl:'Fecha',a:'left'},{w:24,lbl:'KMs',a:'right'},{w:22,lbl:'AdBlue €',a:'right'},{w:22,lbl:'AdBlue L',a:'right'},{w:24,lbl:'Gasoil €',a:'right'},{w:24,lbl:'Gasoil L',a:'right'},{w:34,lbl:'Ticket',a:'center'}];
   }
   doc.setFillColor(232,242,249);doc.rect(ML,y,CW,hdrH,'F');
   doc.setDrawColor(184,212,232);doc.setLineWidth(0.3);doc.line(ML,y+hdrH,ML+CW,y+hdrH);
@@ -1432,7 +1510,11 @@ function drawCombustibleInstitucional(doc) {
       var egl=document.querySelector('.gl[data-row="'+i+'"]');
       var ege=document.querySelector('.ge[data-row="'+i+'"]');
       var egf=document.querySelector('.gf[data-row="'+i+'"]');
-      vals=[String(i),fmtDate(egf?egf.value:''),(egk?egk.value:''),(egl?egl.value:''),(ege?ege.value:''),(rowPhotos&&rowPhotos['g_'+i]&&rowPhotos['g_'+i].data)?'Foto ✓':''];
+      var egc=document.querySelector('.gc[data-row="'+i+'"]');
+      var _gVals=[String(i),fmtDate(egf?egf.value:''),(egk?egk.value:''),(egl?egl.value:''),(ege?ege.value:'')];
+      if(multiCond)_gVals.push(egc?egc.value:'');
+      _gVals.push((rowPhotos&&rowPhotos['g_'+i]&&rowPhotos['g_'+i].data)?'Foto ✓':'');
+      vals=_gVals;
     }else{
       var edk=document.querySelector('.dk[data-row="'+i+'"]');
       var edae=document.querySelector('.dae[data-row="'+i+'"]');
@@ -1440,7 +1522,11 @@ function drawCombustibleInstitucional(doc) {
       var edge=document.querySelector('.dge[data-row="'+i+'"]');
       var edgl=document.querySelector('.dgl[data-row="'+i+'"]');
       var edf=document.querySelector('.df[data-row="'+i+'"]');
-      vals=[String(i),fmtDate(edf?edf.value:''),(edk?edk.value:''),(edae?edae.value:''),(edal?edal.value:''),(edge?edge.value:''),(edgl?edgl.value:''),(rowPhotos&&rowPhotos['d_'+i]&&rowPhotos['d_'+i].data)?'Foto ✓':''];
+      var edc=document.querySelector('.dc[data-row="'+i+'"]');
+      var _dVals=[String(i),fmtDate(edf?edf.value:''),(edk?edk.value:''),(edae?edae.value:''),(edal?edal.value:''),(edge?edge.value:''),(edgl?edgl.value:'')];
+      if(multiCond)_dVals.push(edc?edc.value:'');
+      _dVals.push((rowPhotos&&rowPhotos['d_'+i]&&rowPhotos['d_'+i].data)?'Foto ✓':'');
+      vals=_dVals;
     }
     var hasData=vals.slice(1,vals.length-1).some(function(v){return v&&String(v).trim();});
     if(!hasData)continue;
@@ -1449,9 +1535,12 @@ function drawCombustibleInstitucional(doc) {
     var cx2=ML;
     cols.forEach(function(col,ci){
       var v=String(vals[ci]||'');
+      var isTicket=ci===cols.length-1;
+      var isCond=multiCond&&((tipo==='gasolina'&&ci===5)||(tipo==='gasoil'&&ci===7));
       if(ci===0){doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(grey[0],grey[1],grey[2]);}
-      else if(ci===cols.length-1&&v){doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(10,74,110);}
-      else{doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(dkBlue[0],dkBlue[1],dkBlue[2]);}
+      else if(isTicket&&v){doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(10,74,110);}
+      else{doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(dkBlue[0],dkBlue[1],dkBlue[2]);}
+      if(isCond&&v){var maxW=col.w-3;while(v.length>0&&doc.getTextWidth(v)>maxW)v=v.slice(0,-1);if(v!==String(vals[ci]))v+='…';}
       var tx=col.a==='center'?cx2+col.w/2:(col.a==='right'?cx2+col.w-1:cx2+2);
       doc.text(v,tx,y+rowH-1.5,{align:col.a==='right'?'right':(col.a==='center'?'center':'left')});
       cx2+=col.w;
@@ -1465,19 +1554,31 @@ function drawCombustibleInstitucional(doc) {
     var tLit=document.getElementById('tg_lit').textContent||'0,00';
     var tEur=document.getElementById('tg_eur').textContent||'0,00';
     doc.text('TOTAL:',ML+2,y+5);
-    doc.text(tLit+' L',ML+107,y+5,{align:'right'});
-    doc.text(tEur+' €',ML+141,y+5,{align:'right'});
+    if(multiCond){
+      doc.text(tLit+' L',ML+81,y+5,{align:'right'});
+      doc.text(tEur+' €',ML+107,y+5,{align:'right'});
+    }else{
+      doc.text(tLit+' L',ML+107,y+5,{align:'right'});
+      doc.text(tEur+' €',ML+141,y+5,{align:'right'});
+    }
   }else{
     var tAeur=document.getElementById('td_aeur').textContent||'0,00';
     var tAlit=document.getElementById('td_alit').textContent||'0,00';
     var tGeur=document.getElementById('td_geur').textContent||'0,00';
     var tGlit=document.getElementById('td_glit').textContent||'0,00';
-    var tx0=ML+60;
     doc.text('TOTAL:',ML+2,y+5);
-    doc.text(tAeur+' €',tx0+21,y+5,{align:'right'});
-    doc.text(tAlit+' L',tx0+43,y+5,{align:'right'});
-    doc.text(tGeur+' €',tx0+67,y+5,{align:'right'});
-    doc.text(tGlit+' L',tx0+91,y+5,{align:'right'});
+    if(multiCond){
+      doc.text(tAeur+' €',ML+55,y+5,{align:'right'});
+      doc.text(tAlit+' L',ML+71,y+5,{align:'right'});
+      doc.text(tGeur+' €',ML+89,y+5,{align:'right'});
+      doc.text(tGlit+' L',ML+107,y+5,{align:'right'});
+    }else{
+      var tx0=ML+60;
+      doc.text(tAeur+' €',tx0+21,y+5,{align:'right'});
+      doc.text(tAlit+' L',tx0+43,y+5,{align:'right'});
+      doc.text(tGeur+' €',tx0+67,y+5,{align:'right'});
+      doc.text(tGlit+' L',tx0+91,y+5,{align:'right'});
+    }
   }
   y+=11;
   var totW=114,kmsW=CW-totW-4;
@@ -1786,7 +1887,8 @@ function saveHistorico() {
           fecha = document.querySelector('.gf[data-row="'+row+'"]').value;
       if (kms || eur || lit) {
         var idx = entries.length;
-        entries.push({ kms: kms, eur: eur, lit: lit, fecha: fecha });
+        var cond = (document.querySelector('.gc[data-row="'+row+'"]')||{}).value||'';
+        entries.push({ kms: kms, eur: eur, lit: lit, fecha: fecha, conductor: cond });
         if (rowPhotos['g_'+row]) photos[idx] = rowPhotos['g_'+row];
       }
     });
@@ -1800,7 +1902,8 @@ function saveHistorico() {
           fecha = document.querySelector('.df[data-row="'+row+'"]').value;
       if (kms || aeur || alit || geur || glit) {
         var idx = entries.length;
-        entries.push({ kms: kms, aeur: aeur, alit: alit, geur: geur, glit: glit, fecha: fecha });
+        var cond = (document.querySelector('.dc[data-row="'+row+'"]')||{}).value||'';
+        entries.push({ kms: kms, aeur: aeur, alit: alit, geur: geur, glit: glit, fecha: fecha, conductor: cond });
         if (rowPhotos['d_'+row]) photos[idx] = rowPhotos['d_'+row];
       }
     });
@@ -1957,6 +2060,7 @@ function loadHistorico(key) {
       if (ge) ge.value = e.eur || '';
       if (gl) gl.value = e.lit || '';
       if (gf) gf.value = e.fecha || '';
+      var _gcL = document.querySelector('.gc'+q); if (_gcL) _gcL.value = e.conductor || '';
       if (h.photos && h.photos[idx]) rowPhotos['g_'+row] = h.photos[idx];
     } else {
       var dk = document.querySelector('.dk'+q), dae = document.querySelector('.dae'+q),
@@ -1968,6 +2072,7 @@ function loadHistorico(key) {
       if (dge) dge.value = e.geur || '';
       if (dgl) dgl.value = e.glit || '';
       if (df) df.value = e.fecha || '';
+      var _dcL = document.querySelector('.dc'+q); if (_dcL) _dcL.value = e.conductor || '';
       if (h.photos && h.photos[idx]) rowPhotos['d_'+row] = h.photos[idx];
     }
   });
