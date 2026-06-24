@@ -1,5 +1,5 @@
 # Handover — Partes de Locomoción CHT
-**Fecha:** 2026-06-15 | **SW actual:** `partes-loco-v98`
+**Fecha:** 2026-06-23 | **SW actual:** `partes-loco-v100`
 
 ---
 
@@ -37,6 +37,12 @@ CSS `.req { color: #e53e3e; }` en los 3 módulos. Campos marcados:
 - Parte diario: Conductor/a*, Fecha*, Matrícula*
 - Combustible: Mes / Año*, Matrícula*
 - Orden reparación: Fecha*, Matrícula* (OR en validación)
+
+### Conductor en mayúsculas (v100)
+`parte_servicio_diario` y `parte_combustible`: campo conductor muestra mayúsculas mientras se escribe (CSS) y convierte el valor al perder el foco. Se guarda siempre en mayúsculas. El PDF ya mostraba el valor del campo, por lo que también sale en mayúsculas.
+
+### Formato matrícula con guión (v99)
+Los 3 módulos: `normMat` normaliza la matrícula (sin separadores, mayúsculas) para almacenamiento; `fmtMat` la muestra con guión (MMA-05505). Migración automática de claves antiguas (con espacio o sin separador) al cargar la BD. El campo formatea al perder el foco. Retrocompatible con datos guardados.
 
 ### Fix autocompletado matrícula/conductor (v98)
 `parte_servicio_diario.html`: corregido bucle destructivo entre `onMatriculaChangePD` y `onConductorChangePD`.
