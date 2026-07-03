@@ -1,5 +1,5 @@
 # Handover — Partes de Locomoción CHT
-**Fecha:** 2026-06-23 | **SW actual:** `partes-loco-v100`
+**Fecha:** 2026-06-25 | **SW actual:** `partes-loco-v101`
 
 ---
 
@@ -12,6 +12,14 @@ Sin backend — almacenamiento en localStorage + File System Access API (archivo
 ---
 
 ## Cambios recientes
+
+### Fix contaminación cruzada de repostajes entre vehículos — PENDIENTE DEPLOY
+
+`parte_combustible.html`: `onMatriculaChange()` no guardaba ni limpiaba la tabla de repostajes al cambiar de matrícula, arrastrando filas del vehículo anterior al PDF del nuevo. Reportado por usuaria beta (caso real `MMM-04024`, junio 2026 — histórico corrupto pendiente de corrección manual, a la espera del JSON de la usuaria).
+
+Fix: `onMatriculaChange()` guarda el vehículo saliente y limpia la tabla antes de cargar el entrante. Verificado con regresión en navegador (Playwright/Edge). Detalle técnico y trampa de testing (Playwright auto-descarta `confirm()`) en `CLAUDE.md` → "Patrón de bug: contaminación cruzada de repostajes entre vehículos".
+
+**No desplegado todavía** — sin bump de `sw.js`, sin commit, sin push. A la espera del JSON de la usuaria para contrastar y corregir sus datos antes de subir el fix.
 
 ### UX / UI — Grupos 1-4 (completados)
 - **Grupo 1:** Toast 2800ms, padding-bottom seguro (iOS), contraste botón danger, firma 150px, botones flex, font-size `.ch`
@@ -38,6 +46,25 @@ CSS `.req { color: #e53e3e; }` en los 3 módulos. Campos marcados:
 - Combustible: Mes / Año*, Matrícula*
 - Orden reparación: Fecha*, Matrícula* (OR en validación)
 
+### Conductor por repostaje (v101)
+
+`parte_combustible.html`: cuando hay más de un conductor en el parte, cada repostaje puede asociarse al conductor que lo realizó.
+
+- **UI:** select `#nf_gc` / `#nf_dc` siempre visible bajo los campos del formulario. Con 1 conductor → auto-seleccionado. Con N → dropdown.
+- **Almacenamiento:** campo `conductor` en cada entrada del JSON (`partes_combustible_hist_v1`). Compatible hacia atrás (entradas antiguas sin conductor = cadena vacía).
+- **Tarjetas:** muestra `👤 Nombre` bajo los datos si hay conductor asignado.
+- **Edición inline:** select conductor aparece solo si hay >1 conductores (con 1 no hay elección posible, el valor se preserva).
+- **PDF `multiCond` flag** (`_condList.length > 1`):
+  - Gasolina multiCond: 7 columnas, Conductor (w:48) en ci=5. TOTAL: `ML+81` L, `ML+107` €.
+  - Gas-oil multiCond: 9 columnas, Conductor (w:44) en ci=7. TOTAL: `ML+55/71/89/107`.
+  - Sin multiCond: layout original sin cambios.
+  - Truncación de nombre con `getTextWidth()` + `…`.
+- **PDF sección conductores:** auto-shrink 10→7pt + `splitTextToSize` para wrapping si no cabe.
+- NR: 13 → 14 (máximo de repostajes por parte).
+- Backup del original: `parte_combustible_v100_backup.html`.
+
+**Bugs a evitar:** ver `memory/project_parte_combustible_estado.md` sección "Feature: Conductor por repostaje".
+
 ### Conductor en mayúsculas (v100)
 `parte_servicio_diario` y `parte_combustible`: campo conductor muestra mayúsculas mientras se escribe (CSS) y convierte el valor al perder el foco. Se guarda siempre en mayúsculas. El PDF ya mostraba el valor del campo, por lo que también sale en mayúsculas.
 
@@ -63,6 +90,8 @@ Los 3 módulos: `normMat` normaliza la matrícula (sin separadores, mayúsculas)
 ## Archivos de prueba en prueba/ (NO desplegar)
 - `parte_servicio_diario_historial_test.html`
 - `parte_combustible_tabs.html` / `_tabs_a.html` / `_tabs_b.html`
+- `parte_combustible_conductor_test.html` — prototipo de la feature conductor (ya integrada en el real)
+- `parte_combustible_v100_backup.html` — backup pre-v101
 
 ---
 
@@ -71,6 +100,8 @@ Los 3 módulos: `normMat` normaliza la matrícula (sin separadores, mayúsculas)
 - **Chips:** validar con beta testers. Si rechazo → `memory/project_chips_tabs_revert.md`.
 - **Concepto en OR:** sin asterisco ni validación — pendiente decisión (de momento se deja sin tocar).
 - **Backend separado:** `~/partes-server` WSL puerto 3001 → `memory/project_partes_backend.md`.
+- **Push v101 a GitHub:** cambios de conductor por repostaje pendientes de subir.
+- **Fix contaminación cruzada de repostajes:** pendiente de deploy — a la espera del JSON de la usuaria afectada (`MMM-04024`) para corregir su histórico antes de subir.
 
 ---
 
