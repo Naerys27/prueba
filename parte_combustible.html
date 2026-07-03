@@ -768,6 +768,7 @@ var NR = 14;
 function nval(v) { return parseFloat(String(v || '').replace(',', '.')) || 0; }
 function fmtN(v, d) { var n = Number(v || 0); return n.toFixed(d == null ? 2 : d).replace('.', ','); }
 function gv(id) { var el = document.getElementById(id); return el ? (el.value || '') : ''; }
+function escapeHtml(v) { return String(v || '').replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function fmtMonth(ym) { if (!ym) return ''; var p=ym.split('-'); if (p.length<2) return ym; var m=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']; return m[(parseInt(p[1],10)||1)-1]+' '+p[0]; }
 function fmtDate(iso) { if (!iso) return ''; var p=iso.split('-'); return (p.length===3)?(p[2]+'/'+p[1]+'/'+p[0]):iso; }
 
@@ -926,7 +927,7 @@ function editRepostajeInline(fuel, row) {
   var fields = '';
   var conductorOpts = '<option value="">— Sin especificar —</option>';
   var _cvals = (document.getElementById('v_conductores').value||'').split('\n').map(function(v){return v.trim();}).filter(function(v){return v;});
-  _cvals.forEach(function(v){ conductorOpts += '<option value="'+v.replace(/"/g,'&quot;')+'">'+v+'</option>'; });
+  _cvals.forEach(function(v){ conductorOpts += '<option value="'+escapeHtml(v)+'">'+escapeHtml(v)+'</option>'; });
   var _showCondField = _cvals.length > 1;
   if (fuel === 'g') {
     var kms = (document.querySelector('.gk'+q)||{}).value||'';
@@ -1219,7 +1220,7 @@ function renderRepostajes() {
         if (e.eur) row2 += '<span>'+e.eur+' €</span>';
         if (e.lit) row2 += (row2?' · ':'')+'<span>'+e.lit+' L</span>';
         if (row2) body += '<div class="rep-row2">'+row2+'</div>';
-        if (e.cond) body += '<div class="rep-conductor">👤 '+e.cond+'</div>';
+        if (e.cond) body += '<div class="rep-conductor">👤 '+escapeHtml(e.cond)+'</div>';
       } else {
         body = '<span class="rep-badge rep-badge-d">Gas-oil</span>';
         if (e.kms) body += ' <span class="rep-kms">'+e.kms+' km</span>';
@@ -1228,7 +1229,7 @@ function renderRepostajes() {
         if (e.aeur || e.alit) row2 += '<span>AdBlue: '+(e.aeur||'–')+' € / '+(e.alit||'–')+' L</span>';
         if (e.geur || e.glit) row2 += (row2?' &nbsp;·&nbsp; ':'')+'<span>Gas-oil: '+(e.geur||'–')+' € / '+(e.glit||'–')+' L</span>';
         if (row2) body += '<div class="rep-row2">'+row2+'</div>';
-        if (e.cond) body += '<div class="rep-conductor">👤 '+e.cond+'</div>';
+        if (e.cond) body += '<div class="rep-conductor">👤 '+escapeHtml(e.cond)+'</div>';
       }
       var div = document.createElement('div');
       div.className = 'rep-entry';
@@ -1411,8 +1412,18 @@ function initConductoresUI() {
   syncConductoresField();
 }
 
+function formHasDataFC() {
+  var els = document.querySelectorAll('input, textarea, select');
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    if (el.readOnly || el.id === 'tipo_combustible') continue;
+    if (el.value) return true;
+  }
+  if (Object.keys(rowPhotos).length || Object.keys(_newPhotoData).length) return true;
+  return document.getElementById('sighint').style.display === 'none';
+}
 function resetForm() {
-  if (!arguments[0] && (gv('v_mat') || gv('v_mes')) && !confirm('¿Limpiar el formulario? Se perderán los datos no guardados.')) return;
+  if (!arguments[0] && formHasDataFC() && !confirm('¿Limpiar el formulario? Se perderán los datos no guardados.')) return;
   document.querySelectorAll('input, textarea, select').forEach(function(i) {
     if (i.id==='tipo_combustible') i.value='gasolina';
     else if (!i.readOnly) i.value='';
@@ -1843,6 +1854,23 @@ function newParteForMes(mes) {
 }
 function onMatriculaChange() {
   var mat = normMat(document.getElementById('v_mat').value);
+  var mes = gv('v_mes');
+  // Cambio real de vehículo: guardar los repostajes del anterior antes de tocar la tabla,
+  // y limpiarla para que no arrastre filas del vehículo que se abandona.
+  if (mat && _activeMat && mat !== _activeMat) {
+    var hasData = false;
+    document.querySelectorAll('.gk, .dk').forEach(function(el) { if (el.value) hasData = true; });
+    if (hasData) {
+      var _vmatSwap = document.getElementById('v_mat');
+      _vmatSwap.value = fmtMat(_activeMat);
+      saveHistorico();
+      _vmatSwap.value = fmtMat(mat);
+    }
+    resetForm(true);
+    document.getElementById('v_mat').value = fmtMat(mat);
+    document.getElementById('v_mes').value = mes;
+    _activeParteKey = null;
+  }
   document.getElementById('v_marca').value  = '';
   document.getElementById('v_modelo').value = '';
   document.getElementById('v_tarjeta').value = '';
@@ -1857,7 +1885,7 @@ function onMatriculaChange() {
       if (v.coste)   document.getElementById('v_coste').value   = v.coste;
     }
   }
-  var mes = gv('v_mes');
+  _activeMat = mat || null;
   if (mat && mes) {
     var key = mat + '/' + mes;
     var hist = {};
