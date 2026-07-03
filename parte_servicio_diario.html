@@ -942,7 +942,12 @@
          q('tot_eur').value = fmtN(nval(gv('p1')) + nval(gv('p2')) + nval(gv('p3')), 2);
          q('tot_lit').value = fmtN(nval(gv('l1')) + nval(gv('l2')) + nval(gv('l3')), 2);
       }
-      function resetForm(force) { if (!force && (gv('fecha') || gv('parte_servicio')) && !confirm('¿Limpiar el formulario? Se perderán los datos no guardados.')) return; document.querySelectorAll('input, textarea').forEach(el => el.value = ''); editingParteId = null; setRepostajesVisibles(1, true); recalc(); clearSig(); document.getElementById('fecha').value = new Date().toISOString().slice(0,10); toast('Formulario limpiado'); }
+      function formHasDataPD() {
+         const els = document.querySelectorAll('input, textarea');
+         for (let i = 0; i < els.length; i++) { if (els[i].value) return true; }
+         return q('sighint').style.display === 'none';
+      }
+      function resetForm(force) { if (!force && formHasDataPD() && !confirm('¿Limpiar el formulario? Se perderán los datos no guardados.')) return; document.querySelectorAll('input, textarea').forEach(el => el.value = ''); editingParteId = null; setRepostajesVisibles(1, true); recalc(); clearSig(); document.getElementById('fecha').value = new Date().toISOString().slice(0,10); toast('Formulario limpiado'); }
 
       let sigDrawing = false, sigLX = 0, sigLY = 0;
       const sigCanvas = q('sigcanvas');
@@ -1241,23 +1246,36 @@
         }
         suggestLastKmPD(mat);
       }
+      function pickLastUsedVehiclePD(normConductor, matches) {
+        var parts = getSavedParts().filter(function(p) {
+          return normStr(p.conductor) === normConductor && matches.indexOf(normMat(p.parte_servicio)) !== -1;
+        });
+        if (!parts.length) return null;
+        parts.sort(function(a, b) { return String(b.fecha || '').localeCompare(String(a.fecha || '')); });
+        return normMat(parts[0].parte_servicio);
+      }
       function onConductorChangePD() {
         var conductor = (document.getElementById('conductor').value || '').trim();
         if (!conductor) return;
         var normConductor = normStr(conductor);
         var db = loadVehicleDB_PD();
-        var foundMat = null, foundV = null;
-        Object.keys(db).forEach(function(mat) { if (normStr(db[mat].conductor) === normConductor) { foundMat = mat; foundV = db[mat]; } });
-        if (!foundMat) return;
+        var matches = Object.keys(db).filter(function(mat) { return normStr(db[mat].conductor) === normConductor; });
+        if (!matches.length) return;
         if (document.getElementById('parte_servicio').value.trim()) return;
+        var foundMat = matches.length === 1 ? matches[0] : pickLastUsedVehiclePD(normConductor, matches);
+        if (!foundMat) {
+          if (matches.length > 1) toast('Conductor/a asociado a varios vehículos: selecciona la matrícula');
+          return;
+        }
+        var foundV = db[foundMat];
         document.getElementById('parte_servicio').value = fmtMat(foundMat);
         suggestLastKmPD(foundMat);
-        if (foundV.marca) document.getElementById('marca').value = foundV.marca.toUpperCase();
-        if (foundV.modelo) document.getElementById('modelo').value = foundV.modelo.toUpperCase();
-        if (!foundV.marca && foundV.marcaModelo) {
+        if (foundV.marca && !document.getElementById('marca').value.trim()) document.getElementById('marca').value = foundV.marca.toUpperCase();
+        if (foundV.modelo && !document.getElementById('modelo').value.trim()) document.getElementById('modelo').value = foundV.modelo.toUpperCase();
+        if (!foundV.marca && foundV.marcaModelo && !document.getElementById('marca').value.trim()) {
           var mm = foundV.marcaModelo.split(' ');
           document.getElementById('marca').value = (mm[0] || '').toUpperCase();
-          if (!foundV.modelo) document.getElementById('modelo').value = mm.slice(1).join(' ').toUpperCase() || '';
+          if (!foundV.modelo && !document.getElementById('modelo').value.trim()) document.getElementById('modelo').value = mm.slice(1).join(' ').toUpperCase() || '';
         }
       }
       function tryLinkVehicleConductorPD() {
