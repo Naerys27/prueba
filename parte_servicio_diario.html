@@ -410,16 +410,16 @@
             <div class="grid">
                <div class="f full"><label for="itinerario">Itinerario carretera</label><textarea id="itinerario"></textarea></div>
                <div class="repostaje-row" id="repostaje_row_1" data-repostaje="1">
-                  <div class="f"><label for="p1">Precio (€)</label><input id="p1" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
-                  <div class="f"><label for="l1">Litros</label><input id="l1" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
+                  <div class="f"><label for="p1">Precio (€)</label><input id="p1" type="text" inputmode="decimal" oninput="normDec(this);recalc()"></div>
+                  <div class="f"><label for="l1">Litros</label><input id="l1" type="text" inputmode="decimal" oninput="normDec(this);recalc()"></div>
                </div>
                <div class="repostaje-row hidden" id="repostaje_row_2" data-repostaje="2">
-                  <div class="f"><label for="p2">Precio (€)</label><input id="p2" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
-                  <div class="f"><label for="l2">Litros</label><input id="l2" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
+                  <div class="f"><label for="p2">Precio (€)</label><input id="p2" type="text" inputmode="decimal" oninput="normDec(this);recalc()"></div>
+                  <div class="f"><label for="l2">Litros</label><input id="l2" type="text" inputmode="decimal" oninput="normDec(this);recalc()"></div>
                </div>
                <div class="repostaje-row hidden" id="repostaje_row_3" data-repostaje="3">
-                  <div class="f"><label for="p3">Precio (€)</label><input id="p3" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
-                  <div class="f"><label for="l3">Litros</label><input id="l3" type="number" inputmode="decimal" step="0.01" oninput="recalc()"></div>
+                  <div class="f"><label for="p3">Precio (€)</label><input id="p3" type="text" inputmode="decimal" oninput="normDec(this);recalc()"></div>
+                  <div class="f"><label for="l3">Litros</label><input id="l3" type="text" inputmode="decimal" oninput="normDec(this);recalc()"></div>
                </div>
                <div class="f full repostaje-controls">
                   <button class="sec" id="btn_add_repostaje" type="button" onclick="addRepostaje()">Añadir repostaje</button>
@@ -936,6 +936,17 @@
       if(blobUrl)m.querySelector('#_pdfm_o').addEventListener('click',function(){window.open(blobUrl,'_blank');dismiss();});
     }
       function showErr(msg) { const e = q('errbox'); e.textContent = msg; e.style.display = 'block'; clearTimeout(e._tt); e._tt = setTimeout(() => e.style.display = 'none', 6000); }
+      // Los campos de precio/litros son type=text para que la coma decimal no se pierda: se normaliza a punto al teclear
+      function normDec(el) {
+         let v = el.value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
+         const i = v.indexOf('.');
+         if (i !== -1) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/\./g, '');
+         if (el.value !== v) el.value = v;
+      }
+      const MAX_EUR_AVISO = 400;
+      function hayImporteSospechoso() {
+         return [gv('p1'), gv('p2'), gv('p3')].some(p => { const n = parseFloat(p); return !isNaN(n) && n > MAX_EUR_AVISO; });
+      }
       function recalc() {
          const s = kmval(gv('cont_salida')), l = kmval(gv('cont_llegada'));
          q('kms_recorridos').value = (l > s) ? String(l - s) : '';
@@ -1148,6 +1159,7 @@
       function clearParteFormAfterSave() { FIELD_IDS_PARTES.forEach(id => { if (q(id)) q(id).value = ''; }); editingParteId = null; setRepostajesVisibles(1, true); recalc(); clearSig(); document.getElementById('fecha').value = new Date().toISOString().slice(0,10); }
       async function saveParteDiario() {
          const data = collectParteData(); const errors = validateParteData(data); if (errors.length) { showErr('Revisa el parte:\n- ' + errors.join('\n- ')); return; }
+         if (hayImporteSospechoso() && !confirm('Hay un importe de repostaje inusualmente alto (más de ' + MAX_EUR_AVISO + ' €).\n¿Es correcto? (revisa si querías escribir una coma decimal)')) return;
          saveCurrentVehiclePD();
          const parts = getSavedParts(); const now = new Date().toISOString(); let idx = -1;
          if (editingParteId) { idx = parts.findIndex(p => p.id === editingParteId); const orig = idx >= 0 ? parts[idx] : null; if (orig && data.fecha !== orig.fecha) { const eleccion = await _showFechaCambiadaModal(); data.id = makeNewParteId(data); if (eleccion === 'new') { data.createdAt = now; idx = -1; } else { data.createdAt = orig ? (orig.createdAt || now) : now; } } else { data.id = editingParteId; data.createdAt = orig ? (orig.createdAt || now) : now; } }

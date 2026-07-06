@@ -260,8 +260,8 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
     <div class="cb">
       <div class="g3">
         <div class="f"><label for="nf_gk">KMs</label><input type="number" id="nf_gk" inputmode="decimal" placeholder="0"></div>
-        <div class="f"><label for="nf_ge">Euros</label><input type="number" id="nf_ge" step="0.01" inputmode="decimal" placeholder="0,00"></div>
-        <div class="f"><label for="nf_gl">Litros</label><input type="number" id="nf_gl" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+        <div class="f"><label for="nf_ge">Euros</label><input type="text" id="nf_ge" inputmode="decimal" placeholder="0,00" oninput="normDec(this)"></div>
+        <div class="f"><label for="nf_gl">Litros</label><input type="text" id="nf_gl" inputmode="decimal" placeholder="0,00" oninput="normDec(this)"></div>
       </div>
       <div class="g2" style="margin-top:9px">
         <div class="f"><label for="nf_gf">Fecha</label><input type="date" id="nf_gf"></div>
@@ -288,13 +288,13 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
       </div>
       <div class="g2" style="margin-top:9px">
         <div class="f full" style="grid-column:1/-1"><span class="fuel-sublabel fuel-sublabel-adblue">AdBlue</span></div>
-        <div class="f"><label for="nf_dae">Euros</label><input type="number" id="nf_dae" step="0.01" inputmode="decimal" placeholder="0,00"></div>
-        <div class="f"><label for="nf_dal">Litros</label><input type="number" id="nf_dal" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+        <div class="f"><label for="nf_dae">Euros</label><input type="text" id="nf_dae" inputmode="decimal" placeholder="0,00" oninput="normDec(this)"></div>
+        <div class="f"><label for="nf_dal">Litros</label><input type="text" id="nf_dal" inputmode="decimal" placeholder="0,00" oninput="normDec(this)"></div>
       </div>
       <div class="g2" style="margin-top:6px">
         <div class="f full" style="grid-column:1/-1"><span class="fuel-sublabel fuel-sublabel-gasoil">Gas-oil</span></div>
-        <div class="f"><label for="nf_dge">Euros</label><input type="number" id="nf_dge" step="0.01" inputmode="decimal" placeholder="0,00"></div>
-        <div class="f"><label for="nf_dgl">Litros</label><input type="number" id="nf_dgl" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+        <div class="f"><label for="nf_dge">Euros</label><input type="text" id="nf_dge" inputmode="decimal" placeholder="0,00" oninput="normDec(this)"></div>
+        <div class="f"><label for="nf_dgl">Litros</label><input type="text" id="nf_dgl" inputmode="decimal" placeholder="0,00" oninput="normDec(this)"></div>
       </div>
       <div class="f" style="margin-top:9px"><label>Foto del ticket</label>
         <button type="button" class="photo-add-btn" onclick="captureNewPhoto('d')" id="nf_d_photobtn">📷 Añadir foto</button>
@@ -769,6 +769,18 @@ function nval(v) { return parseFloat(String(v || '').replace(',', '.')) || 0; }
 function fmtN(v, d) { var n = Number(v || 0); return n.toFixed(d == null ? 2 : d).replace('.', ','); }
 function gv(id) { var el = document.getElementById(id); return el ? (el.value || '') : ''; }
 function escapeHtml(v) { return String(v || '').replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+// Los campos de importes/litros son type=text para que la coma decimal no se pierda: se normaliza a punto al teclear
+function normDec(el) {
+  var v = el.value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
+  var i = v.indexOf('.');
+  if (i !== -1) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/\./g, '');
+  if (el.value !== v) el.value = v;
+}
+var MAX_EUR_AVISO = 400;
+function importeSospechoso(eur) {
+  var n = parseFloat(eur);
+  return !isNaN(n) && n > MAX_EUR_AVISO;
+}
 function fmtMonth(ym) { if (!ym) return ''; var p=ym.split('-'); if (p.length<2) return ym; var m=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']; return m[(parseInt(p[1],10)||1)-1]+' '+p[0]; }
 function fmtDate(iso) { if (!iso) return ''; var p=iso.split('-'); return (p.length===3)?(p[2]+'/'+p[1]+'/'+p[0]):iso; }
 
@@ -800,8 +812,8 @@ function buildRows() {
   for (var i=1;i<=NR;i++) {
     var tr1=document.createElement('tr');
     tr1.innerHTML='<td><input type="number" inputmode="decimal" class="gk" data-row="'+i+'" oninput="recalc()"></td>'+
-      '<td><input type="number" inputmode="decimal" step="0.01" class="ge" data-row="'+i+'" oninput="recalc()"></td>'+
-      '<td><input type="number" inputmode="decimal" step="0.01" class="gl" data-row="'+i+'" oninput="recalc()"></td>'+
+      '<td><input type="text" inputmode="decimal" class="ge" data-row="'+i+'" oninput="normDec(this);recalc()"></td>'+
+      '<td><input type="text" inputmode="decimal" class="gl" data-row="'+i+'" oninput="normDec(this);recalc()"></td>'+
       '<td><input type="date" class="gf" data-row="'+i+'"></td>'+
       '<td class="photo-td"><button type="button" class="photo-btn" data-row="'+i+'" data-fuel="g">📷</button><div class="thumb-wrap" id="gthumb'+i+'"></div></td>'+
       '<td><input type="text" class="gc" data-row="'+i+'"></td>';
@@ -809,10 +821,10 @@ function buildRows() {
 
     var tr2=document.createElement('tr');
     tr2.innerHTML='<td><input type="number" inputmode="decimal" class="dk" data-row="'+i+'" oninput="recalc()"></td>'+
-      '<td><input type="number" inputmode="decimal" step="0.01" class="dae" data-row="'+i+'" oninput="recalc()"></td>'+
-      '<td><input type="number" inputmode="decimal" step="0.01" class="dal" data-row="'+i+'" oninput="recalc()"></td>'+
-      '<td><input type="number" inputmode="decimal" step="0.01" class="dge" data-row="'+i+'" oninput="recalc()"></td>'+
-      '<td><input type="number" inputmode="decimal" step="0.01" class="dgl" data-row="'+i+'" oninput="recalc()"></td>'+
+      '<td><input type="text" inputmode="decimal" class="dae" data-row="'+i+'" oninput="normDec(this);recalc()"></td>'+
+      '<td><input type="text" inputmode="decimal" class="dal" data-row="'+i+'" oninput="normDec(this);recalc()"></td>'+
+      '<td><input type="text" inputmode="decimal" class="dge" data-row="'+i+'" oninput="normDec(this);recalc()"></td>'+
+      '<td><input type="text" inputmode="decimal" class="dgl" data-row="'+i+'" oninput="normDec(this);recalc()"></td>'+
       '<td><input type="date" class="df" data-row="'+i+'"></td>'+
       '<td class="photo-td"><button type="button" class="photo-btn" data-row="'+i+'" data-fuel="d">📷</button><div class="thumb-wrap" id="dthumb'+i+'"></div></td>'+
       '<td><input type="text" class="dc" data-row="'+i+'"></td>';
@@ -938,8 +950,8 @@ function editRepostajeInline(fuel, row) {
     fields = '<div class="rep-inline-grid">'+
       '<div><label>KMs</label><input type="number" id="ie_gk_'+row+'" inputmode="decimal" value="'+kms+'"></div>'+
       '<div><label>Fecha</label><input type="date" id="ie_gf_'+row+'" value="'+fecha+'"></div>'+
-      '<div><label>Euros</label><input type="number" id="ie_ge_'+row+'" step="0.01" inputmode="decimal" value="'+eur+'"></div>'+
-      '<div><label>Litros</label><input type="number" id="ie_gl_'+row+'" step="0.01" inputmode="decimal" value="'+lit+'"></div>'+
+      '<div><label>Euros</label><input type="text" id="ie_ge_'+row+'" inputmode="decimal" value="'+eur+'" oninput="normDec(this)"></div>'+
+      '<div><label>Litros</label><input type="text" id="ie_gl_'+row+'" inputmode="decimal" value="'+lit+'" oninput="normDec(this)"></div>'+
       (_showCondField?'<div style="grid-column:1/-1"><label>Conductor</label><select id="ie_gc_'+row+'" class="conductor-rep-sel">'+conductorOpts+'</select></div>':'')+
     '</div>';
   } else {
@@ -953,10 +965,10 @@ function editRepostajeInline(fuel, row) {
     fields = '<div class="rep-inline-grid">'+
       '<div><label>KMs</label><input type="number" id="ie_dk_'+row+'" inputmode="decimal" value="'+kms+'"></div>'+
       '<div><label>Fecha</label><input type="date" id="ie_df_'+row+'" value="'+fecha+'"></div>'+
-      '<div><label>AdBlue €</label><input type="number" id="ie_dae_'+row+'" step="0.01" inputmode="decimal" value="'+aeur+'"></div>'+
-      '<div><label>AdBlue L</label><input type="number" id="ie_dal_'+row+'" step="0.01" inputmode="decimal" value="'+alit+'"></div>'+
-      '<div><label>Gas-oil €</label><input type="number" id="ie_dge_'+row+'" step="0.01" inputmode="decimal" value="'+geur+'"></div>'+
-      '<div><label>Gas-oil L</label><input type="number" id="ie_dgl_'+row+'" step="0.01" inputmode="decimal" value="'+glit+'"></div>'+
+      '<div><label>AdBlue €</label><input type="text" id="ie_dae_'+row+'" inputmode="decimal" value="'+aeur+'" oninput="normDec(this)"></div>'+
+      '<div><label>AdBlue L</label><input type="text" id="ie_dal_'+row+'" inputmode="decimal" value="'+alit+'" oninput="normDec(this)"></div>'+
+      '<div><label>Gas-oil €</label><input type="text" id="ie_dge_'+row+'" inputmode="decimal" value="'+geur+'" oninput="normDec(this)"></div>'+
+      '<div><label>Gas-oil L</label><input type="text" id="ie_dgl_'+row+'" inputmode="decimal" value="'+glit+'" oninput="normDec(this)"></div>'+
       (_showCondField?'<div style="grid-column:1/-1"><label>Conductor</label><select id="ie_dc_'+row+'" class="conductor-rep-sel">'+conductorOpts+'</select></div>':'')+
     '</div>';
   }
@@ -974,6 +986,8 @@ function editRepostajeInline(fuel, row) {
 function saveRepostajeInline(fuel, row) {
   var q = '[data-row="'+row+'"]';
   function sv(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+  var _eurEdit = fuel === 'g' ? sv('ie_ge_'+row) : (importeSospechoso(sv('ie_dge_'+row)) ? sv('ie_dge_'+row) : sv('ie_dae_'+row));
+  if (importeSospechoso(_eurEdit) && !confirm('Importe inusualmente alto: ' + _eurEdit + ' €.\n¿Es correcto? (revisa si querías escribir una coma decimal)')) return;
   if (fuel === 'g') {
     var gk = document.querySelector('.gk'+q), ge = document.querySelector('.ge'+q),
         gl = document.querySelector('.gl'+q), gf = document.querySelector('.gf'+q);
@@ -1113,7 +1127,7 @@ function nextFreeRow(fuel) {
 }
 function addRepostaje(fuel) {
   var row = nextFreeRow(fuel);
-  if (!row) { toast('Límite de ' + NR + ' repostajes alcanzado'); return; }
+  if (!row) { showErr('No se puede añadir el repostaje: has alcanzado el límite de ' + NR + ' repostajes este mes para este combustible.'); return; }
   var q = '[data-row="'+row+'"]';
   if (fuel === 'g') {
     var kms = document.getElementById('nf_gk').value;
@@ -1121,6 +1135,8 @@ function addRepostaje(fuel) {
     var lit = document.getElementById('nf_gl').value;
     var fecha = document.getElementById('nf_gf').value;
     if (!kms && !eur && !lit) { toast('Rellena al menos un campo'); return; }
+    if (importeSospechoso(eur) && !confirm('Importe inusualmente alto: ' + eur + ' €.\n¿Es correcto? (revisa si querías escribir una coma decimal)')) return;
+    if (fecha && gv('v_mes') && fecha.slice(0, 7) !== gv('v_mes') && !confirm('La fecha del repostaje (' + fecha + ') no es del mes del parte (' + gv('v_mes') + ').\n¿Añadirlo igualmente?')) return;
     var cond_g = document.getElementById('nf_gc').value;
     document.querySelector('.gk'+q).value = kms;
     document.querySelector('.ge'+q).value = eur;
@@ -1141,6 +1157,8 @@ function addRepostaje(fuel) {
     var glit = document.getElementById('nf_dgl').value;
     var fecha = document.getElementById('nf_df').value;
     if (!kms && !aeur && !alit && !geur && !glit) { toast('Rellena al menos un campo'); return; }
+    if ((importeSospechoso(aeur) || importeSospechoso(geur)) && !confirm('Importe inusualmente alto: ' + (importeSospechoso(geur) ? geur : aeur) + ' €.\n¿Es correcto? (revisa si querías escribir una coma decimal)')) return;
+    if (fecha && gv('v_mes') && fecha.slice(0, 7) !== gv('v_mes') && !confirm('La fecha del repostaje (' + fecha + ') no es del mes del parte (' + gv('v_mes') + ').\n¿Añadirlo igualmente?')) return;
     var cond_d = document.getElementById('nf_dc').value;
     document.querySelector('.dk'+q).value = kms;
     document.querySelector('.dae'+q).value = aeur;
@@ -1320,10 +1338,16 @@ document.addEventListener('input', function(ev) {
   }
 });
 
+function normStr(s) { return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
 function syncConductoresField() {
   var values = Array.prototype.slice.call(document.querySelectorAll('.driver-input'))
     .map(function(inp){ return (inp.value || '').trim().toUpperCase(); })
     .filter(function(v){ return v !== ''; });
+  // Dedup sin distinguir acentos: "JOSÉ PÉREZ" y "JOSE PEREZ" son la misma persona.
+  // Igual que en el parte diario (saveConductorName): la última grafía escrita reemplaza a la anterior
+  var order = [], byKey = {};
+  values.forEach(function(v) { var k = normStr(v); if (!(k in byKey)) order.push(k); byKey[k] = v; });
+  values = order.map(function(k) { return byKey[k]; });
   document.getElementById('v_conductores').value = values.join('\n');
   updateConductorSelects(values);
 }
@@ -1365,7 +1389,15 @@ function addConductorRow(value) {
   list.appendChild(row);
   var _inp = row.querySelector('input');
   _inp.addEventListener('input', syncConductoresField);
-  _inp.addEventListener('blur', function() { this.value = this.value.toUpperCase(); syncConductoresField(); });
+  _inp.addEventListener('blur', function() {
+    this.value = this.value.toUpperCase();
+    var self = this, dup = false;
+    document.querySelectorAll('.driver-input').forEach(function(other) {
+      if (other !== self && other.value.trim() && normStr(other.value) === normStr(self.value)) dup = true;
+    });
+    if (dup && self.value.trim()) toast('Conductor repetido (se ignora la copia): ' + self.value.trim().toUpperCase());
+    syncConductoresField();
+  });
   updateConductorRemoveButtons();
   syncConductoresField();
 }

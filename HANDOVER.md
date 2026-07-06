@@ -1,5 +1,5 @@
 # Handover — Partes de Locomoción CHT
-**Fecha:** 2026-06-25 | **SW actual:** `partes-loco-v101`
+**Fecha:** 2026-07-06 | **SW actual:** `partes-loco-v102` (desplegado 2026-07-03) | **v103 en preparación** (sin desplegar)
 
 ---
 
@@ -13,13 +13,26 @@ Sin backend — almacenamiento en localStorage + File System Access API (archivo
 
 ## Cambios recientes
 
-### Fix contaminación cruzada de repostajes entre vehículos — PENDIENTE DEPLOY
+### v103 — EN PREPARACIÓN (2026-07-06, local, sin desplegar)
 
-`parte_combustible.html`: `onMatriculaChange()` no guardaba ni limpiaba la tabla de repostajes al cambiar de matrícula, arrastrando filas del vehículo anterior al PDF del nuevo. Reportado por usuaria beta (caso real `MMM-04024`, junio 2026 — histórico corrupto pendiente de corrección manual, a la espera del JSON de la usuaria).
+Ronda de robustez tras testing adversario (todos con test de regresión en `tests/test_adversarial.js`, 30 asserts):
 
-Fix: `onMatriculaChange()` guarda el vehículo saliente y limpia la tabla antes de cargar el entrante. Verificado con regresión en navegador (Playwright/Edge). Detalle técnico y trampa de testing (Playwright auto-descarta `confirm()`) en `CLAUDE.md` → "Patrón de bug: contaminación cruzada de repostajes entre vehículos".
+- **Coma decimal (bug real):** los campos de euros/litros eran `type="number"` y el navegador descartaba la coma en silencio — teclear "50,55" guardaba **5055** (importe ×100). Ahora son `type="text" inputmode="decimal"` con `normDec()` que convierte coma→punto al teclear y rechaza caracteres no numéricos. Aplicado en combustible (form nuevo repostaje, tabla, editor inline) y parte diario (p1-3/l1-3). Los km siguen `type="number"` (enteros).
+- **Aviso importe sospechoso:** `MAX_EUR_AVISO = 400` — importes de repostaje >400€ piden `confirm()` antes de aceptarse (addRepostaje, saveRepostajeInline, saveParteDiario).
+- **Aviso fecha fuera de mes:** repostaje con fecha de otro mes distinto a `v_mes` pide confirmación (antes se aceptaba en silencio).
+- **Dedup conductores por acentos (combustible):** "JOSÉ PÉREZ" y "JOSE PEREZ" ya no conviven en la lista — dedup con `normStr`, gana la última grafía escrita (mismo criterio que `saveConductorName` del diario). Toast "Conductor repetido" al detectarlo.
+- **Tope de 14 repostajes:** al intentar el 15º ahora sale `showErr` persistente con mensaje claro (antes toast fugaz).
 
-**No desplegado todavía** — sin bump de `sw.js`, sin commit, sin push. A la espera del JSON de la usuaria para contrastar y corregir sus datos antes de subir el fix.
+### v102 — DESPLEGADO 2026-07-03 (8 bugs + stripOldPhotos + suite de tests)
+
+- **Contaminación cruzada de repostajes/km entre vehículos** (`onMatriculaChange`, caso real `MMM-04024` junio 2026): desplegado. El JSON de la usuaria se corrigió manualmente contrastando ticket a ticket (solo `MMM05520/2026-06` tenía entries duplicadas; `km_ini/km_fin` de 4 matrículas quedaron en blanco por irreconstruibles — deben reintroducirlos los conductores).
+- **Órdenes de reparación rotas en producción**: `normMat`/`fmtMat` estaban dentro de un IIFE pero se llamaban desde funciones globales — guardar/cargar/borrar/listar órdenes lanzaba `ReferenceError` desde v99. Movidas al scope global.
+- **Autofill conductor ambiguo** (diario): conductor con varios vehículos elige el usado más recientemente (`pickLastUsedVehiclePD`); nunca pisa una matrícula ya escrita.
+- **Guards `resetForm` de los 3 módulos**: comprobaban solo 1-2 campos; ahora `formHasData*()` revisa todos los campos, fotos y firma.
+- **`mergeData()` en storage.js**: merge por `updatedAt`/`createdAt` (antes localStorage pisaba versiones más recientes del archivo); vehículos campo a campo.
+- **XSS**: nombres de conductor sin escapar via `innerHTML` en combustible — `escapeHtml()` añadida.
+- **`stripOldPhotos()`**: documentada en v97 pero nunca existió en el código; implementada de verdad (purga fotos >3 meses solo de localStorage, el JSON conserva todo; el merge recupera fotos del archivo si el registro purgado gana por timestamp).
+- **Suite de tests permanente**: `tests/` con 10 archivos (~130 asserts) + `tests/run_tests.sh` + README. **Obligatorio pasarla antes de cada deploy.**
 
 ### UX / UI — Grupos 1-4 (completados)
 - **Grupo 1:** Toast 2800ms, padding-bottom seguro (iOS), contraste botón danger, firma 150px, botones flex, font-size `.ch`
@@ -97,11 +110,15 @@ Los 3 módulos: `normMat` normaliza la matrícula (sin separadores, mayúsculas)
 
 ## Pendientes
 
+- **Desplegar v103** (coma decimal + avisos + dedup): pasar `bash tests/run_tests.sh`, commit, push, bump `sw.js` a v103.
+- **Añadir `test_adversarial.js` a `tests/`** al cerrar la ronda v103 (ya escrito, 30 asserts).
+- **Entregar a la usuaria el JSON corregido** (`partes_copia_2026-07-03.json`, local, gitignoreado) y que confirme que le llega la v102.
+- **km de junio en blanco**: avisar a los responsables de `MMM06038/MMM05520/MMM04024/MMM05422` para que reintroduzcan `km_ini/km_fin` de junio a mano (irreconstruibles).
+- **Validación en móvil real**: la suite cubre lógica en Chromium desktop; falta un ciclo completo en Android (PWA instalada, cámara, vinculación real del JSON).
+- **DECISIÓN APLAZADA (2026-07-06) — arrastre de conductores a mes nuevo:** hoy la lista de conductores de combustible NO se precarga al abrir un mes nuevo del mismo vehículo (hay que reescribirla). Se decidió dejarlo así por ahora. Si se cambia de opinión: precargar desde el mes más reciente de la misma matrícula al crear el registro (opción recomendada en su día; ver conversación 2026-07-06).
 - **Chips:** validar con beta testers. Si rechazo → `memory/project_chips_tabs_revert.md`.
 - **Concepto en OR:** sin asterisco ni validación — pendiente decisión (de momento se deja sin tocar).
 - **Backend separado:** `~/partes-server` WSL puerto 3001 → `memory/project_partes_backend.md`.
-- **Push v101 a GitHub:** cambios de conductor por repostaje pendientes de subir.
-- **Fix contaminación cruzada de repostajes:** pendiente de deploy — a la espera del JSON de la usuaria afectada (`MMM-04024`) para corregir su histórico antes de subir.
 
 ---
 

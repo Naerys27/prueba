@@ -16,7 +16,7 @@ PWA (Progressive Web App) para gestionar la documentación del Servicio de Locom
 
 **URL de producción (beta):** [https://naerys27.github.io/prueba/](https://naerys27.github.io/prueba/)
 
-**Service Worker actual:** `partes-loco-v101` — incrementar en cada deploy.
+**Service Worker actual:** `partes-loco-v102` (desplegado 2026-07-03) — incrementar en cada deploy. Cambios locales pendientes de deploy → bump a v103.
 
 ---
 
@@ -29,7 +29,8 @@ prueba/
 ├── parte_combustible.html      # Módulo partes mensuales de combustible
 ├── orden_reparacion.html       # Módulo órdenes de reparación y suministro
 ├── storage.js                  # Capa de almacenamiento (localStorage + File System Access API)
-├── sw.js                       # Service Worker (caché offline, versión actual: v101)
+├── sw.js                       # Service Worker (caché offline, versión actual: v102)
+├── tests/                      # Batería de regresión Playwright — pasar SIEMPRE antes de deploy (tests/README.md)
 ├── manifest.json               # Manifiesto PWA
 └── icons/
     ├── icon-192.png
@@ -78,7 +79,7 @@ GitHub Pages publica automáticamente desde la rama `main`.
 **IMPORTANTE — tras cada deploy:** incrementar la versión del Service Worker en `sw.js`:
 
 ```javascript
-const CACHE = 'partes-loco-vN';  // incrementar N — actualmente v101
+const CACHE = 'partes-loco-vN';  // incrementar N — actualmente v102
 ```
 
 Si no se incrementa, los usuarios seguirán usando la versión cacheada anterior.
@@ -189,7 +190,7 @@ El SW cubre `./` para simplicidad. A tener en cuenta si se despliega en subcarpe
 
 Las funciones `saveCurrentVehicle/saveVehicleOR/saveCurrentVehiclePD` deben llamarse al **inicio** de `saveHistorico/saveOrden/saveParteDiario`, no solo desde `makePDF`. Si se añade un nuevo campo de vehículo, verificar que se incluye en estas funciones.
 
-## Patrón de bug: contaminación cruzada de repostajes entre vehículos (RESUELTO, pendiente deploy)
+## Patrón de bug: contaminación cruzada de repostajes entre vehículos (RESUELTO — desplegado en v102)
 
 **Síntoma:** al generar el PDF mensual de Parte Combustible para una matrícula, aparecían repostajes de OTRO vehículo del mismo usuario mezclados en la tabla. Reportado por usuaria beta con varios vehículos a su cargo (caso real: `MMM-04024`, junio 2026 — histórico corrupto, corrección manual pendiente del JSON de la usuaria).
 
