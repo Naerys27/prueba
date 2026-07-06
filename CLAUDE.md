@@ -64,6 +64,10 @@ python -m http.server 8080
 **Deploy:**
 
 ```bash
+# 1. SIEMPRE antes de subir: ejecutar la batería de regresión (ver tests/README.md)
+bash tests/run_tests.sh   # si falla algún test, NO desplegar
+
+# 2. Subir
 git add .
 git commit -m "descripción"
 git push origin main
