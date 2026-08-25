@@ -1127,6 +1127,8 @@
     function setSavedOrdenes(list) { FSStorage.setItem(OR_KEY, JSON.stringify(list)); }
 
     function escapeHtmlOR(v) { return String(v || '').replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+    function normMat(s) { return (s || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase(); }
+    function fmtMat(s) { var n = normMat(s); return n.length > 3 ? n.slice(0, 3) + '-' + n.slice(3) : n; }
     function fechaCortaOR(iso) { if (!iso) return ''; var p = iso.split('-'); return p.length === 3 ? p[2]+'/'+p[1]+'/'+p[0] : iso; }
 
     function saveOrden() {
@@ -1236,8 +1238,13 @@
       if (arrow) arrow.textContent = open ? '▾' : '▴';
     }
 
+    function formHasDataOR() {
+      var els = document.querySelectorAll('input, textarea');
+      for (var i = 0; i < els.length; i++) { if (!els[i].readOnly && els[i].value) return true; }
+      return false;
+    }
     function resetFormOR(force) {
-      if (!force && (gv('fecha') || gv('matricula')) && !confirm('¿Limpiar el formulario? Se perderán los datos no guardados.')) return;
+      if (!force && formHasDataOR() && !confirm('¿Limpiar el formulario? Se perderán los datos no guardados.')) return;
       _editingOrdenId = null;
       var els = document.querySelectorAll('input, textarea');
       for (var i = 0; i < els.length; i++) els[i].value = '';
@@ -1313,8 +1320,6 @@
     (function () {
       FSStorage.init();
       var VKEY = 'partes_vehiculos_v1';
-      function normMat(s) { return (s || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase(); }
-      function fmtMat(s) { var n = normMat(s); return n.length > 3 ? n.slice(0, 3) + '-' + n.slice(3) : n; }
       function loadDB() {
         var raw; try { raw = JSON.parse(FSStorage.getItem(VKEY) || '{}'); } catch(e) { raw = {}; }
         var mig = {}; Object.keys(raw).forEach(function(k) { var nk = normMat(k) || k; mig[nk] = raw[k]; });
