@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { nuevaPagina } = require('./_comun');
 const assert = require('assert');
 
 (async () => {
@@ -9,7 +10,7 @@ const assert = require('assert');
 
   // --- Bug 2: parte_servicio_diario resetForm guard ---
   {
-    const page = await browser.newPage();
+    const page = await nuevaPagina(browser);
     let dialogSeen = false;
     page.on('dialog', d => { dialogSeen = true; d.dismiss(); });
     await page.goto(BASE + '/parte_servicio_diario.html');
@@ -26,7 +27,7 @@ const assert = require('assert');
 
   // --- Bug 3: parte_combustible resetForm guard ---
   {
-    const page = await browser.newPage();
+    const page = await nuevaPagina(browser);
     let dialogSeen = false;
     page.on('dialog', d => { dialogSeen = true; d.dismiss(); });
     await page.goto(BASE + '/parte_combustible.html');
@@ -44,7 +45,7 @@ const assert = require('assert');
 
   // --- Bug 4: orden_reparacion resetFormOR guard ---
   {
-    const page = await browser.newPage();
+    const page = await nuevaPagina(browser);
     let dialogSeen = false;
     page.on('dialog', d => { dialogSeen = true; d.dismiss(); });
     await page.goto(BASE + '/orden_reparacion.html');
@@ -67,7 +68,7 @@ const assert = require('assert');
 
   // --- Bug 5: mergeData per-field / per-record merge (storage.js) ---
   {
-    const page = await browser.newPage();
+    const page = await nuevaPagina(browser);
     await page.goto(BASE + '/parte_combustible.html');
     const result = await page.evaluate(() => {
       var mergeDataFn = window.FSStorage && window.FSStorage._test_mergeData;

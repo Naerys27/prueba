@@ -1,10 +1,11 @@
 const { chromium } = require('playwright');
+const { nuevaPagina } = require('./_comun');
 
 // Exploratorio parte diario: varios vehiculos y conductores, autofills, validaciones, historial
 (async () => {
   const BASE = 'http://localhost:8899';
   const browser = await chromium.launch();
-  const page = await browser.newPage();
+  const page = await nuevaPagina(browser);
   const errors = [];
   const dialogs = [];
   page.on('pageerror', e => errors.push(e.message));

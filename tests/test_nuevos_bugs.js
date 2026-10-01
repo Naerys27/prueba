@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { nuevaPagina } = require('./_comun');
 
 // --- Parte 1: test unitario del nuevo mergeData (replica de storage.js) ---
 function mergeData(file, ls) {
@@ -67,7 +68,7 @@ ok('Registros legacy sin timestamp: comportamiento anterior conservado (gana loc
 (async () => {
   const BASE = 'http://localhost:8899';
   const browser = await chromium.launch();
-  const page = await browser.newPage();
+  const page = await nuevaPagina(browser);
   page.on('dialog', d => d.accept());
   let xssFired = false;
   await page.exposeFunction('_xssProof', () => { xssFired = true; });

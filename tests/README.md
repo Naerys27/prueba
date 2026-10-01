@@ -39,6 +39,18 @@ El script sirve el repo en `http://localhost:8899` (si no hay ya un servidor), l
 | `test_mensual_multi.js` | Parte combustible: 3 vehículos/4 conductores, aislamiento total, km por vehículo, meses, edición, borrado, PDFs | Exploratorio |
 | `test_diario_multi.js` | Parte diario: varios vehículos/conductores, autofills, validaciones, PDF | Exploratorio |
 | `test_edicion_multi.js` | Edición en los 3 módulos, incl. reindexado de fotos al borrar un repostaje intermedio | Exploratorio |
+| `test_or_quota.js` | `QuotaExceededError` al guardar una orden de reparación: aviso mostrado, orden no persistida | Bug real (auditoría 2026-09-01) |
+| `test_readFile_corrupto.js` | JSON corrupto en el archivo vinculado (`setup()` e `init()`): aviso mostrado, archivo NO sobreescrito, localStorage intacto | Bug real (auditoría 2026-09-01) |
+| `test_pdf_tamano.js` | PDFs comprimidos (`FlateDecode`) en los 3 módulos; PDF mensual del parte diario con 10 días firmados: una página por día y < 1 MB | Bug real (oct 2026, PDFs de varios MB) |
+
+`tests/_comun.js` no es un test: tiene utilidades compartidas y `run_tests.sh` no lo ejecuta.
+
+## Escribir un test nuevo
+
+Abrir las páginas siempre con `nuevaPagina(browser)` (o `nuevaPagina(browser, opciones)`) de `tests/_comun.js`, nunca con `browser.newPage()`:
+
+- Fija el "hoy" del navegador en `HOY_TESTS` (2026-07-15). Los datos sembrados con fechas de julio de 2026 no caducan por las purgas de 3 meses, sea cual sea la fecha real.
+- Espera a que el Service Worker controle la página. Si no, la recarga que hace la app en la primera instalación del SW puede caer a mitad de test y borrar lo rellenado.
 
 ## Avisos de mantenimiento
 

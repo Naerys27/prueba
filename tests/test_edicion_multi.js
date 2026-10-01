@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { nuevaPagina } = require('./_comun');
 
 // Edicion en los 3 modulos: partes diarios, combustible (incl. fotos y reindexado), ordenes
 (async () => {
@@ -10,7 +11,7 @@ const { chromium } = require('playwright');
 
   // ============ 1. EDICION PARTE DIARIO ============
   {
-    const page = await browser.newPage();
+    const page = await nuevaPagina(browser);
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     page.on('dialog', d => d.accept());
@@ -100,7 +101,7 @@ const { chromium } = require('playwright');
 
   // ============ 2. EDICION PARTE COMBUSTIBLE (con fotos y reindexado) ============
   {
-    const page = await browser.newPage();
+    const page = await nuevaPagina(browser);
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     page.on('dialog', d => d.accept());
@@ -196,7 +197,7 @@ const { chromium } = require('playwright');
 
   // ============ 3. ORDENES DE REPARACION ============
   {
-    const page = await browser.newPage();
+    const page = await nuevaPagina(browser);
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     page.on('dialog', d => d.accept());

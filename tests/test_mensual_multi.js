@@ -1,10 +1,11 @@
 const { chromium } = require('playwright');
+const { nuevaPagina } = require('./_comun');
 
 // Exploratorio parte combustible: 3 vehiculos, 4 conductores, cambios repetidos entre matriculas
 (async () => {
   const BASE = 'http://localhost:8899';
   const browser = await chromium.launch();
-  const page = await browser.newPage();
+  const page = await nuevaPagina(browser);
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   page.on('dialog', d => d.accept());

@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { nuevaPagina } = require('./_comun');
 
 (async () => {
   const BASE = 'http://localhost:8899';
@@ -8,7 +9,7 @@ const { chromium } = require('playwright');
 
   // ============ MODULO 1: PARTE SERVICIO DIARIO ============
   {
-    const page = await browser.newPage();
+    const page = await nuevaPagina(browser);
     const errors = [];
     page.on('pageerror', e => errors.push('JS: ' + e.message));
     page.on('dialog', d => d.accept());
@@ -72,7 +73,7 @@ const { chromium } = require('playwright');
 
   // ============ MODULO 2: PARTE COMBUSTIBLE ============
   {
-    const page = await browser.newPage();
+    const page = await nuevaPagina(browser);
     const errors = [];
     page.on('pageerror', e => errors.push('JS: ' + e.message));
     page.on('dialog', d => d.accept());
@@ -135,7 +136,7 @@ const { chromium } = require('playwright');
 
   // ============ MODULO 3: ORDEN REPARACION ============
   {
-    const page = await browser.newPage();
+    const page = await nuevaPagina(browser);
     const errors = [];
     page.on('pageerror', e => errors.push('JS: ' + e.message));
     page.on('dialog', d => d.accept());

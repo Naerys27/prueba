@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { nuevaPagina } = require('./_comun');
 
 // Tests adversarios: intentar romper la app a proposito
 (async () => {
@@ -10,7 +11,7 @@ const { chromium } = require('playwright');
   function info(name, val) { console.log('INFO', name, '->', val); }
 
   // ============ COMBUSTIBLE ============
-  const page = await browser.newPage();
+  const page = await nuevaPagina(browser);
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   page.on('dialog', d => d.accept());
@@ -179,7 +180,7 @@ const { chromium } = require('playwright');
 
   // ============ PARTE DIARIO ============
   {
-    const page2 = await browser.newPage();
+    const page2 = await nuevaPagina(browser);
     const errors2 = [];
     page2.on('pageerror', e => errors2.push(e.message));
     page2.on('dialog', d => d.accept());

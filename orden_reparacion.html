@@ -1063,7 +1063,7 @@
         try {
           var JPDF = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
           if (!JPDF) throw new Error('jsPDF no cargado');
-          var doc = new JPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+          var doc = new JPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
           drawOrdenInstitucional(doc);
 
           var mat = (gv('matricula') || 'SIN_MATRICULA').toUpperCase();
@@ -1090,7 +1090,7 @@
         try {
           var JPDF = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
           if (!JPDF) throw new Error('jsPDF no cargado');
-          var doc = new JPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+          var doc = new JPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
           drawOrdenInstitucional(doc);
 
           var mat = (gv('matricula') || 'SIN_MATRICULA').toUpperCase();

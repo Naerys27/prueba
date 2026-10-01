@@ -1,11 +1,17 @@
 const { chromium } = require('playwright');
+const { nuevaPagina } = require('./_comun');
 
 (async () => {
   const browser = await chromium.launch();
-  const page = await browser.newPage();
+  const page = await nuevaPagina(browser);
   const toasts = [];
   page.on('dialog', d => d.accept());
   const BASE = 'http://localhost:8899';
+  let fallos = 0;
+  function check(ok, okMsg, failMsg) {
+    console.log(ok ? okMsg : failMsg);
+    if (!ok) fallos++;
+  }
 
   async function reset() {
     await page.goto(BASE + '/parte_servicio_diario.html');
@@ -41,7 +47,7 @@ const { chromium } = require('playwright');
   let marca = await page.inputValue('#marca');
   let modelo = await page.inputValue('#modelo');
   console.log('matricula:', mat, '| marca:', marca, '| modelo:', modelo);
-  console.log(mat === '111-AAA' && marca === 'FORD' && modelo === 'TRANSIT' ? 'OK' : '*** FALLO: no autocompleto correctamente con match unico ***');
+  check(mat === '111-1AAA' && marca === 'FORD' && modelo === 'TRANSIT', 'OK', '*** FALLO: no autocompleto correctamente con match unico ***');
 
   // ===== TEST B: conductor con 2 vehiculos, con historial de partes -> elige el usado mas reciente =====
   console.log('');
@@ -59,7 +65,7 @@ const { chromium } = require('playwright');
   modelo = await page.inputValue('#modelo');
   console.log('matricula:', mat, '| marca:', marca, '| modelo:', modelo);
   console.log(mat === '333-3CC' || mat === '333-CCC' || mat.replace(/-/g,'') === '3333CCC' ? 'revisar formato' : '');
-  console.log(marca === 'RENAULT' && modelo === 'MASTER' ? 'OK: eligio el vehiculo mas usado recientemente (RENAULT MASTER)' : '*** FALLO: deberia haber elegido RENAULT MASTER (uso mas reciente), obtuvo ' + marca + ' ' + modelo + ' ***');
+  check(marca === 'RENAULT' && modelo === 'MASTER', 'OK: eligio el vehiculo mas usado recientemente (RENAULT MASTER)', '*** FALLO: deberia haber elegido RENAULT MASTER (uso mas reciente), obtuvo ' + marca + ' ' + modelo + ' ***');
 
   // ===== TEST C: conductor con 2 vehiculos, SIN historial -> no autocompleta nada + toast =====
   console.log('');
@@ -76,7 +82,7 @@ const { chromium } = require('playwright');
   modelo = await page.inputValue('#modelo');
   const toastText = await page.evaluate(() => document.getElementById('toast') ? document.getElementById('toast').textContent : null);
   console.log('matricula:', JSON.stringify(mat), '| marca:', JSON.stringify(marca), '| modelo:', JSON.stringify(modelo), '| toast:', JSON.stringify(toastText));
-  console.log(mat === '' && marca === '' && modelo === '' ? 'OK: no autocompleto con ambiguedad sin historial (deja elegir al usuario)' : '*** FALLO: autocompleto algo pese a ser ambiguo sin historial ***');
+  check(mat === '' && marca === '' && modelo === '', 'OK: no autocompleto con ambiguedad sin historial (deja elegir al usuario)', '*** FALLO: autocompleto algo pese a ser ambiguo sin historial ***');
 
   // ===== TEST D (regresion bug 1): marca/modelo ya escritos a mano NO se sobreescriben al escribir conductor =====
   console.log('');
@@ -92,7 +98,7 @@ const { chromium } = require('playwright');
   modelo = await page.inputValue('#modelo');
   mat = await page.inputValue('#parte_servicio');
   console.log('marca:', marca, '| modelo:', modelo, '| matricula:', mat);
-  console.log(marca === 'SEAT' && modelo === 'IBIZA' ? 'OK: no se sobreescribieron marca/modelo ya escritos' : '*** FALLO: bug 1 sigue presente, se sobreescribio ***');
+  check(marca === 'SEAT' && modelo === 'IBIZA', 'OK: no se sobreescribieron marca/modelo ya escritos', '*** FALLO: bug 1 sigue presente, se sobreescribio ***');
 
   // ===== TEST E (regresion): cambiar matricula a mano SI debe actualizar marca/modelo al vehiculo nuevo =====
   console.log('');
@@ -112,8 +118,11 @@ const { chromium } = require('playwright');
   marca = await page.inputValue('#marca');
   modelo = await page.inputValue('#modelo');
   console.log('marca:', marca, '| modelo:', modelo, '(se esperaba OPEL MOVANO, el vehiculo nuevo)');
-  console.log(marca === 'OPEL' && modelo === 'MOVANO' ? 'OK: el cambio manual de matricula sigue actualizando marca/modelo con normalidad' : '*** FALLO: el cambio de vehiculo por matricula dejo de funcionar ***');
+  check(marca === 'OPEL' && modelo === 'MOVANO', 'OK: el cambio manual de matricula sigue actualizando marca/modelo con normalidad', '*** FALLO: el cambio de vehiculo por matricula dejo de funcionar ***');
 
   await browser.close();
+  console.log('');
+  console.log('=== RESULTADO: ' + (5 - fallos) + ' PASS / ' + fallos + ' FAIL ===');
+  if (fallos > 0) process.exit(1);
 })();
 

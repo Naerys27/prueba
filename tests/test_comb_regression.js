@@ -1,8 +1,9 @@
 const { chromium } = require('playwright');
+const { nuevaPagina } = require('./_comun');
 
 (async () => {
   const browser = await chromium.launch();
-  const page = await browser.newPage();
+  const page = await nuevaPagina(browser);
   page.on('dialog', d => d.accept());
   const BASE = 'http://localhost:8899';
 

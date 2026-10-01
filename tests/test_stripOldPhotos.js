@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { nuevaPagina } = require('./_comun');
 
 (async () => {
   const BASE = 'http://localhost:8899';
@@ -49,7 +50,7 @@ const { chromium } = require('playwright');
 
   // ===== ESCENARIO A: modo activo (JSON vinculado) =====
   {
-    const page = await browser.newPage();
+    const page = await nuevaPagina(browser);
     await page.addInitScript(stubFS);
     await page.goto(BASE + '/parte_combustible.html');
     await page.evaluate(() => localStorage.clear());
@@ -83,7 +84,7 @@ const { chromium } = require('playwright');
 
   // ===== ESCENARIO B: recuperacion en merge — registro antiguo purgado en LS pero editado (mas nuevo), archivo con fotos =====
   {
-    const page = await browser.newPage();
+    const page = await nuevaPagina(browser);
     await page.addInitScript(stubFS);
     await page.goto(BASE + '/parte_combustible.html');
     await page.evaluate(() => localStorage.clear());
@@ -113,7 +114,7 @@ const { chromium } = require('playwright');
 
   // ===== ESCENARIO C: sin archivo vinculado, NO se purga nada =====
   {
-    const page = await browser.newPage();
+    const page = await nuevaPagina(browser);
     await page.goto(BASE + '/parte_combustible.html');
     await page.evaluate(() => localStorage.clear());
     await page.goto(BASE + '/parte_combustible.html');
