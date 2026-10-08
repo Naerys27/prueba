@@ -1124,7 +1124,21 @@
     var OR_KEY = 'cht_orden_reparacion_v1';
 
     function getSavedOrdenes() { try { return JSON.parse(FSStorage.getItem(OR_KEY) || '[]'); } catch(e) { return []; } }
-    function setSavedOrdenes(list) { FSStorage.setItem(OR_KEY, JSON.stringify(list)); }
+    function avisarSiLleno(e) {
+      if (!(e && (e.name === 'QuotaExceededError' || e.code === 22))) throw e;
+      showErr(FSStorage.isPending()
+        ? 'Almacenamiento del navegador lleno. Pulsa Reconectar para guardar en el archivo vinculado.'
+        : 'Almacenamiento lleno. Vincula un archivo JSON para poder seguir guardando.');
+    }
+    function setSavedOrdenes(list) {
+      try {
+        FSStorage.setItem(OR_KEY, JSON.stringify(list));
+        return true;
+      } catch(e) {
+        avisarSiLleno(e);
+        return false;
+      }
+    }
 
     function escapeHtmlOR(v) { return String(v || '').replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
     function normMat(s) { return (s || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase(); }
@@ -1149,7 +1163,8 @@
         localizacion: gv('localizacion')
       };
       if (!data.fecha && !data.matricula) { showErr('Rellena al menos la fecha o la matrícula antes de guardar.'); return; }
-      window.saveVehicleOR();
+      // Con el almacenamiento lleno, un vehiculo nuevo ya no cabe y falla antes que la orden
+      try { window.saveVehicleOR(); } catch(e) { avisarSiLleno(e); return; }
       var list = getSavedOrdenes();
       var idx = -1;
       for (var i = 0; i < list.length; i++) { if (list[i].id === data.id) { idx = i; break; } }
@@ -1157,7 +1172,7 @@
       var _cutoff = new Date(); _cutoff.setMonth(_cutoff.getMonth() - 6);
       var _cutoffStr = _cutoff.getFullYear() + '-' + String(_cutoff.getMonth() + 1).padStart(2, '0');
       list = list.filter(function(o) { return !o.fecha || o.fecha >= _cutoffStr; });
-      setSavedOrdenes(list);
+      if (!setSavedOrdenes(list)) return;
       renderOrHistory();
       if (idx >= 0) {
         _editingOrdenId = data.id;

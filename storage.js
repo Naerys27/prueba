@@ -5,6 +5,9 @@
   var IDB_STORE = 'config';
   var HANDLE_KEY = 'file_handle';
   var DATA_KEYS = ['partes_vehiculos_v1', 'partes_conductores_v1', 'cht_parte_servicio_diario_v1', 'cht_orden_reparacion_v1', 'partes_combustible_hist_v1'];
+  // Marca de "hay cambios guardados solo en este navegador": se pone al guardar con archivo vinculado
+  // pero sin permiso, y obliga a combinar archivo y localStorage la próxima vez que haya permiso
+  var SYNC_KEY = 'partes_fs_sin_sincronizar';
 
   var _handle = null;
   var _cache = {};
@@ -59,7 +62,15 @@
     var file = await handle.getFile();
     var text = await file.text();
     if (!text || !text.trim()) return {};
-    try { return JSON.parse(text); } catch(e) { return {}; }
+    var data = null;
+    try { data = JSON.parse(text); } catch(e) {}
+    // Un JSON válido que no es un objeto (null, lista, número...) tampoco son datos de la app
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      var err = new Error('El archivo vinculado no contiene datos válidos de la app');
+      err.name = 'FileCorruptError';
+      throw err;
+    }
+    return data;
   }
 
   async function writeFile(handle, data) {
@@ -81,6 +92,19 @@
       var v = localStorage.getItem(k);
       if (v) try { _cache[k] = JSON.parse(v); } catch(e) {}
     });
+  }
+
+  function readLS() {
+    var data = {};
+    DATA_KEYS.forEach(function(k) {
+      var v = localStorage.getItem(k);
+      if (v) try { data[k] = JSON.parse(v); } catch(e) {}
+    });
+    return data;
+  }
+
+  function marcarSinSincronizar() {
+    try { localStorage.setItem(SYNC_KEY, '1'); return true; } catch(e) { return false; }
   }
 
   function notify() {
@@ -121,10 +145,11 @@
     return c.getFullYear() + '-' + String(c.getMonth() + 1).padStart(2, '0');
   }
 
-  // Solo para la copia de localStorage: el JSON vinculado conserva siempre las fotos completas
-  function stripOldPhotos(hist) {
+  // Solo para la copia de localStorage: el JSON vinculado conserva siempre las fotos completas.
+  // Quita las fotos de los meses anteriores a cutoff (por defecto, los de más de 3 meses).
+  function stripOldPhotos(hist, cutoff) {
     if (!hist || typeof hist !== 'object') return hist;
-    var cutoff = photoCutoffStr();
+    cutoff = cutoff || photoCutoffStr();
     var out = {};
     Object.keys(hist).forEach(function(k) {
       var rec = hist[k];
@@ -142,7 +167,20 @@
 
   function lsWrite(k, val) {
     var v = (_active && k === 'partes_combustible_hist_v1') ? stripOldPhotos(val) : val;
-    localStorage.setItem(k, JSON.stringify(v));
+    lsSet(k, JSON.stringify(v));
+  }
+
+  // Con el archivo conectado la app lee las fotos de _cache, no de localStorage. Si localStorage
+  // se llena (~5 MB), la copia local del histórico de combustible pasa a guardarse sin ninguna foto.
+  function lsSet(k, str) {
+    try {
+      localStorage.setItem(k, str);
+    } catch(e) {
+      var hist = _cache['partes_combustible_hist_v1'];
+      if (!_active || !(e && (e.name === 'QuotaExceededError' || e.code === 22)) || !hist || typeof hist !== 'object') throw e;
+      localStorage.setItem('partes_combustible_hist_v1', JSON.stringify(stripOldPhotos(hist, '9999-99')));
+      if (k !== 'partes_combustible_hist_v1') localStorage.setItem(k, str);
+    }
   }
 
   function mergeData(file, ls) {
@@ -167,10 +205,11 @@
           var a = fv[rk], b = lv[rk];
           if (a && b) {
             var win = (new Date(b.updatedAt || 0) >= new Date(a.updatedAt || 0)) ? b : a;
-            // Si gana localStorage en un registro antiguo, sus fotos pueden haber sido purgadas:
-            // recuperarlas del archivo para no perderlas del JSON al reescribirlo
+            // Si gana localStorage, sus fotos pueden haber sido purgadas (registro antiguo, o cualquiera
+            // si localStorage se llenó): recuperarlas del archivo para no perderlas del JSON al reescribirlo
             var mes = win.mes || (rk.split('/')[1] || '');
-            if (win === b && a.photos && Object.keys(a.photos).length && mes && mes < phCutoff) {
+            var purgadas = (mes && mes < phCutoff) || !win.photos;
+            if (win === b && a.photos && Object.keys(a.photos).length && purgadas) {
               var ph = Object.assign({}, a.photos, win.photos || {});
               var valid = {};
               var n = (win.entries || []).length;
@@ -219,11 +258,29 @@
           var perm = await queryOnly(handle);
           if (perm === 'granted') {
             _handle = handle;
-            _cache = await readFile(handle);
-            _active = true;
-            DATA_KEYS.forEach(function(k) {
-              if (_cache[k] !== undefined) lsWrite(k, _cache[k]);
-            });
+            try {
+              _cache = await readFile(handle);
+              _active = true;
+              // Se guardó sin permiso (sin pulsar Reconectar): combinar como reconnect() para no perderlo
+              if (localStorage.getItem(SYNC_KEY)) {
+                _cache = mergeData(_cache, readLS());
+                try {
+                  await writeFile(handle, _cache);
+                  localStorage.removeItem(SYNC_KEY);
+                } catch(e) {
+                  console.warn('[FSStorage] init merge:', e.message);
+                }
+              }
+              DATA_KEYS.forEach(function(k) {
+                if (_cache[k] !== undefined) lsWrite(k, _cache[k]);
+              });
+            } catch(e) {
+              if (e.name === 'FileCorruptError') {
+                alert('⚠️ El archivo vinculado parece estar dañado o no es JSON válido.\nSe van a usar los datos guardados en este dispositivo sin modificar el archivo.\nRevísalo manualmente o vincula otro desde "Configurar archivo".');
+              } else {
+                throw e;
+              }
+            }
           } else if (perm === 'prompt') {
             _handle = handle;
             _pending = true;
@@ -256,18 +313,20 @@
         _active = true;
         try {
           var fileData = await readFile(_handle);
-          var lsData = {};
-          DATA_KEYS.forEach(function(k) {
-            var v = localStorage.getItem(k);
-            if (v) try { lsData[k] = JSON.parse(v); } catch(e) {}
-          });
+          var lsData = readLS();
           _cache = mergeData(fileData, lsData);
           if (Object.keys(lsData).length) await writeFile(_handle, _cache);
+          localStorage.removeItem(SYNC_KEY);
           DATA_KEYS.forEach(function(k) {
             if (_cache[k] !== undefined) lsWrite(k, _cache[k]);
           });
         } catch(e) {
-          console.warn('[FSStorage] reconnect merge:', e.message);
+          if (e.name === 'FileCorruptError') {
+            alert('⚠️ El archivo vinculado parece estar dañado o no es JSON válido.\nNo se ha modificado. Se van a usar los datos guardados en este dispositivo.\nRevísalo manualmente o vincula otro desde "Configurar archivo".');
+            _active = false;
+          } else {
+            console.warn('[FSStorage] reconnect merge:', e.message);
+          }
           loadLS();
         }
         return true;
@@ -305,14 +364,16 @@
           }
         }
         var fileData = {};
-        try { fileData = await readFile(handle); } catch(e) {}
-        var lsData = {};
-        DATA_KEYS.forEach(function(k) {
-          var v = localStorage.getItem(k);
-          if (v) try { lsData[k] = JSON.parse(v); } catch(e) {}
-        });
-        var merged = mergeData(fileData, lsData);
+        try { fileData = await readFile(handle); }
+        catch(e) {
+          if (e.name === 'FileCorruptError') {
+            alert('⚠️ El archivo elegido no es JSON válido o no contiene datos de esta app, así que no se puede usar sin arriesgar perder sus datos.\nElige otro archivo o corrígelo manualmente y vuelve a intentarlo.\nNo se ha modificado.');
+            return false;
+          }
+        }
+        var merged = mergeData(fileData, readLS());
         await writeFile(handle, merged);
+        localStorage.removeItem(SYNC_KEY);
         await idbPut(HANDLE_KEY, handle);
         _handle = handle;
         _cache = merged;
@@ -347,10 +408,14 @@
           console.error('[FSStorage] write:', e.message);
         });
         if (key === 'partes_combustible_hist_v1' && typeof _cache[key] === 'object') lsWrite(key, _cache[key]);
-        else localStorage.setItem(key, value);
+        else lsSet(key, value);
         return;
       }
+      // Con archivo vinculado sin permiso, marcar antes de guardar; si localStorage estaba lleno,
+      // reintentar después por si el guardado ha liberado sitio
+      var marcada = _handle && marcarSinSincronizar();
       localStorage.setItem(key, value);
+      if (_handle && !marcada) marcarSinSincronizar();
     },
 
     removeItem: function(key) {
@@ -362,7 +427,9 @@
         localStorage.removeItem(key);
         return;
       }
+      var marcada = _handle && marcarSinSincronizar();
       localStorage.removeItem(key);
+      if (_handle && !marcada) marcarSinSincronizar();
     }
   };
 

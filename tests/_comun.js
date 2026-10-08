@@ -22,4 +22,39 @@ async function nuevaPagina(browser, opciones) {
   return page;
 }
 
-module.exports = { HOY_TESTS, nuevaPagina };
+// Init script: File System Access API falso para probar storage.js. El "archivo" es window.__fileText,
+// el permiso window.__perm ('granted' | 'prompt' | 'denied') y los alert() quedan en window.__alerts.
+// El IndexedDB falso recuerda lo guardado (init() relee el handle persistido), a diferencia del de
+// test_stripOldPhotos.js.
+function stubFS() {
+  window.__fileText = '';
+  window.__perm = 'granted';
+  window.__alerts = [];
+  window.alert = (msg) => { window.__alerts.push(msg); };
+  const idbStore = {};
+  const fakeDb = {
+    createObjectStore() {},
+    transaction() {
+      const tx = {
+        objectStore: () => ({
+          put: (val, key) => { idbStore[key] = val; return {}; },
+          get: (key) => { const rq = {}; setTimeout(() => rq.onsuccess && rq.onsuccess({ target: { result: idbStore[key] } }), 0); return rq; },
+          delete: (key) => { delete idbStore[key]; return {}; }
+        })
+      };
+      setTimeout(() => tx.oncomplete && tx.oncomplete(), 0);
+      return tx;
+    }
+  };
+  Object.defineProperty(window, 'indexedDB', { value: { open: () => { const r = { result: fakeDb }; setTimeout(() => r.onsuccess && r.onsuccess({ target: { result: fakeDb } }), 0); return r; } } });
+  const handle = {
+    queryPermission: async () => window.__perm,
+    requestPermission: async () => 'granted',
+    getFile: async () => ({ text: async () => window.__fileText }),
+    createWritable: async () => ({ write: async (t) => { window.__fileText = t; }, close: async () => {} })
+  };
+  window.showSaveFilePicker = async () => handle;
+  window.showOpenFilePicker = async () => [handle];
+}
+
+module.exports = { HOY_TESTS, nuevaPagina, stubFS };

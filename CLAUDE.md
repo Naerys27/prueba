@@ -94,7 +94,7 @@ Si no se incrementa, los usuarios seguirán usando la versión cacheada anterior
 | --- | --- |
 | Sin archivo vinculado | Lee/escribe en `localStorage` |
 | Archivo vinculado + permiso concedido | Lee/escribe en JSON externo Y en `localStorage` simultáneamente |
-| Archivo vinculado + permiso pendiente | Lee de `localStorage`, muestra banner "Reconectar" |
+| Archivo vinculado + permiso pendiente | Lee de `localStorage`, muestra banner "Reconectar". Al guardar pone la marca `partes_fs_sin_sincronizar`: el siguiente `init()` con permiso combina archivo y `localStorage` en vez de pisarlo (sin marca, `init()` usa solo el archivo) |
 
 **Claves de datos en storage:**
 
@@ -218,6 +218,7 @@ Las funciones `saveCurrentVehicle/saveVehicleOR/saveCurrentVehiclePD` deben llam
 | `validateParteData()` | parte_servicio_diario | Valida fecha + conductor/a + matrícula + contadores + horas |
 | `updateConductorSelects()` | parte_combustible | Sincroniza selects de conductor en forms de repostaje |
 | `stripOldPhotos()` | storage.js | Purga fotos >3 meses de localStorage cuando hay JSON vinculado |
+| `lsSet()` | storage.js | Con JSON conectado y localStorage lleno, guarda la copia local del histórico de combustible sin fotos y reintenta |
 
 ---
 

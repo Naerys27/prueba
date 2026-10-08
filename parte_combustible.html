@@ -354,8 +354,8 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
 
 <div class="bar">
   <button class="btn btnc" onclick="resetForm()">Nuevo</button>
-  <button class="btn btns" onclick="saveHistorico();toast('Parte guardado');renderHistorico();clearDraft();" id="savebtn">Guardar</button>
-  <button class="btn btnp" onclick="saveHistorico();renderHistorico();clearDraft();makePDF()" id="pdfbtn">Generar PDF</button>
+  <button class="btn btns" onclick="if(saveHistorico()!==false){toast('Parte guardado');renderHistorico();clearDraft();}" id="savebtn">Guardar</button>
+  <button class="btn btnp" onclick="if(saveHistorico()!==false){renderHistorico();clearDraft();}makePDF()" id="pdfbtn">Generar PDF</button>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -1227,25 +1227,25 @@ function renderRepostajes() {
       var ph = rowPhotos[_phKey];
       var _phTid = 'rep-photo-'+e.fuel+'-'+e.row;
       var phHtml = ph
-        ? '<div class="rep-thumb" id="'+_phTid+'" style="margin-top:4px"><img src="'+ph.data+'" onclick="removeRowPhoto(\''+_phKey+'\',\''+_phTid+'\')" title="Toca para eliminar"></div>'
+        ? '<div class="rep-thumb" id="'+_phTid+'" style="margin-top:4px"><img src="'+escapeHtml(ph.data)+'" onclick="removeRowPhoto(\''+_phKey+'\',\''+_phTid+'\')" title="Toca para eliminar"></div>'
         : '<div id="'+_phTid+'" style="margin-top:4px"><button type="button" class="photo-add-btn" style="font-size:11px;padding:4px 8px" onclick="addPhotoToRow(\''+e.fuel+'\',\''+e.row+'\')">📷 Foto</button></div>';
       var body = '';
       if (e.fuel === 'g') {
         body = '<span class="rep-badge rep-badge-g">Gasolina</span>';
-        if (e.kms) body += ' <span class="rep-kms">'+e.kms+' km</span>';
-        if (e.fecha) body += ' <span class="rep-date">'+fmtDate(e.fecha)+'</span>';
+        if (e.kms) body += ' <span class="rep-kms">'+escapeHtml(e.kms)+' km</span>';
+        if (e.fecha) body += ' <span class="rep-date">'+escapeHtml(fmtDate(e.fecha))+'</span>';
         var row2 = '';
-        if (e.eur) row2 += '<span>'+e.eur+' €</span>';
-        if (e.lit) row2 += (row2?' · ':'')+'<span>'+e.lit+' L</span>';
+        if (e.eur) row2 += '<span>'+escapeHtml(e.eur)+' €</span>';
+        if (e.lit) row2 += (row2?' · ':'')+'<span>'+escapeHtml(e.lit)+' L</span>';
         if (row2) body += '<div class="rep-row2">'+row2+'</div>';
         if (e.cond) body += '<div class="rep-conductor">👤 '+escapeHtml(e.cond)+'</div>';
       } else {
         body = '<span class="rep-badge rep-badge-d">Gas-oil</span>';
-        if (e.kms) body += ' <span class="rep-kms">'+e.kms+' km</span>';
-        if (e.fecha) body += ' <span class="rep-date">'+fmtDate(e.fecha)+'</span>';
+        if (e.kms) body += ' <span class="rep-kms">'+escapeHtml(e.kms)+' km</span>';
+        if (e.fecha) body += ' <span class="rep-date">'+escapeHtml(fmtDate(e.fecha))+'</span>';
         var row2 = '';
-        if (e.aeur || e.alit) row2 += '<span>AdBlue: '+(e.aeur||'–')+' € / '+(e.alit||'–')+' L</span>';
-        if (e.geur || e.glit) row2 += (row2?' &nbsp;·&nbsp; ':'')+'<span>Gas-oil: '+(e.geur||'–')+' € / '+(e.glit||'–')+' L</span>';
+        if (e.aeur || e.alit) row2 += '<span>AdBlue: '+escapeHtml(e.aeur||'–')+' € / '+escapeHtml(e.alit||'–')+' L</span>';
+        if (e.geur || e.glit) row2 += (row2?' &nbsp;·&nbsp; ':'')+'<span>Gas-oil: '+escapeHtml(e.geur||'–')+' € / '+escapeHtml(e.glit||'–')+' L</span>';
         if (row2) body += '<div class="rep-row2">'+row2+'</div>';
         if (e.cond) body += '<div class="rep-conductor">👤 '+escapeHtml(e.cond)+'</div>';
       }
@@ -1731,7 +1731,7 @@ function validateCombustible() {
 function makePDF() {
   var errs = validateCombustible();
   if (errs.length) { showErr('Revisa el parte:\n• ' + errs.join('\n• ')); return; }
-  var btn=document.getElementById('pdfbtn'); btn.textContent='Generando...'; btn.disabled=true; setTimeout(function(){ try { var JPDF=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:window.jsPDF; if(!JPDF) throw new Error('jsPDF no cargado.'); var doc=new JPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true}); drawCombustibleInstitucional(doc); var mesVal=gv('v_mes')||'parte', matVal=gv('v_mat')||'vehiculo'; addPhotosPage(doc); saveCurrentVehicle(); saveHistorico(); var fname=fmtMonth(mesVal).split(' ')[0]+' '+matVal+' Parte de Combustible.pdf'; doc.save(fname); var blobUrl=null; try { blobUrl=doc.output('bloburl'); } catch(e) {} _showPDFOpenModal(blobUrl,fname); } catch(err) { showErr('ERROR: '+err.message); } btn.textContent='Generar PDF'; btn.disabled=false; },80); }
+  var btn=document.getElementById('pdfbtn'); btn.textContent='Generando...'; btn.disabled=true; setTimeout(function(){ try { var JPDF=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:window.jsPDF; if(!JPDF) throw new Error('jsPDF no cargado.'); var doc=new JPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true}); drawCombustibleInstitucional(doc); var mesVal=gv('v_mes')||'parte', matVal=gv('v_mat')||'vehiculo'; addPhotosPage(doc); saveHistorico(); var fname=fmtMonth(mesVal).split(' ')[0]+' '+matVal+' Parte de Combustible.pdf'; doc.save(fname); var blobUrl=null; try { blobUrl=doc.output('bloburl'); } catch(e) {} _showPDFOpenModal(blobUrl,fname); } catch(err) { showErr('ERROR: '+err.message); } btn.textContent='Generar PDF'; btn.disabled=false; },80); }
 function _showPDFOpenModal(blobUrl, filename) {
   var dark = document.documentElement.getAttribute('data-theme') === 'dark';
   var modal = document.createElement('div');
@@ -1802,7 +1802,8 @@ function onMesChange(auto) {
       var _vmes = document.getElementById('v_mes');
       if (_activeMat) _vmat.value = fmtMat(_activeMat);
       if (_activeMes) _vmes.value = _activeMes;
-      saveHistorico();
+      // Si no se ha podido guardar, no se cambia de mes para no perder lo rellenado
+      if (saveHistorico() === false) return;
       _vmes.value = mes;
     }
   }
@@ -1861,7 +1862,7 @@ function loadParteChip(key) {
     var _vmes = document.getElementById('v_mes');
     if (_activeMat) _vmat.value = fmtMat(_activeMat);
     if (_activeMes) _vmes.value = _activeMes;
-    saveHistorico();
+    if (saveHistorico() === false) return;
   }
   _activeParteKey = key;
   loadHistorico(key);
@@ -1874,7 +1875,7 @@ function newParteForMes(mes) {
     var _vmes = document.getElementById('v_mes');
     if (_activeMat) _vmat.value = fmtMat(_activeMat);
     if (_activeMes) _vmes.value = _activeMes;
-    saveHistorico();
+    if (saveHistorico() === false) return;
   }
   _activeParteKey = null;
   _activeMes = mes;
@@ -1895,7 +1896,8 @@ function onMatriculaChange() {
     if (hasData) {
       var _vmatSwap = document.getElementById('v_mat');
       _vmatSwap.value = fmtMat(_activeMat);
-      saveHistorico();
+      // Si no se ha podido guardar, se queda en el vehículo anterior para no perder sus repostajes
+      if (saveHistorico() === false) return;
       _vmatSwap.value = fmtMat(mat);
     }
     resetForm(true);
@@ -1932,11 +1934,19 @@ function onMatriculaChange() {
   }
 }
 var HIST_KEY = 'partes_combustible_hist_v1';
+function avisarSiLleno(e) {
+  if (!(e && (e.name === 'QuotaExceededError' || e.code === 22))) throw e;
+  showErr(FSStorage.isPending()
+    ? 'Almacenamiento del navegador lleno. Pulsa Reconectar para guardar en el archivo vinculado.'
+    : 'Almacenamiento lleno. Vincula un archivo JSON para guardar con fotos.');
+}
+// Devuelve false si no se ha podido guardar por falta de espacio
 function saveHistorico() {
   var mat = normMat(gv('v_mat'));
   var mes = gv('v_mes');
   if (!mat || !mes) return;
-  saveCurrentVehicle();
+  // Con el almacenamiento lleno, un vehículo nuevo ya no cabe y falla antes que el parte
+  try { saveCurrentVehicle(); } catch(e) { avisarSiLleno(e); return false; }
   var tipo = document.getElementById('tipo_combustible').value;
   var entries = [], photos = {};
   if (tipo === 'gasolina') {
@@ -1985,8 +1995,8 @@ function saveHistorico() {
   try {
     FSStorage.setItem(HIST_KEY, JSON.stringify(hist));
   } catch(e) {
-    if (e.name === 'QuotaExceededError' || e.code === 22) showErr('Almacenamiento lleno. Vincula un archivo JSON para guardar con fotos.');
-    else throw e;
+    avisarSiLleno(e);
+    return false;
   }
   _activeParteKey = key;
   renderMatriculaChips(mes);
@@ -2014,14 +2024,13 @@ function renderHistorico() {
     div.innerHTML =
       '<div class="hist-hdr" onclick="toggleHistEntry(this)">' +
         '<span class="rep-badge '+(h.tipo==='gasolina'?'rep-badge-g':'rep-badge-d')+'">'+(h.tipo==='gasolina'?'Gasolina':'Gas-oil')+'</span>' +
-        ' <span class="hist-mes">'+fmtMonth(h.mes)+'</span>' +
+        ' <span class="hist-mes">'+escapeHtml(fmtMonth(h.mes))+'</span>' +
         ' <span class="hist-sum">'+h.entries.length+' repostaje'+(h.entries.length!==1?'s':'')+' · '+fmtN(totalEur,2)+' €</span>' +
         '<span class="hist-arr">▾</span>' +
       '</div>' +
       '<div class="hist-rows" style="display:none"></div>';
     var rowsEl = div.querySelector('.hist-rows');
     h.entries.forEach(function(e, idx) {
-      var ph = (h.photos && h.photos[idx]) ? '<img src="'+h.photos[idx].data+'" style="max-height:32px;border-radius:4px;margin-top:4px;display:block">' : '';
       var text = '';
       if (h.tipo === 'gasolina') {
         if (e.kms) text += e.kms+' km';
@@ -2036,7 +2045,15 @@ function renderHistorico() {
       }
       var r = document.createElement('div');
       r.className = 'hist-row';
-      r.innerHTML = '<span>'+text+'</span>'+ph;
+      var span = document.createElement('span');
+      span.textContent = text;
+      r.appendChild(span);
+      if (h.photos && h.photos[idx]) {
+        var img = document.createElement('img');
+        img.style.cssText = 'max-height:32px;border-radius:4px;margin-top:4px;display:block';
+        img.src = h.photos[idx].data;
+        r.appendChild(img);
+      }
       rowsEl.appendChild(r);
     });
     var actRow = document.createElement('div');

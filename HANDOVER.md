@@ -94,9 +94,12 @@ Los 3 módulos: `normMat` normaliza la matrícula (sin separadores, mayúsculas)
 `parte_servicio_diario.html`: añadida validación real en `validateParteData()` — el parte no se puede guardar ni generar PDF sin indicar el nombre del conductor/a.
 
 ### Purga fotos antiguas de localStorage (v97)
-`storage.js`: función privada `stripOldPhotos()` — cuando hay archivo JSON vinculado, las fotos de entradas con más de 3 meses se eliminan de localStorage (pero se conservan en el JSON durante 6 meses). Evita que localStorage se llene con Base64 acumulado.
+`storage.js`: función privada `stripOldPhotos()` — cuando hay archivo JSON vinculado, las fotos de entradas con más de 3 meses se eliminan de localStorage (pero se conservan en el JSON durante 6 meses). Evita que localStorage se llene con Base64 acumulado. Si aun así no cabe (fotos recientes de más de ~5 MB), `lsSet()` guarda la copia local del histórico sin ninguna foto (desde 2026-10-08, ver `errores.md`).
 - `mergeData()` actualizado para recuperar fotos del archivo cuando localStorage no las tiene (evita que el merge borre fotos del JSON progresivamente).
 - `saveHistorico()` en `parte_combustible.html` añade `try/catch` con `showErr` para `QuotaExceededError`.
+
+### Guardar sin permiso del archivo (2026-10-08)
+`storage.js`: marca `partes_fs_sin_sincronizar` en `localStorage`. Se pone al guardar o borrar con archivo vinculado sin permiso. Si `init()` arranca con permiso y la marca existe, combina archivo y `localStorage` como `reconnect()` y la borra tras escribir el archivo. Evita perder lo guardado sin permiso cuando el navegador devuelve el permiso sin pulsar Reconectar (ver `errores.md`).
 
 ---
 
@@ -119,6 +122,7 @@ Los 3 módulos: `normMat` normaliza la matrícula (sin separadores, mayúsculas)
 - **Chips:** validar con beta testers. Si rechazo → `memory/project_chips_tabs_revert.md`.
 - **Concepto en OR:** sin asterisco ni validación — pendiente decisión (de momento se deja sin tocar).
 - **Backend separado:** `~/partes-server` WSL puerto 3001 → `memory/project_partes_backend.md`.
+- **DESCARTADO (2026-09-01) — dividir `mergeData()` (storage.js) por superar las 50 líneas:** solo la supera en ~4 líneas; no compensa el riesgo de tocar una función con muchos casos límite ya parcheados (timestamps legacy, recuperación de fotos, dedupe de conductores) a cambio de tan poco. Revisar si en el futuro crece más.
 
 ---
 
