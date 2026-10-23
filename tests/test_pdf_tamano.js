@@ -3,8 +3,8 @@ const { nuevaPagina } = require('./_comun');
 const fs = require('fs');
 
 // Tamano de los PDFs: sin compress:true jsPDF incrusta cada firma PNG como pixeles en bruto
-// (~250 KB por dia firmado; 10 dias = 3-7 MB segun el ancho del lienzo). Comprimido, 10 dias ~650 KB
-// (casi todo es el logo, que se incrusta una sola vez). El limite deja margen y salta si se pierde la compresion.
+// (~250 KB por dia firmado; 10 dias = 3-7 MB segun el ancho del lienzo). Comprimido, cada PDF lleva ademas
+// el logo (~230 KB desde v106, se incrusta una sola vez). El limite deja margen y salta si se pierde la compresion.
 const LIMITE_MENSUAL_10_DIAS = 1024 * 1024;
 const DIAS_FIRMADOS = 10;
 

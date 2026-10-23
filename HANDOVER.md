@@ -13,6 +13,10 @@ Sin backend — almacenamiento en localStorage + File System Access API (archivo
 
 ## Cambios recientes
 
+### v106 — logo del PDF reducido (2026-10-23, local, sin desplegar)
+
+- El logo de la cabecera PDF (`LOGO` en combustible y diario, `LOGO_IMG` en orden) pasa de 5803×1070 px / 552 KB (2048×378 / 322 KB en orden) a una sola imagen de 3000×553 px, JPEG calidad 95, 229 KB, la misma en los 3 módulos. Cada PDF baja de ~557 KB a ~234 KB y cada HTML ~130-430 KB. Se probaron 1600 px/q90 (se notaba la pérdida) y 2400 px/q95; el usuario eligió 3000 px.
+
 ### v103 — EN PREPARACIÓN (2026-07-06, local, sin desplegar)
 
 Ronda de robustez tras testing adversario (todos con test de regresión en `tests/test_adversarial.js`, 30 asserts):
