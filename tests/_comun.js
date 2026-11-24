@@ -12,9 +12,10 @@ const HOY_TESTS = '2026-07-15T10:00:00';
 // Antes de devolverla espera a que el Service Worker controle la pagina: en un contexto nuevo el SW
 // se instala en la primera carga, hace clients.claim() y la app recarga en 'controllerchange'. Si esa
 // recarga cae a mitad de test borra lo rellenado (Bug2 fallaba ~2 de cada 3 veces por esto).
-async function nuevaPagina(browser, opciones) {
+// hoy: otro instante de arranque para tests que dependen de la fecha (mejor con 'Z' para no depender de la zona de Node).
+async function nuevaPagina(browser, opciones, hoy = HOY_TESTS) {
   const page = await browser.newPage(opciones);
-  await page.clock.install({ time: HOY_TESTS });
+  await page.clock.install({ time: hoy });
   // Solo un documento cargado ya a traves del SW (el recargado) nace con controller.
   await page.addInitScript(() => { window.__nacioConSW = !!navigator.serviceWorker.controller; });
   await page.goto(BASE + '/index.html');

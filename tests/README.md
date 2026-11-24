@@ -45,6 +45,7 @@ El script sirve el repo en `http://localhost:8899` (si no hay ya un servidor), l
 | `test_ls_lleno.js` | `localStorage` lleno de verdad (cuota real de Chromium) con fotos de combustible recientes: con archivo conectado no avisa, la copia local va sin fotos y la app las sigue viendo; otra clave hace sitio quitando esas fotos; sin permiso el aviso pide Reconectar; sin archivo, pide vincularlo; `reconnect()` recupera fotos quitadas sin resucitar las borradas | Bug real (oct 2026, JSON de 6 MB) |
 | `test_sin_sincronizar.js` | Archivo vinculado sin permiso: guardar o borrar deja la marca `partes_fs_sin_sincronizar` y `init()` con permiso combina en vez de pisar; sin marca no resucita lo borrado en otro equipo; archivo dañado o fallo de escritura conservan la marca; `reconnect()`/`setup()` la borran; marca con `localStorage` lleno; avisos "Pulsa Reconectar" en órdenes y parte diario; parte diario con vehículo nuevo y almacenamiento lleno avisa en vez de no hacer nada | Bug real (oct 2026) |
 | `test_comb_lleno.js` | Parte combustible con `localStorage` lleno (cuota real): Guardar con vehículo nuevo o conocido avisa, no dice "Parte guardado" y conserva el borrador; aviso "Reconectar" con archivo pendiente; Generar PDF genera el PDF aunque no se guarde; cambiar de matrícula, de mes o "+ Nuevo" no vacía el formulario si no se ha podido guardar; control con espacio libre | Bug real (oct 2026) |
+| `test_fechas_purga.js` | Purga de 6 meses de combustible y órdenes y de fotos en `localStorage` los días 29-31 (el corte no salta un mes); fecha por defecto del parte diario en hora de España a las 00:30 (verano e invierno), tras "Nuevo" y tras guardar | Bug real (nov 2026) |
 | `test_pdf_tamano.js` | PDFs comprimidos (`FlateDecode`) en los 3 módulos; PDF mensual del parte diario con 10 días firmados: una página por día y < 1 MB | Bug real (oct 2026, PDFs de varios MB) |
 
 `tests/_comun.js` no es un test: tiene utilidades compartidas y `run_tests.sh` no lo ejecuta.
@@ -54,6 +55,7 @@ El script sirve el repo en `http://localhost:8899` (si no hay ya un servidor), l
 Abrir las páginas siempre con `nuevaPagina(browser)` (o `nuevaPagina(browser, opciones)`) de `tests/_comun.js`, nunca con `browser.newPage()`:
 
 - Fija el "hoy" del navegador en `HOY_TESTS` (2026-07-15). Los datos sembrados con fechas de julio de 2026 no caducan por las purgas de 3 meses, sea cual sea la fecha real.
+- Para probar otra fecha u hora: `nuevaPagina(browser, { timezoneId: 'Europe/Madrid' }, '2026-10-31T10:00:00Z')`. Usar `Z` en la hora para que no dependa de la zona horaria de Node.
 - Espera a que el Service Worker controle la página. Si no, la recarga que hace la app en la primera instalación del SW puede caer a mitad de test y borrar lo rellenado.
 
 Para probar el archivo JSON vinculado, `page.addInitScript(stubFS)` (también de `_comun.js`) simula la API de archivos: el contenido del archivo está en `window.__fileText`, el permiso en `window.__perm` y los `alert()` quedan en `window.__alerts`.

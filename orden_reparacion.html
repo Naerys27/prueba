@@ -1169,7 +1169,8 @@
       var idx = -1;
       for (var i = 0; i < list.length; i++) { if (list[i].id === data.id) { idx = i; break; } }
       if (idx >= 0) list[idx] = data; else list.push(data);
-      var _cutoff = new Date(); _cutoff.setMonth(_cutoff.getMonth() - 6);
+      // Día 1 antes de restar: un 31 menos 6 meses saltaría al mes siguiente
+      var _cutoff = new Date(); _cutoff.setDate(1); _cutoff.setMonth(_cutoff.getMonth() - 6);
       var _cutoffStr = _cutoff.getFullYear() + '-' + String(_cutoff.getMonth() + 1).padStart(2, '0');
       list = list.filter(function(o) { return !o.fecha || o.fecha >= _cutoffStr; });
       if (!setSavedOrdenes(list)) return;

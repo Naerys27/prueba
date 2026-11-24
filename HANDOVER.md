@@ -1,5 +1,5 @@
 # Handover — Partes de Locomoción CHT
-**Fecha:** 2026-07-06 | **SW actual:** `partes-loco-v102` (desplegado 2026-07-03) | **v103 en preparación** (sin desplegar)
+**Fecha:** 2026-11-24 | **SW publicado:** `partes-loco-v106` | **v107 local** (sin desplegar)
 
 ---
 
@@ -13,11 +13,17 @@ Sin backend — almacenamiento en localStorage + File System Access API (archivo
 
 ## Cambios recientes
 
-### v106 — logo del PDF reducido (2026-10-23, local, sin desplegar)
+### v107 — fechas de la purga y del parte diario (2026-11-24, local, sin desplegar)
+
+- Combustible, órdenes y fotos de `localStorage` purgaban un mes entero antes de tiempo los días 31 (y algunos 29 y 30): `setDate(1)` antes de restar meses.
+- El parte diario ponía la fecha de ayer entre las 00:00 y las 01:00/02:00: `fechaHoyLocal()` en vez de `toISOString()`.
+- Detalle en `errores.md`. Test nuevo: `tests/test_fechas_purga.js` (48 comprobaciones).
+
+### v106 — logo del PDF reducido (2026-10-23, desplegado)
 
 - El logo de la cabecera PDF (`LOGO` en combustible y diario, `LOGO_IMG` en orden) pasa de 5803×1070 px / 552 KB (2048×378 / 322 KB en orden) a una sola imagen de 3000×553 px, JPEG calidad 95, 229 KB, la misma en los 3 módulos. Cada PDF baja de ~557 KB a ~234 KB y cada HTML ~130-430 KB. Se probaron 1600 px/q90 (se notaba la pérdida) y 2400 px/q95; el usuario eligió 3000 px.
 
-### v103 — EN PREPARACIÓN (2026-07-06, local, sin desplegar)
+### v103 — desplegado (coma decimal, avisos, dedup)
 
 Ronda de robustez tras testing adversario (todos con test de regresión en `tests/test_adversarial.js`, 30 asserts):
 
@@ -117,8 +123,7 @@ Los 3 módulos: `normMat` normaliza la matrícula (sin separadores, mayúsculas)
 
 ## Pendientes
 
-- **Desplegar v103** (coma decimal + avisos + dedup): pasar `bash tests/run_tests.sh`, commit, push, bump `sw.js` a v103.
-- **Añadir `test_adversarial.js` a `tests/`** al cerrar la ronda v103 (ya escrito, 30 asserts).
+- **Desplegar v107** (fechas de purga y del parte diario): tests ya pasados el 2026-11-24 (19 archivos), falta commit y push.
 - **Entregar a la usuaria el JSON corregido** (`partes_copia_2026-07-03.json`, local, gitignoreado) y que confirme que le llega la v102.
 - **km de junio en blanco**: avisar a los responsables de `MMM06038/MMM05520/MMM04024/MMM05422` para que reintroduzcan `km_ini/km_fin` de junio a mano (irreconstruibles).
 - **Validación en móvil real**: la suite cubre lógica en Chromium desktop; falta un ciclo completo en Android (PWA instalada, cámara, vinculación real del JSON).

@@ -16,7 +16,7 @@ PWA (Progressive Web App) para gestionar la documentación del Servicio de Locom
 
 **URL de producción (beta):** [https://naerys27.github.io/prueba/](https://naerys27.github.io/prueba/)
 
-**Service Worker actual:** `partes-loco-v102` (desplegado 2026-07-03) — incrementar en cada deploy. Cambios locales pendientes de deploy → bump a v103.
+**Service Worker actual:** `partes-loco-v107` (local; publicado v106) — incrementar en cada deploy.
 
 ---
 
@@ -29,7 +29,7 @@ prueba/
 ├── parte_combustible.html      # Módulo partes mensuales de combustible
 ├── orden_reparacion.html       # Módulo órdenes de reparación y suministro
 ├── storage.js                  # Capa de almacenamiento (localStorage + File System Access API)
-├── sw.js                       # Service Worker (caché offline, versión actual: v102)
+├── sw.js                       # Service Worker (caché offline, versión actual: v107)
 ├── tests/                      # Batería de regresión Playwright — pasar SIEMPRE antes de deploy (tests/README.md)
 ├── manifest.json               # Manifiesto PWA
 └── icons/
@@ -79,7 +79,7 @@ GitHub Pages publica automáticamente desde la rama `main`.
 **IMPORTANTE — tras cada deploy:** incrementar la versión del Service Worker en `sw.js`:
 
 ```javascript
-const CACHE = 'partes-loco-vN';  // incrementar N — actualmente v102
+const CACHE = 'partes-loco-vN';  // incrementar N — actualmente v107
 ```
 
 Si no se incrementa, los usuarios seguirán usando la versión cacheada anterior.
@@ -104,11 +104,13 @@ Si no se incrementa, los usuarios seguirán usando la versión cacheada anterior
 - `cht_orden_reparacion_v1` — historial órdenes de reparación
 - `partes_combustible_hist_v1` — historial partes combustible
 
-**Retención de datos:**
+**Retención de datos** (por meses de calendario, no por días; la purga se escribe también en el JSON vinculado):
 
-- Partes diarios: 3 meses (purga automática)
-- Partes combustible: 6 meses (purga automática)
-- Órdenes de reparación: 6 meses (purga automática)
+- Partes diarios: mes actual + 2 anteriores. Se purga al abrir el módulo y al guardar.
+- Partes combustible: mes actual + 6 anteriores. Se purga solo al guardar.
+- Órdenes de reparación: mes actual + 6 anteriores. Se purga solo al guardar.
+- Fotos de combustible en `localStorage` (solo con JSON vinculado): mes actual + 3 anteriores; el JSON las conserva.
+- Al restar meses, siempre `setDate(1)` antes de `setMonth()` (un día 31 salta al mes siguiente). Para la fecha de hoy, nunca `toISOString()` (es UTC): en el parte diario, `fechaHoyLocal()`.
 
 ---
 

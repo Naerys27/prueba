@@ -958,7 +958,7 @@
          for (let i = 0; i < els.length; i++) { if (els[i].value) return true; }
          return q('sighint').style.display === 'none';
       }
-      function resetForm(force) { if (!force && formHasDataPD() && !confirm('¿Limpiar el formulario? Se perderán los datos no guardados.')) return; document.querySelectorAll('input, textarea').forEach(el => el.value = ''); editingParteId = null; setRepostajesVisibles(1, true); recalc(); clearSig(); document.getElementById('fecha').value = new Date().toISOString().slice(0,10); toast('Formulario limpiado'); }
+      function resetForm(force) { if (!force && formHasDataPD() && !confirm('¿Limpiar el formulario? Se perderán los datos no guardados.')) return; document.querySelectorAll('input, textarea').forEach(el => el.value = ''); editingParteId = null; setRepostajesVisibles(1, true); recalc(); clearSig(); document.getElementById('fecha').value = fechaHoyLocal(); toast('Formulario limpiado'); }
 
       let sigDrawing = false, sigLX = 0, sigLY = 0;
       const sigCanvas = q('sigcanvas');
@@ -1123,6 +1123,8 @@
          catch (err) { avisarErrorGuardado(err); return false; }
       }
       function cleanKeyPart(v) { return normMat(v) || 'SIN_MATRICULA'; }
+      // Fecha local: toISOString() da la de UTC, que de 00:00 a 01:00/02:00 en España aún es la de ayer
+      function fechaHoyLocal() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
       function currentMonthValue() { const f = gv('fecha'); if (f && /^\d{4}-\d{2}-\d{2}$/.test(f)) return f.slice(0, 7); const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
       function ensureMonthInput() { const mes = q('mes_partes'); if (mes && !mes.value) mes.value = currentMonthValue(); }
       function monthKey(fecha) { return (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) ? fecha.slice(0, 7) : ''; }
@@ -1140,7 +1142,7 @@
          }
          return removed;
       }
-      function makeNewParteId(data) { const fecha = data.fecha || new Date().toISOString().slice(0, 10); const matricula = cleanKeyPart(data.parte_servicio); const unique = (Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7)).toUpperCase(); return fecha + '_' + matricula + '_' + unique; }
+      function makeNewParteId(data) { const fecha = data.fecha || fechaHoyLocal(); const matricula = cleanKeyPart(data.parte_servicio); const unique = (Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7)).toUpperCase(); return fecha + '_' + matricula + '_' + unique; }
       function collectParteData() { recalc(); const data = {}; FIELD_IDS_PARTES.forEach(id => data[id] = gv(id)); data.parte_servicio = normMat(data.parte_servicio); data.conductor = (data.conductor || '').toUpperCase(); data.marca = (data.marca || '').toUpperCase(); data.modelo = (data.modelo || '').toUpperCase(); data.firma = hasSignature() ? sigCanvas.toDataURL('image/png') : ''; data.updatedAt = new Date().toISOString(); return data; }
       function validateParteData(data) {
          const errors = [];
@@ -1157,7 +1159,7 @@
       }
       function loadSignatureFromData(data) { return new Promise(resolve => { clearSig(); if (!data || !data.firma) return resolve(); const img = new Image(); img.onload = function () { sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height); sigCtx.drawImage(img, 0, 0, sigCanvas.width, sigCanvas.height); q('sighint').style.display = 'none'; resolve(); }; img.onerror = function () { resolve(); }; img.src = data.firma; }); }
       function setParteData(data, includeSignature = true) { FIELD_IDS_PARTES.forEach(id => { if (q(id)) q(id).value = data && data[id] ? data[id] : ''; }); const _ps = q('parte_servicio'); if (_ps && _ps.value) _ps.value = fmtMat(_ps.value); const _pc = q('conductor'); if (_pc && _pc.value) _pc.value = _pc.value.toUpperCase(); const _pm = q('marca'); if (_pm && _pm.value) _pm.value = _pm.value.toUpperCase(); const _pmo = q('modelo'); if (_pmo && _pmo.value) _pmo.value = _pmo.value.toUpperCase(); updateRepostajesFromValues(); recalc(); return includeSignature ? loadSignatureFromData(data) : Promise.resolve(); }
-      function clearParteFormAfterSave() { FIELD_IDS_PARTES.forEach(id => { if (q(id)) q(id).value = ''; }); editingParteId = null; setRepostajesVisibles(1, true); recalc(); clearSig(); document.getElementById('fecha').value = new Date().toISOString().slice(0,10); }
+      function clearParteFormAfterSave() { FIELD_IDS_PARTES.forEach(id => { if (q(id)) q(id).value = ''; }); editingParteId = null; setRepostajesVisibles(1, true); recalc(); clearSig(); document.getElementById('fecha').value = fechaHoyLocal(); }
       async function saveParteDiario() {
          const data = collectParteData(); const errors = validateParteData(data); if (errors.length) { showErr('Revisa el parte:\n- ' + errors.join('\n- ')); return; }
          if (hayImporteSospechoso() && !confirm('Hay un importe de repostaje inusualmente alto (más de ' + MAX_EUR_AVISO + ' €).\n¿Es correcto? (revisa si querías escribir una coma decimal)')) return;
@@ -1397,7 +1399,7 @@
       }
       FSStorage.onReady(function() {
         setRepostajesVisibles(1, false);
-        document.getElementById('fecha').value = new Date().toISOString().slice(0,10);
+        document.getElementById('fecha').value = fechaHoyLocal();
         ensureMonthInput();
         purgeOldParts(true);
         renderSavedDays();

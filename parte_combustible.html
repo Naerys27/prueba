@@ -1987,8 +1987,9 @@ function saveHistorico() {
     km_ini: gv('km_ini'), km_fin: gv('km_fin'),
     updatedAt: new Date().toISOString() };
   if (Object.keys(photos).length) hist[key].photos = photos;
-  // Purgar entradas con más de 6 meses
+  // Purgar entradas con más de 6 meses. Día 1 antes de restar: un 31 menos 6 meses saltaría al mes siguiente
   var cutoff = new Date();
+  cutoff.setDate(1);
   cutoff.setMonth(cutoff.getMonth() - 6);
   var cutoffStr = cutoff.getFullYear() + '-' + String(cutoff.getMonth() + 1).padStart(2, '0');
   Object.keys(hist).forEach(function(k) { if (hist[k].mes && hist[k].mes < cutoffStr) delete hist[k]; });

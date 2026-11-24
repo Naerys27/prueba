@@ -6,6 +6,18 @@ referencian por la versión del Service Worker en la que se corrigieron.
 
 ---
 
+## 2026-11-24 — Combustible y órdenes purgaban un mes entero antes de tiempo los días 31 (y algunos 29 y 30)
+
+- **Síntoma:** encontrado revisando la purga, sin que lo haya reportado ningún usuario. El 31-10-2026 combustible y órdenes borraban todo abril al guardar, cuando abril debía conservarse hasta noviembre. Lo mismo el 29, 30 y 31 de agosto (febrero) y el 31 de diciembre (junio), entre otros. La purga se escribe también en el JSON vinculado, así que ese mes desaparecía también del archivo.
+- **Causa:** el corte se calculaba con `setMonth(getMonth() - 6)` sobre la fecha de hoy. Si el mes de destino no tiene ese día (31 de abril, 31 de febrero...), JavaScript salta al mes siguiente y el corte avanza un mes. `photoCutoffStr()` de `storage.js` tenía el mismo fallo con 3 meses, aunque solo afectaba a las fotos de la copia de `localStorage`. El parte diario no lo tenía porque pasa al día 1 antes de restar.
+- **Solución:** `setDate(1)` antes de restar meses en `saveHistorico()` (`parte_combustible.html`), `saveOrden()` (`orden_reparacion.html`) y `photoCutoffStr()` (`storage.js`). Test nuevo: `tests/test_fechas_purga.js` (bloques A, B y C).
+
+## 2026-11-24 — Parte diario: de 00:00 a 01:00 (02:00 en verano) la fecha por defecto era la de ayer
+
+- **Síntoma:** al abrir el parte diario, al guardar o al pulsar "Nuevo" pasada la medianoche, el campo Fecha mostraba el día anterior. Un parte de madrugada se guardaba con la fecha de ayer si no se revisaba.
+- **Causa:** la fecha se obtenía con `new Date().toISOString().slice(0, 10)`, que es la fecha en UTC. En España (UTC+1 / UTC+2) la fecha UTC sigue siendo la de ayer durante la primera o las dos primeras horas del día.
+- **Solución:** función `fechaHoyLocal()` con la fecha local, usada al abrir, en `resetForm()`, en `clearParteFormAfterSave()` y en `makeNewParteId()`. Test: `tests/test_fechas_purga.js` (bloques D y E, con zona `Europe/Madrid`). Contra el código anterior el test falla 15 de 48 comprobaciones.
+
 ## 2026-10-08 — Combustible: con el almacenamiento lleno, Guardar fallaba sin aviso o decía "Parte guardado" sin guardar
 
 - **Síntoma:** con `localStorage` lleno y sin archivo conectado:

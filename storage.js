@@ -141,6 +141,7 @@
 
   function photoCutoffStr() {
     var c = new Date();
+    c.setDate(1); // un 31 menos 3 meses saltaría al mes siguiente
     c.setMonth(c.getMonth() - 3);
     return c.getFullYear() + '-' + String(c.getMonth() + 1).padStart(2, '0');
   }
