@@ -978,10 +978,6 @@
       sigCanvas.addEventListener('touchmove', (ev) => { ev.preventDefault(); moveSig(ev); }, { passive: false });
       sigCanvas.addEventListener('touchend', endSig);
 
-      const PDF = { dx: -8.92, titleX: 143.13, titleY: 49.00, underlineY: 49.83, topLogo: { x: 12.70, y: 12.70, w: 129.80, h: 22.30 }, signBox: { x: 111.12, y: 268.54, w: 74.62, h: 22.49 }, signBanner: { x: 110.84, y: 268.09, w: 16.97, h: 3.77 }, signText: { x: 114.58, y: 270.90 }, signImage: { x: 112.20, y: 270.00, w: 72.00, h: 19.80 } };
-      const TX = (x) => x + PDF.dx;
-      function drawBlueRect(doc, x, y, w, h, label, blue, dark) { doc.setDrawColor(blue[0], blue[1], blue[2]); doc.setLineWidth(0.8); doc.rect(TX(x), y, w, h); doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(dark[0], dark[1], dark[2]); doc.text(label, TX(x) + 3.0, y + 5.6); }
-      function drawInlineField(doc, label, value, x, y, maxX) { const gap = 1.2; doc.setFont('helvetica', 'bold'); doc.setTextColor(22, 22, 22); doc.text(label, x, y); const valueX = x + doc.getTextWidth(label) + gap; doc.setFont('helvetica', 'normal'); const lines = doc.splitTextToSize(value || '', Math.max(5, maxX - valueX)); doc.text(lines, valueX, y); }
       function hasSignature() { try { const px = sigCtx.getImageData(0, 0, sigCanvas.width, sigCanvas.height).data; for (let i = 3; i < px.length; i += 4) { if (px[i] > 0) return true; } } catch { } return false; }
 
       
