@@ -1,5 +1,5 @@
 # Handover — Partes de Locomoción CHT
-**Fecha:** 2026-11-24 | **SW publicado:** `partes-loco-v106` | **v107 local** (sin desplegar)
+**Fecha:** 2026-11-26 | **SW publicado:** `partes-loco-v108`
 
 ---
 
@@ -13,7 +13,15 @@ Sin backend — almacenamiento en localStorage + File System Access API (archivo
 
 ## Cambios recientes
 
-### v107 — fechas de la purga y del parte diario (2026-11-24, local, sin desplegar)
+### Auditoría de código (desde 2026-11-25)
+
+Entregas pequeñas para poder deshacerlas por separado. Punto de vuelta: etiqueta local `antes-auditoria` (= v107, commit `3e20a9a`).
+
+- **v108 (2026-11-26, desplegado):** dos fallos de combustible encontrados en la auditoría, los dos ya presentes en v107. Detalle en `errores.md`.
+  - Sin mes (tras cerrar el aviso del PDF o pulsar "Nuevo"), los repostajes se perdían sin aviso o se guardaban en otro mes. Ahora Guardar y los cambios de matrícula o mes avisan y no limpian el formulario. Test: `tests/test_comb_sin_mes.js`.
+  - Borrar el único repostaje de un parte guardado y pulsar Guardar no borraba nada. Ahora Guardar pregunta si se borra el parte. Test: `tests/test_comb_parte_vacio.js`.
+
+### v107 — fechas de la purga y del parte diario (2026-11-24, desplegado)
 
 - Combustible, órdenes y fotos de `localStorage` purgaban un mes entero antes de tiempo los días 31 (y algunos 29 y 30): `setDate(1)` antes de restar meses.
 - El parte diario ponía la fecha de ayer entre las 00:00 y las 01:00/02:00: `fechaHoyLocal()` en vez de `toISOString()`.
@@ -113,9 +121,7 @@ Los 3 módulos: `normMat` normaliza la matrícula (sin separadores, mayúsculas)
 
 ---
 
-## Archivos de prueba en prueba/ (NO desplegar)
-- `parte_servicio_diario_historial_test.html`
-- `parte_combustible_tabs.html` / `_tabs_a.html` / `_tabs_b.html`
+## Archivos de prueba en prueba/ (NO desplegar, gitignoreados)
 - `parte_combustible_conductor_test.html` — prototipo de la feature conductor (ya integrada en el real)
 - `parte_combustible_v100_backup.html` — backup pre-v101
 
@@ -123,7 +129,7 @@ Los 3 módulos: `normMat` normaliza la matrícula (sin separadores, mayúsculas)
 
 ## Pendientes
 
-- **Desplegar v107** (fechas de purga y del parte diario): tests ya pasados el 2026-11-24 (19 archivos), falta commit y push.
+- **Auditoría de código:** entregas v109 (código muerto), v110 (errores y XSS) y v111 (duplicados de combustible), una a una y probadas por los usuarios antes de la siguiente.
 - **Entregar a la usuaria el JSON corregido** (`partes_copia_2026-07-03.json`, local, gitignoreado) y que confirme que le llega la v102.
 - **km de junio en blanco**: avisar a los responsables de `MMM06038/MMM05520/MMM04024/MMM05422` para que reintroduzcan `km_ini/km_fin` de junio a mano (irreconstruibles).
 - **Validación en móvil real**: la suite cubre lógica en Chromium desktop; falta un ciclo completo en Android (PWA instalada, cámara, vinculación real del JSON).
@@ -137,16 +143,7 @@ Los 3 módulos: `normMat` normaliza la matrícula (sin separadores, mayúsculas)
 
 ## Funciones clave
 
-| Función | Archivo | Qué hace |
-|---------|---------|---------|
-| `saveCurrentVehicle()` | parte_combustible | Guarda marca/modelo/tarjeta/coste en BD vehículos |
-| `saveVehicleOR()` | orden_reparacion | Guarda marca/modelo en BD vehículos |
-| `saveCurrentVehiclePD()` | parte_servicio_diario | Guarda marca/modelo en BD vehículos |
-| `updateModuleStats()` | index.html | Último registro en tarjetas del menú |
-| `renderSavedDays()` | parte_servicio_diario | Lista de partes del mes seleccionado |
-| `saveHistorico()` | parte_combustible | Guarda parte mensual + BD vehículos |
-| `saveOrden()` | orden_reparacion | Guarda orden + BD vehículos |
-| `validateParteData()` | parte_servicio_diario | Valida fecha + conductor/a + matrícula + contadores + horas |
+Ver la tabla "Funciones clave" en `CLAUDE.md`.
 
 ---
 

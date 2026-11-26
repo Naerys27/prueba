@@ -29,6 +29,7 @@ El script sirve el repo en `http://localhost:8899` (si no hay ya un servidor), l
 
 | Archivo | Cubre | Origen |
 |---|---|---|
+| `test_adversarial.js` | Coma decimal en euros/litros, aviso de importe > 400 €, fecha de repostaje fuera del mes, conductores repetidos con y sin acentos, tope de 14 repostajes | Testing adversario (v103) |
 | `test_ambiguo.js` | Autofill conductor→matrícula con conductor de varios vehículos (5 escenarios) | Bug real (jul 2026) |
 | `test_bugs_2_3_4_5.js` | Guards de confirmación en `resetForm` de los 3 módulos | Bugs reales |
 | `test_comb_regression.js` | Contaminación cruzada de repostajes entre vehículos (A→B→A) | Bug real reportado en beta |

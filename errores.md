@@ -6,6 +6,12 @@ referencian por la versión del Service Worker en la que se corrigieron.
 
 ---
 
+## 2026-11-25 — Combustible: repostajes de un vehículo sin mes se pierden sin aviso al cambiar de matrícula (PENDIENTE)
+
+- **Síntoma:** encontrado en una sesión de uso simulada durante la auditoría, sin que lo haya reportado ningún usuario. Pasa igual en v107 (publicada) y en v108. Pasos: generar el PDF de un vehículo y cerrar el aviso "PDF generado", lo que vacía el formulario y también el mes. Escribir otra matrícula sin volver a poner el mes, añadir un repostaje y cambiar de matrícula. El repostaje desaparece sin ningún aviso. Los datos del primer vehículo no se pierden: al volver a poner el mes reaparecen.
+- **Causa:** `saveHistorico()` hace `if (!mat || !mes) return;` y devuelve `undefined`, no `false`. `onMatriculaChange()` (y también `onMesChange()`, `loadParteChip()` y `newParteForMes()`) solo se detienen si recibe `false`, así que siguen y llaman a `resetForm(true)` con el repostaje sin guardar. Además, el `resetForm(true)` del aviso del PDF (`_showPDFOpenModal`) vacía el mes pero deja `_activeMat`, `_activeMes` y `_activeParteKey` con los valores anteriores.
+- **Solución:** pendiente de decidir con el usuario. Queda fuera del alcance de la auditoría porque cambia el comportamiento.
+
 ## 2026-11-24 — Combustible y órdenes purgaban un mes entero antes de tiempo los días 31 (y algunos 29 y 30)
 
 - **Síntoma:** encontrado revisando la purga, sin que lo haya reportado ningún usuario. El 31-10-2026 combustible y órdenes borraban todo abril al guardar, cuando abril debía conservarse hasta noviembre. Lo mismo el 29, 30 y 31 de agosto (febrero) y el 31 de diciembre (junio), entre otros. La purga se escribe también en el JSON vinculado, así que ese mes desaparecía también del archivo.
