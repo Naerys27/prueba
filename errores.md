@@ -6,11 +6,11 @@ referencian por la versión del Service Worker en la que se corrigieron.
 
 ---
 
-## 2026-11-26 — Una versión nueva puede instalarse con los archivos de la anterior (PENDIENTE)
+## 2026-11-26 — Una versión nueva puede instalarse con los archivos de la anterior
 
 - **Síntoma:** encontrado al probar la actualización de v108 a 2026.11.2 con un servidor local, sin que lo haya reportado ningún usuario. Pasa con cualquier versión, también en v108. Si la versión nueva se instala poco después de la anterior, sale el aviso "Nueva versión disponible", se pulsa Actualizar y la caché pasa a llamarse como la nueva, pero las páginas siguen siendo las viejas. Se queda así hasta la siguiente subida.
 - **Causa:** el `install` de `sw.js` hace `caches.open(CACHE).then(c => c.addAll(FILES))`, y `addAll` pasa por la caché HTTP del navegador. Si el navegador aún tiene por buenas las copias que descargó al instalar la versión anterior, las mete en la caché nueva sin pedirlas al servidor. GitHub Pages manda `cache-control: max-age=600`: el riesgo existe cuando entre una instalación y la siguiente pasan menos de 10 minutos, por ejemplo si se suben dos versiones seguidas. Comprobado: con la caché HTTP vacía la misma actualización sale bien (páginas nuevas, versión en el menú, caché vieja borrada, datos intactos).
-- **Solución:** pendiente de decidir con el usuario. Propuesta: pedir los archivos saltándose la caché HTTP en el `install` (`new Request(f, { cache: 'reload' })`).
+- **Solución:** el `install` pide los archivos saltándose la caché HTTP: `c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))` (en 2026.11.2). Comprobado simulando la actualización de v108 a 2026.11.2 sin vaciar la caché HTTP: antes del cambio la caché nueva tenía el `index.html` viejo; después, el nuevo, con la versión en el menú y los datos intactos. La batería no cubre la actualización del SW; esa prueba se hizo aparte con un script.
 
 ## 2026-11-26 — Combustible: borrar el único repostaje y pulsar Guardar no borra nada
 
