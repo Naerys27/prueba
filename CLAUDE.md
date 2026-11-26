@@ -16,7 +16,7 @@ PWA (Progressive Web App) para gestionar la documentación del Servicio de Locom
 
 **URL de producción (beta):** [https://naerys27.github.io/prueba/](https://naerys27.github.io/prueba/)
 
-**Versión actual:** `2026.11.2` (rama `entregas`; publicada v108) — cambiarla en cada deploy (ver "Versiones").
+**Versión actual:** `2026.11.2` (publicada el 2026-11-26) — cambiarla en cada deploy (ver "Versiones").
 
 ---
 
