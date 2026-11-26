@@ -1,4 +1,6 @@
-const CACHE = 'partes-loco-v109';
+// Versión de la app (año.mes.número): cambiarla en cada subida. El menú la muestra pidiéndosela al SW.
+const VERSION = '2026.11.2';
+const CACHE = 'partes-loco-' + VERSION;
 const FILES = [
   'index.html',
   'parte_combustible.html',
@@ -16,6 +18,7 @@ self.addEventListener('install', e => {
 
 self.addEventListener('message', e => {
   if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
+  if (e.data && e.data.type === 'GET_VERSION' && e.ports[0]) e.ports[0].postMessage(VERSION);
 });
 
 self.addEventListener('activate', e => {

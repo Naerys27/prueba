@@ -1,5 +1,5 @@
 # Handover — Partes de Locomoción CHT
-**Fecha:** 2026-11-26 | **SW publicado:** `partes-loco-v108` | **v109 en rama `entregas`** (sin desplegar)
+**Fecha:** 2026-11-26 | **SW publicado:** `partes-loco-v108` | **2026.11.2 en rama `entregas`** (sin desplegar)
 
 ---
 
@@ -20,7 +20,7 @@ Entregas pequeñas para poder deshacerlas por separado. Punto de vuelta: etiquet
 - **v108 (2026-11-26, desplegado):** dos fallos de combustible encontrados en la auditoría, los dos ya presentes en v107. Detalle en `errores.md`.
   - Sin mes (tras cerrar el aviso del PDF o pulsar "Nuevo"), los repostajes se perdían sin aviso o se guardaban en otro mes. Ahora Guardar y los cambios de matrícula o mes avisan y no limpian el formulario. Test: `tests/test_comb_sin_mes.js`.
   - Borrar el único repostaje de un parte guardado y pulsar Guardar no borraba nada. Ahora Guardar pregunta si se borra el parte. Test: `tests/test_comb_parte_vacio.js`.
-- **v109 (sin desplegar):** borrado código muerto del PDF, sin efecto visible (orden de reparación: `fitOneLine`, `addFitText`, `wrapTextHard`, `addBlockText`, `drawCentered`, `drawLabel`, `drawSignArrow`, `A4W/A4H`; parte diario: `PDF`, `TX`, `drawBlueRect`, `drawInlineField`).
+- **2026.11.2 (sin desplegar):** primera con el formato nuevo de versión (`año.mes.número`, ver "Versiones" en `CLAUDE.md`); la versión se ve al pie del menú. Además, borrado código muerto del PDF, sin efecto visible (orden de reparación: `fitOneLine`, `addFitText`, `wrapTextHard`, `addBlockText`, `drawCentered`, `drawLabel`, `drawSignArrow`, `A4W/A4H`; parte diario: `PDF`, `TX`, `drawBlueRect`, `drawInlineField`).
 
 ### v107 — fechas de la purga y del parte diario (2026-11-24, desplegado)
 
@@ -130,7 +130,7 @@ Los 3 módulos: `normMat` normaliza la matrícula (sin separadores, mayúsculas)
 
 ## Pendientes
 
-- **Auditoría de código:** entregas v109 (código muerto), v110 (errores y XSS) y v111 (duplicados de combustible), una a una y probadas por los usuarios antes de la siguiente.
+- **Auditoría de código:** entregas 2026.11.2 (versión visible + código muerto), luego errores y XSS, y por último duplicados de combustible, una a una y probadas por los usuarios antes de la siguiente.
 - **Entregar a la usuaria el JSON corregido** (`partes_copia_2026-07-03.json`, local, gitignoreado) y que confirme que le llega la v102.
 - **km de junio en blanco**: avisar a los responsables de `MMM06038/MMM05520/MMM04024/MMM05422` para que reintroduzcan `km_ini/km_fin` de junio a mano (irreconstruibles).
 - **Validación en móvil real**: la suite cubre lógica en Chromium desktop; falta un ciclo completo en Android (PWA instalada, cámara, vinculación real del JSON).

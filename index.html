@@ -239,6 +239,7 @@
     }
     .export-link{display:block;text-align:center;font-size:11px;color:var(--text-muted);text-decoration:none;padding:10px 0 4px;cursor:pointer;-webkit-tap-highlight-color:transparent}
     .export-link:active{opacity:.6}
+    .app-version{text-align:center;font-size:10px;color:var(--text-muted);padding:2px 0 10px}
   </style>
 </head>
 
@@ -337,6 +338,7 @@
     </div>
   </div>
   <a class="export-link" onclick="exportAllData()">↓ exportar copia de todos los datos</a>
+  <div class="app-version" id="app-version"></div>
   <input type="file" id="import-all-input" accept=".json" style="display:none" onchange="importAllData(event)">
   <script>
     FSStorage.init();
@@ -463,6 +465,12 @@
             });
           });
         });
+        // Sin SW controlando (primera visita) o con un SW anterior a 2026.11.2, no se muestra nada
+        if (navigator.serviceWorker.controller) {
+          var ch = new MessageChannel();
+          ch.port1.onmessage = function(e) { document.getElementById('app-version').textContent = 'Versión ' + e.data; };
+          navigator.serviceWorker.controller.postMessage({ type: 'GET_VERSION' }, [ch.port2]);
+        }
         var _swRefreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', function() {
           if (!_swRefreshing) { _swRefreshing = true; window.location.reload(); }

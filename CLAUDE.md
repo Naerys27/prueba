@@ -16,7 +16,7 @@ PWA (Progressive Web App) para gestionar la documentación del Servicio de Locom
 
 **URL de producción (beta):** [https://naerys27.github.io/prueba/](https://naerys27.github.io/prueba/)
 
-**Service Worker actual:** `partes-loco-v109` (rama `entregas`; publicado v108) — incrementar en cada deploy.
+**Versión actual:** `2026.11.2` (rama `entregas`; publicada v108) — cambiarla en cada deploy (ver "Versiones").
 
 ---
 
@@ -29,7 +29,7 @@ prueba/
 ├── parte_combustible.html      # Módulo partes mensuales de combustible
 ├── orden_reparacion.html       # Módulo órdenes de reparación y suministro
 ├── storage.js                  # Capa de almacenamiento (localStorage + File System Access API)
-├── sw.js                       # Service Worker (caché offline, versión actual: v109)
+├── sw.js                       # Service Worker (caché offline y VERSION de la app, actual: 2026.11.2)
 ├── tests/                      # Batería de regresión Playwright — pasar SIEMPRE antes de deploy (tests/README.md)
 ├── manifest.json               # Manifiesto PWA
 └── icons/
@@ -76,13 +76,19 @@ git push origin main
 
 GitHub Pages publica automáticamente desde la rama `main`.
 
-**IMPORTANTE — tras cada deploy:** incrementar la versión del Service Worker en `sw.js`:
+**IMPORTANTE — en cada deploy:** cambiar la versión en `sw.js` (es el único sitio donde está):
 
 ```javascript
-const CACHE = 'partes-loco-vN';  // incrementar N — actualmente v109
+const VERSION = '2026.11.2';  // año.mes.número — actualmente 2026.11.2
 ```
 
-Si no se incrementa, los usuarios seguirán usando la versión cacheada anterior.
+Si no se cambia, los usuarios seguirán usando la versión cacheada anterior.
+
+### Versiones
+
+- Formato `año.mes.número`: el número empieza en 1 cada mes (`2026.11.2`, `2026.12.1`). Decidido con el usuario el 2026-11-26; hasta entonces era un contador (`v1`…`v108`, la última fue v108 = `2026.11.1`).
+- De `VERSION` salen el nombre de la caché (`partes-loco-2026.11.2`) y el texto "Versión 2026.11.2" del pie del menú. El menú la pide al SW que controla la página (`GET_VERSION`), así enseña la versión que de verdad se está usando. Sin SW controlando (primera visita) no se muestra.
+- Cambiar el nombre de la caché es seguro: al activarse, el SW borra toda caché que no se llame como la actual. Los datos de usuario están en `localStorage` y no se tocan.
 
 ---
 
@@ -282,7 +288,7 @@ Para cambios en PDF, indicar siempre si aplica `multiCond` o no y verificar que 
 - Sin frameworks, sin npm, sin build tools.
 - jsPDF embebido — no usar imports externos nuevos.
 - Coordenadas PDF son absolutas y frágiles: documentar siempre las posiciones TOTAL que cambien y si dependen del flag `multiCond`.
-- Service Worker: incrementar `partes-loco-vN` en cada deploy.
+- Service Worker: cambiar `VERSION` en `sw.js` en cada deploy.
 
 ### Errores y decisiones
 
