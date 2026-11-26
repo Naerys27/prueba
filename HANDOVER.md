@@ -1,5 +1,5 @@
 # Handover — Partes de Locomoción CHT
-**Fecha:** 2026-11-26 | **SW publicado:** `partes-loco-v108`
+**Fecha:** 2026-11-26 | **SW publicado:** `partes-loco-v108` | **v109 en rama `entregas`** (sin desplegar)
 
 ---
 
@@ -20,6 +20,7 @@ Entregas pequeñas para poder deshacerlas por separado. Punto de vuelta: etiquet
 - **v108 (2026-11-26, desplegado):** dos fallos de combustible encontrados en la auditoría, los dos ya presentes en v107. Detalle en `errores.md`.
   - Sin mes (tras cerrar el aviso del PDF o pulsar "Nuevo"), los repostajes se perdían sin aviso o se guardaban en otro mes. Ahora Guardar y los cambios de matrícula o mes avisan y no limpian el formulario. Test: `tests/test_comb_sin_mes.js`.
   - Borrar el único repostaje de un parte guardado y pulsar Guardar no borraba nada. Ahora Guardar pregunta si se borra el parte. Test: `tests/test_comb_parte_vacio.js`.
+- **v109 (sin desplegar):** borrado código muerto del PDF, sin efecto visible (orden de reparación: `fitOneLine`, `addFitText`, `wrapTextHard`, `addBlockText`, `drawCentered`, `drawLabel`, `drawSignArrow`, `A4W/A4H`; parte diario: `PDF`, `TX`, `drawBlueRect`, `drawInlineField`).
 
 ### v107 — fechas de la purga y del parte diario (2026-11-24, desplegado)
 

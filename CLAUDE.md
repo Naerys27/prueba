@@ -16,7 +16,7 @@ PWA (Progressive Web App) para gestionar la documentación del Servicio de Locom
 
 **URL de producción (beta):** [https://naerys27.github.io/prueba/](https://naerys27.github.io/prueba/)
 
-**Service Worker actual:** `partes-loco-v108` (publicado) — incrementar en cada deploy.
+**Service Worker actual:** `partes-loco-v109` (rama `entregas`; publicado v108) — incrementar en cada deploy.
 
 ---
 
@@ -29,7 +29,7 @@ prueba/
 ├── parte_combustible.html      # Módulo partes mensuales de combustible
 ├── orden_reparacion.html       # Módulo órdenes de reparación y suministro
 ├── storage.js                  # Capa de almacenamiento (localStorage + File System Access API)
-├── sw.js                       # Service Worker (caché offline, versión actual: v108)
+├── sw.js                       # Service Worker (caché offline, versión actual: v109)
 ├── tests/                      # Batería de regresión Playwright — pasar SIEMPRE antes de deploy (tests/README.md)
 ├── manifest.json               # Manifiesto PWA
 └── icons/
@@ -79,7 +79,7 @@ GitHub Pages publica automáticamente desde la rama `main`.
 **IMPORTANTE — tras cada deploy:** incrementar la versión del Service Worker en `sw.js`:
 
 ```javascript
-const CACHE = 'partes-loco-vN';  // incrementar N — actualmente v108
+const CACHE = 'partes-loco-vN';  // incrementar N — actualmente v109
 ```
 
 Si no se incrementa, los usuarios seguirán usando la versión cacheada anterior.
