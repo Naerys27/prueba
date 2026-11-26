@@ -6,11 +6,14 @@ referencian por la versión del Service Worker en la que se corrigieron.
 
 ---
 
-## 2026-11-26 — Combustible: borrar el único repostaje y pulsar Guardar no borra nada (PENDIENTE)
+## 2026-11-26 — Combustible: borrar el único repostaje y pulsar Guardar no borra nada
 
 - **Síntoma:** encontrado al investigar el fallo siguiente. En un parte guardado con un solo repostaje, se borra ese repostaje y se pulsa Guardar: sale "Parte guardado", pero al recargar el repostaje vuelve. Pasa ya en v107.
 - **Causa:** `saveHistorico()` termina en `if (!entries.length) return;` sin tocar el histórico, así que lo guardado antes sigue ahí.
-- **Solución:** pendiente de que el usuario decida qué debe pasar (borrar el parte entero, avisar, o dejarlo como está; el parte completo ya se puede borrar desde el historial).
+- **Solución:** decidido con el usuario: Guardar borra el parte, avisando antes.
+  - El botón Guardar llama a la nueva `guardarParte()`. Si el parte de esa matrícula y mes ya estaba guardado y no queda ningún repostaje, pregunta "El parte de <mes> · <matrícula> se ha quedado sin repostajes. ¿Borrar el parte?". Si se acepta, lo borra, dice "Parte borrado" y lo quita de la barra de matrículas; si se cancela, no toca nada. En los demás casos guarda como antes.
+  - El borrado sale de `deleteHistorico()` a `borrarParte()`, que usan las dos. Generar PDF no pasa por `guardarParte()` y no borra.
+  - `tests/test_comb_parte_vacio.js`: 18 comprobaciones; con el código anterior fallan 8.
 
 ## 2026-11-25 — Combustible: repostajes de un vehículo sin mes se pierden sin aviso o van a otro mes
 

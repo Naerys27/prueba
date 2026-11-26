@@ -33,6 +33,7 @@ El script sirve el repo en `http://localhost:8899` (si no hay ya un servidor), l
 | `test_ambiguo.js` | Autofill conductor→matrícula con conductor de varios vehículos (5 escenarios) | Bug real (jul 2026) |
 | `test_bugs_2_3_4_5.js` | Guards de confirmación en `resetForm` de los 3 módulos | Bugs reales |
 | `test_comb_sin_mes.js` | Parte combustible sin mes tras cerrar el aviso del PDF o pulsar "Nuevo": Guardar avisa y no dice "Parte guardado", cambiar de matrícula no pierde el repostaje, elegir mes lo guarda en ese mes y no en el del parte anterior; sin matrícula, cambiar de mes avisa; controles del flujo normal y de Generar PDF | Bug real (auditoría 2026-11-25) |
+| `test_comb_parte_vacio.js` | Parte combustible guardado que se queda sin repostajes: Guardar pregunta si se borra el parte y, si se acepta, lo borra (no vuelve al recargar, sale de la barra de matrículas, no toca otros vehículos); cancelar no toca nada; con otros repostajes guarda sin preguntar; borrar desde el historial sigue igual | Bug real (auditoría 2026-11-26) |
 | `test_comb_regression.js` | Contaminación cruzada de repostajes entre vehículos (A→B→A) | Bug real reportado en beta |
 | `test_regresion_e2e.js` | Flujo completo de los 3 módulos: rellenar → guardar → PDF | Regresión general |
 | `test_nuevos_bugs.js` | Merge por timestamp (réplica) + XSS en nombre de conductor | Bugs reales |

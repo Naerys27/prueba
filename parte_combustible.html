@@ -354,7 +354,7 @@ table.ft tfoot td.tv{color:#f5c400;font-family:monospace;font-size:12px}
 
 <div class="bar">
   <button class="btn btnc" onclick="resetForm()">Nuevo</button>
-  <button class="btn btns" onclick="if(saveHistorico()!==false){toast('Parte guardado');renderHistorico();clearDraft();}" id="savebtn">Guardar</button>
+  <button class="btn btns" onclick="guardarParte()" id="savebtn">Guardar</button>
   <button class="btn btnp" onclick="if(saveHistorico()!==false){renderHistorico();clearDraft();}makePDF()" id="pdfbtn">Generar PDF</button>
 </div>
 <div class="toast" id="toast"></div>
@@ -2175,6 +2175,27 @@ function loadHistorico(key) {
 }
 function deleteHistorico(key, label) {
   if (!confirm('¿Borrar el parte de ' + label + '?')) return;
+  borrarParte(key);
+}
+// Guardar un parte ya guardado que se ha quedado sin repostajes lo borra (antes no hacía nada y el
+// repostaje volvía al recargar). Generar PDF no pasa por aquí: no borra.
+function guardarParte() {
+  var key = normMat(gv('v_mat')) + '/' + gv('v_mes');
+  var hist = {};
+  try { hist = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); } catch(e) {}
+  var hayRepostajes = false;
+  document.querySelectorAll('.gk,.ge,.gl,.dk,.dae,.dal,.dge,.dgl').forEach(function(e){ if (e.value) hayRepostajes = true; });
+  if (!hist[key] || hayRepostajes) {
+    if (saveHistorico() !== false) { toast('Parte guardado'); renderHistorico(); clearDraft(); }
+    return;
+  }
+  if (!confirm('El parte de ' + fmtMonth(hist[key].mes) + ' · ' + fmtMat(hist[key].mat) + ' se ha quedado sin repostajes. ¿Borrar el parte?')) return;
+  borrarParte(key);
+  _activeParteKey = null;
+  renderMatriculaChips(gv('v_mes'));
+  clearDraft();
+}
+function borrarParte(key) {
   var hist = {};
   try { hist = JSON.parse(FSStorage.getItem(HIST_KEY) || '{}'); } catch(e) {}
   delete hist[key];
