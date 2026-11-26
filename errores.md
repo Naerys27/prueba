@@ -6,11 +6,28 @@ referencian por la versión del Service Worker en la que se corrigieron.
 
 ---
 
-## 2026-11-25 — Combustible: repostajes de un vehículo sin mes se pierden sin aviso al cambiar de matrícula (PENDIENTE)
+## 2026-11-26 — Combustible: borrar el único repostaje y pulsar Guardar no borra nada (PENDIENTE)
 
-- **Síntoma:** encontrado en una sesión de uso simulada durante la auditoría, sin que lo haya reportado ningún usuario. Pasa igual en v107 (publicada) y en v108. Pasos: generar el PDF de un vehículo y cerrar el aviso "PDF generado", lo que vacía el formulario y también el mes. Escribir otra matrícula sin volver a poner el mes, añadir un repostaje y cambiar de matrícula. El repostaje desaparece sin ningún aviso. Los datos del primer vehículo no se pierden: al volver a poner el mes reaparecen.
-- **Causa:** `saveHistorico()` hace `if (!mat || !mes) return;` y devuelve `undefined`, no `false`. `onMatriculaChange()` (y también `onMesChange()`, `loadParteChip()` y `newParteForMes()`) solo se detienen si recibe `false`, así que siguen y llaman a `resetForm(true)` con el repostaje sin guardar. Además, el `resetForm(true)` del aviso del PDF (`_showPDFOpenModal`) vacía el mes pero deja `_activeMat`, `_activeMes` y `_activeParteKey` con los valores anteriores.
-- **Solución:** pendiente de decidir con el usuario. Queda fuera del alcance de la auditoría porque cambia el comportamiento.
+- **Síntoma:** encontrado al investigar el fallo siguiente. En un parte guardado con un solo repostaje, se borra ese repostaje y se pulsa Guardar: sale "Parte guardado", pero al recargar el repostaje vuelve. Pasa ya en v107.
+- **Causa:** `saveHistorico()` termina en `if (!entries.length) return;` sin tocar el histórico, así que lo guardado antes sigue ahí.
+- **Solución:** pendiente de que el usuario decida qué debe pasar (borrar el parte entero, avisar, o dejarlo como está; el parte completo ya se puede borrar desde el historial).
+
+## 2026-11-25 — Combustible: repostajes de un vehículo sin mes se pierden sin aviso o van a otro mes
+
+- **Síntoma:** encontrado en una sesión de uso simulada durante la auditoría, sin que lo haya reportado ningún usuario. Pasa igual en v107 (publicada) y en v108. Al cerrar el aviso "PDF generado" o pulsar "Nuevo" el formulario se vacía, mes incluido. Si luego se escribe otra matrícula y se añade un repostaje sin volver a poner el mes:
+  - Guardar dice "Parte guardado" y borra el borrador, pero no guarda nada.
+  - Cambiar de matrícula pierde el repostaje sin avisar.
+  - Elegir un mes distinto guarda el repostaje en el mes del parte anterior (en el nuevo no aparece).
+  - Lo mismo sin matrícula: cambiar de mes pierde el repostaje.
+
+  Los datos ya guardados no se pierden. Generar PDF sí avisaba ("Indica el mes y año").
+- **Causa:** dos fallos juntos.
+  - `saveHistorico()` hacía `if (!mat || !mes) return;`, que devuelve `undefined`, no `false`. El botón Guardar, `onMatriculaChange()`, `onMesChange()`, `loadParteChip()` y `newParteForMes()` solo se detienen con `false`, así que daban el parte por guardado y limpiaban el formulario.
+  - Cerrar el aviso del PDF y "Nuevo" vaciaban el formulario pero dejaban `_activeMat`, `_activeMes` y `_activeParteKey` del parte anterior. `onMesChange()` restaura `_activeMes` antes de guardar, así que guardaba en el mes viejo.
+- **Solución:**
+  - `saveHistorico()`: si falta mes o matrícula y hay repostajes, avisa ("No se ha guardado el parte" con lo que falta, mismos textos que `validateCombustible()`) y devuelve `false`. Sin repostajes sigue sin avisar.
+  - Nueva `olvidarParteActivo()`, llamada desde "Nuevo" (`resetForm()` sin argumento) y al cerrar el aviso del PDF. No va en `resetForm(true)` porque sus otros llamantes fijan el parte activo antes o después.
+  - Test: `tests/test_comb_sin_mes.js`. Contra el código anterior fallan 18 de 36 comprobaciones. La sesión de uso completa da los mismos datos y PDFs que v107.
 
 ## 2026-11-24 — Combustible y órdenes purgaban un mes entero antes de tiempo los días 31 (y algunos 29 y 30)
 

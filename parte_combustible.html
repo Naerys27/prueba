@@ -1467,8 +1467,12 @@ function resetForm() {
   document.getElementById('nf_d_photobtn').className='photo-add-btn';
   document.getElementById('nf_g_thumb').innerHTML='';
   document.getElementById('nf_d_thumb').innerHTML='';
-  switchFuelType(); clearSig(); if (!arguments[0]) toast('Formulario limpiado');
+  switchFuelType(); clearSig(); if (!arguments[0]) { olvidarParteActivo(); toast('Formulario limpiado'); }
 }
+// Formulario en blanco a petición del usuario (Nuevo, cerrar el aviso del PDF): sin esto, el siguiente
+// cambio de mes guardaría lo nuevo en el mes del parte anterior. resetForm(true) no lo hace porque quien
+// lo llama así fija después (o antes) el parte activo.
+function olvidarParteActivo() { _activeParteKey = null; _activeMes = null; _activeMat = null; }
 
 var sigDrawing=false,sigLX=0,sigLY=0; var sigCanvas=document.getElementById('sigcanvas'); var sigCtx=sigCanvas.getContext('2d');
 function resizeSigCanvas() { var box=document.getElementById('sigbox'); sigCanvas.width=box.offsetWidth; sigCanvas.height=box.offsetHeight; }
@@ -1745,7 +1749,7 @@ function _showPDFOpenModal(blobUrl, filename) {
     openBtn+
     '</div>';
   document.body.appendChild(modal);
-  function dismiss() { if (blobUrl) URL.revokeObjectURL(blobUrl); modal.remove(); resetForm(true); }
+  function dismiss() { if (blobUrl) URL.revokeObjectURL(blobUrl); modal.remove(); resetForm(true); olvidarParteActivo(); }
   modal.querySelector('#_pdfm_c').addEventListener('click', dismiss);
   if (blobUrl) modal.querySelector('#_pdfm_o').addEventListener('click', function() { window.open(blobUrl, '_blank'); dismiss(); });
 }
@@ -1940,11 +1944,17 @@ function avisarSiLleno(e) {
     ? 'Almacenamiento del navegador lleno. Pulsa Reconectar para guardar en el archivo vinculado.'
     : 'Almacenamiento lleno. Vincula un archivo JSON para guardar con fotos.');
 }
-// Devuelve false si no se ha podido guardar por falta de espacio
+// Devuelve false si no se ha podido guardar (falta mes o matrícula con repostajes, o falta de espacio)
 function saveHistorico() {
   var mat = normMat(gv('v_mat'));
   var mes = gv('v_mes');
-  if (!mat || !mes) return;
+  if (!mat || !mes) {
+    // Con repostajes hay que avisar: quien llama limpiaría el formulario y se perderían
+    var errs = validateCombustible();
+    if (errs.indexOf('Añade al menos un repostaje.') !== -1) return;
+    showErr('No se ha guardado el parte:\n• ' + errs.join('\n• '));
+    return false;
+  }
   // Con el almacenamiento lleno, un vehículo nuevo ya no cabe y falla antes que el parte
   try { saveCurrentVehicle(); } catch(e) { avisarSiLleno(e); return false; }
   var tipo = document.getElementById('tipo_combustible').value;
